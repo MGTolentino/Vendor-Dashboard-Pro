@@ -20,6 +20,12 @@ $vendor = vdp_get_current_vendor();
 if (!$vendor) {
     echo '<div class="vdp-notice vdp-notice-error">';
     echo '<p>' . esc_html__('You must be a registered vendor to access this dashboard.', 'vendor-dashboard-pro') . '</p>';
+    echo '<p>' . esc_html__('Please register as a vendor to continue.', 'vendor-dashboard-pro') . '</p>';
+    if (function_exists('hivepress') && hivepress()->router->get_url('vendor_register_page')) {
+        echo '<a href="' . esc_url(hivepress()->router->get_url('vendor_register_page')) . '" class="vdp-btn vdp-btn-primary">';
+        echo esc_html__('Register as Vendor', 'vendor-dashboard-pro');
+        echo '</a>';
+    }
     echo '</div>';
     return;
 }
@@ -118,13 +124,19 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                         <li class="vdp-nav-item <?php echo $current_action === 'products' ? 'vdp-active' : ''; ?>">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('products')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="products">
                                 <i class="fas fa-box"></i>
-                                <span><?php esc_html_e('Products', 'vendor-dashboard-pro'); ?></span>
+                                <span><?php esc_html_e('Listings', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
                         <li class="vdp-nav-item <?php echo $current_action === 'orders' ? 'vdp-active' : ''; ?>">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('orders')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="orders">
                                 <i class="fas fa-shopping-cart"></i>
                                 <span><?php esc_html_e('Orders', 'vendor-dashboard-pro'); ?></span>
+                            </a>
+                        </li>
+                        <li class="vdp-nav-item <?php echo $current_action === 'leads' ? 'vdp-active' : ''; ?>">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('leads')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="leads">
+                                <i class="fas fa-user-plus"></i>
+                                <span><?php esc_html_e('Leads', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
                         <li class="vdp-nav-item <?php echo $current_action === 'messages' ? 'vdp-active' : ''; ?>">
@@ -151,16 +163,40 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                 <!-- Original HivePress Link -->
                 <div class="vdp-sidebar-footer">
                     <?php
-                    $vendor_id = 1;
+                    $vendor_id = null;
+                    $vendor_slug = '';
+                    
                     if (is_object($vendor) && method_exists($vendor, 'get_id')) {
                         $vendor_id = $vendor->get_id();
                     } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
                         $vendor_id = ($vendor->get_id)();
                     }
+                    
+                    if (is_object($vendor) && method_exists($vendor, 'get_slug')) {
+                        $vendor_slug = $vendor->get_slug();
+                    } elseif (is_object($vendor) && isset($vendor->get_slug) && is_callable($vendor->get_slug)) {
+                        $vendor_slug = ($vendor->get_slug)();
+                    }
+                    
+                    // Determine vendor profile URL
+                    $profile_url = '#';
+                    if (class_exists('\HivePress\Models\Vendor') && function_exists('hivepress') && $vendor_id) {
+                        // Try using HivePress URL
+                        $profile_url = hivepress()->router->get_url('vendor_view_page', ['id' => $vendor_id]);
+                    } elseif ($vendor_id) {
+                        // Fallback to post permalink
+                        $profile_url = get_permalink($vendor_id);
+                    } elseif (!empty($vendor_slug)) {
+                        // Try to construct URL from slug
+                        $vendor_page = get_option('hp_vendor_view_page');
+                        if ($vendor_page) {
+                            $profile_url = get_permalink($vendor_page) . $vendor_slug . '/';
+                        }
+                    }
                     ?>
-                    <a href="<?php echo esc_url(get_permalink($vendor_id)); ?>" class="vdp-hivepress-link" target="_blank">
+                    <a href="<?php echo esc_url($profile_url); ?>" class="vdp-hivepress-link" target="_blank">
                         <i class="fas fa-external-link-alt"></i>
-                        <?php esc_html_e('View Original Profile', 'vendor-dashboard-pro'); ?>
+                        <?php esc_html_e('View Public Profile', 'vendor-dashboard-pro'); ?>
                     </a>
                 </div>
             </div>

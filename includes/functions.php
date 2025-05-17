@@ -23,32 +23,51 @@ function vdp_is_user_vendor() {
     // Get current user ID
     $user_id = get_current_user_id();
     
-    // For development purposes, always return true if HivePress isn't detected or isn't working correctly
-    if (!class_exists('\HivePress\Models\Vendor')) {
-        // During development/testing, assume the current user is a vendor
+    // Direct database query approach - more reliable across different setups
+    global $wpdb;
+    
+    // Query for hp_vendor post type associated with the current user
+    $vendor_count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$wpdb->posts} p 
+        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
+        WHERE p.post_type = 'hp_vendor' 
+        AND p.post_status = 'publish' 
+        AND pm.meta_key = 'hp_user_id' 
+        AND pm.meta_value = %d",
+        $user_id
+    ));
+    
+    // If we found a vendor post for this user
+    if ($vendor_count > 0) {
         return true;
     }
     
-    try {
-        // Check if user has a vendor profile
-        $vendor = \HivePress\Models\Vendor::query()->filter(
-            array(
-                'user' => $user_id,
-                'status' => 'publish',
-            )
-        )->get_first();
-        
-        return !empty($vendor);
-    } catch (Exception $e) {
-        // If there's any error, assume user is a vendor during development
-        return true;
+    // Try HivePress API as fallback if available
+    if (class_exists('\HivePress\Models\Vendor')) {
+        try {
+            // Check if user has a vendor profile using HivePress API
+            $vendor = \HivePress\Models\Vendor::query()->filter(
+                array(
+                    'user' => $user_id,
+                    'status' => 'publish',
+                )
+            )->get_first();
+            
+            return !empty($vendor);
+        } catch (Exception $e) {
+            // If HivePress API fails, we already tried direct DB query
+            return false;
+        }
     }
+    
+    // No vendor found for this user
+    return false;
 }
 
 /**
  * Get current user's vendor object.
  *
- * @return \HivePress\Models\Vendor|null|object
+ * @return \HivePress\Models\Vendor|object|null
  */
 function vdp_get_current_vendor() {
     if (!is_user_logged_in()) {
@@ -58,55 +77,106 @@ function vdp_get_current_vendor() {
     // Get current user ID
     $user_id = get_current_user_id();
     
-    // For development purposes, create a dummy vendor object if HivePress isn't working
-    if (!class_exists('\HivePress\Models\Vendor')) {
-        return vdp_get_dummy_vendor();
+    // Try direct database query first - more reliable across different setups
+    global $wpdb;
+    
+    // Query for hp_vendor post associated with current user
+    $vendor_post = $wpdb->get_row($wpdb->prepare(
+        "SELECT p.* FROM {$wpdb->posts} p 
+        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
+        WHERE p.post_type = 'hp_vendor' 
+        AND p.post_status IN ('publish', 'draft', 'pending') 
+        AND pm.meta_key = 'hp_user_id' 
+        AND pm.meta_value = %d 
+        LIMIT 1",
+        $user_id
+    ));
+    
+    if ($vendor_post) {
+        // Create a vendor object from post data
+        return vdp_create_vendor_from_post($vendor_post);
     }
     
-    try {
-        // Get vendor
-        $vendor = \HivePress\Models\Vendor::query()->filter(
-            array(
-                'user' => $user_id,
-                'status' => array('publish', 'draft', 'pending'),
-            )
-        )->get_first();
-        
-        if (empty($vendor)) {
-            return vdp_get_dummy_vendor();
+    // Try HivePress API as fallback if available
+    if (class_exists('\HivePress\Models\Vendor')) {
+        try {
+            // Get vendor using HivePress API
+            $vendor = \HivePress\Models\Vendor::query()->filter(
+                array(
+                    'user' => $user_id,
+                    'status' => array('publish', 'draft', 'pending'),
+                )
+            )->get_first();
+            
+            if (!empty($vendor)) {
+                return $vendor;
+            }
+        } catch (Exception $e) {
+            // If HivePress API fails, we already tried direct DB query
         }
-        
-        return $vendor;
-    } catch (Exception $e) {
-        // If there's any error, return a dummy vendor object
-        return vdp_get_dummy_vendor();
     }
+    
+    // No vendor found for this user
+    return null;
 }
 
 /**
- * Get a dummy vendor object for development/testing.
+ * Create a vendor object from post data.
  *
- * @return object
+ * @param object $post WP_Post object for vendor.
+ * @return object Vendor object with callable methods.
  */
-function vdp_get_dummy_vendor() {
-    // Create a simple dummy object with required methods
+function vdp_create_vendor_from_post($post) {
+    // Create an object with callable methods
     $vendor = new stdClass();
     
-    // Add methods to the dummy vendor
-    $vendor->get_id = function() {
-        return 1;
+    // Get vendor metadata
+    $name = get_post_meta($post->ID, 'hp_name', true) ?: $post->post_title;
+    $verified = get_post_meta($post->ID, 'hp_verified', true) ?: false;
+    $user_id = get_post_meta($post->ID, 'hp_user_id', true);
+    
+    // Get user data for additional info
+    $user_info = get_userdata($user_id);
+    if ($user_info && empty($name)) {
+        $name = $user_info->display_name;
+    }
+    
+    // Add methods to the vendor object
+    $vendor->get_id = function() use ($post) {
+        return $post->ID;
     };
     
-    $vendor->get_name = function() {
-        return 'Test Vendor';
+    $vendor->get_name = function() use ($name, $post) {
+        return !empty($name) ? $name : $post->post_title;
     };
     
-    $vendor->get_image__url = function() {
+    $vendor->get_image__url = function($size = 'thumbnail') use ($post) {
+        $attachment_id = get_post_thumbnail_id($post->ID);
+        if ($attachment_id) {
+            $image = wp_get_attachment_image_src($attachment_id, $size);
+            return $image ? $image[0] : false;
+        }
         return false;
     };
     
-    $vendor->is_verified = function() {
-        return true;
+    $vendor->is_verified = function() use ($verified) {
+        return (bool) $verified;
+    };
+    
+    $vendor->get_slug = function() use ($post) {
+        return $post->post_name;
+    };
+    
+    $vendor->get_registered_date = function() use ($post) {
+        return $post->post_date;
+    };
+    
+    $vendor->get_description = function() use ($post) {
+        return $post->post_content;
+    };
+    
+    $vendor->get_user_id = function() use ($user_id) {
+        return $user_id;
     };
     
     return $vendor;

@@ -72,7 +72,7 @@
          * @returns {string} URL
          */
         buildDashboardUrl: function(action, item) {
-            var url = vdpSettings.dashboardUrl;
+            var url = vdp_vars.dashboard_url;
             var separator = url.indexOf('?') !== -1 ? '&' : '?';
             
             if (action) {
@@ -144,7 +144,7 @@
                     window.scrollTo(0, 0);
                 },
                 error: function() {
-                    VDP.showNotice(vdpSettings.i18n.error, 'error');
+                    VDP.showNotice(vdp_vars.texts.error, 'error');
                 },
                 complete: function() {
                     VDP.hideLoading();
@@ -179,6 +179,11 @@
             if (!$('.vdp-dashboard-content').length || typeof Chart === 'undefined') {
                 return;
             }
+
+            // Cleanup any existing charts to prevent errors
+            Chart.helpers.each(Chart.instances, function(instance) {
+                instance.destroy();
+            });
 
             // Helper to create gradient
             function createGradient(ctx, startColor, endColor) {
@@ -217,11 +222,11 @@
          */
         loadChartData: function(metric, period, callback) {
             $.ajax({
-                url: vdpSettings.ajaxUrl,
+                url: vdp_vars.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'vdp_get_chart_data',
-                    nonce: vdpSettings.nonce,
+                    nonce: vdp_vars.nonce,
                     metric: metric,
                     period: period
                 },
@@ -346,7 +351,7 @@
                     return;
                 }
                 
-                if (confirm(vdpSettings.i18n.confirmDelete)) {
+                if (confirm(vdp_vars.texts.confirm_delete)) {
                     VDP.deleteProduct(productId);
                 }
             });
@@ -391,11 +396,11 @@
          */
         deleteProduct: function(productId) {
             $.ajax({
-                url: vdpSettings.ajaxUrl,
+                url: vdp_vars.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'vdp_delete_listing',
-                    nonce: vdpSettings.nonce,
+                    nonce: vdp_vars.nonce,
                     listing_id: productId
                 },
                 beforeSend: function() {
@@ -413,7 +418,7 @@
                     }
                 },
                 error: function() {
-                    VDP.showNotice(vdpSettings.i18n.error, 'error');
+                    VDP.showNotice(vdp_vars.texts.error, 'error');
                 },
                 complete: function() {
                     VDP.hideLoading();
@@ -429,17 +434,17 @@
         saveProduct: function($form) {
             var formData = new FormData($form[0]);
             formData.append('action', 'vdp_save_listing');
-            formData.append('nonce', vdpSettings.nonce);
+            formData.append('nonce', vdp_vars.nonce);
             
             $.ajax({
-                url: vdpSettings.ajaxUrl,
+                url: vdp_vars.ajax_url,
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
                 beforeSend: function() {
                     VDP.showLoading();
-                    $form.find('button[type="submit"]').prop('disabled', true).html(vdpSettings.i18n.saving);
+                    $form.find('button[type="submit"]').prop('disabled', true).html(vdp_vars.texts.loading);
                 },
                 success: function(response) {
                     if (response.success) {
@@ -456,11 +461,11 @@
                     }
                 },
                 error: function() {
-                    VDP.showNotice(vdpSettings.i18n.error, 'error');
+                    VDP.showNotice(vdp_vars.texts.error, 'error');
                 },
                 complete: function() {
                     VDP.hideLoading();
-                    $form.find('button[type="submit"]').prop('disabled', false).html(vdpSettings.i18n.saveChanges);
+                    $form.find('button[type="submit"]').prop('disabled', false).html(vdp_vars.texts.loading);
                 }
             });
         },
@@ -522,17 +527,17 @@
         replyMessage: function($form) {
             var formData = new FormData($form[0]);
             formData.append('action', 'vdp_reply_message');
-            formData.append('nonce', vdpSettings.nonce);
+            formData.append('nonce', vdp_vars.nonce);
             
             $.ajax({
-                url: vdpSettings.ajaxUrl,
+                url: vdp_vars.ajax_url,
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
                 beforeSend: function() {
                     VDP.showLoading();
-                    $form.find('button[type="submit"]').prop('disabled', true).html(vdpSettings.i18n.sending);
+                    $form.find('button[type="submit"]').prop('disabled', true).html(vdp_vars.texts.loading);
                 },
                 success: function(response) {
                     if (response.success) {
@@ -548,11 +553,11 @@
                     }
                 },
                 error: function() {
-                    VDP.showNotice(vdpSettings.i18n.error, 'error');
+                    VDP.showNotice(vdp_vars.texts.error, 'error');
                 },
                 complete: function() {
                     VDP.hideLoading();
-                    $form.find('button[type="submit"]').prop('disabled', false).html(vdpSettings.i18n.sendReply);
+                    $form.find('button[type="submit"]').prop('disabled', false).html(vdp_vars.texts.loading);
                 }
             });
         },
@@ -581,17 +586,17 @@
         saveSettings: function($form) {
             var formData = new FormData($form[0]);
             formData.append('action', 'vdp_save_vendor_settings');
-            formData.append('nonce', vdpSettings.nonce);
+            formData.append('nonce', vdp_vars.nonce);
             
             $.ajax({
-                url: vdpSettings.ajaxUrl,
+                url: vdp_vars.ajax_url,
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
                 beforeSend: function() {
                     VDP.showLoading();
-                    $form.find('button[type="submit"]').prop('disabled', true).html(vdpSettings.i18n.saving);
+                    $form.find('button[type="submit"]').prop('disabled', true).html(vdp_vars.texts.loading);
                 },
                 success: function(response) {
                     if (response.success) {
@@ -601,11 +606,11 @@
                     }
                 },
                 error: function() {
-                    VDP.showNotice(vdpSettings.i18n.error, 'error');
+                    VDP.showNotice(vdp_vars.texts.error, 'error');
                 },
                 complete: function() {
                     VDP.hideLoading();
-                    $form.find('button[type="submit"]').prop('disabled', false).html(vdpSettings.i18n.saveChanges);
+                    $form.find('button[type="submit"]').prop('disabled', false).html(vdp_vars.texts.loading);
                 }
             });
         },

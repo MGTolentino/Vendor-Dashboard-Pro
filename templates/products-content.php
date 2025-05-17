@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     <div class="vdp-filters">
         <div class="vdp-filter-group">
             <div class="vdp-search-box">
-                <input type="text" class="vdp-search-input vdp-search-products" placeholder="<?php esc_attr_e('Search products...', 'vendor-dashboard-pro'); ?>">
+                <input type="text" class="vdp-search-input vdp-search-products" placeholder="<?php esc_attr_e('Search listings...', 'vendor-dashboard-pro'); ?>">
                 <button type="button" class="vdp-search-btn">
                     <i class="fas fa-search"></i>
                 </button>
@@ -42,7 +42,7 @@ if (!defined('ABSPATH')) {
         <div class="vdp-filter-actions">
             <a href="<?php echo esc_url(vdp_get_dashboard_url('products/add')); ?>" class="vdp-btn vdp-btn-primary">
                 <i class="fas fa-plus"></i>
-                <?php esc_html_e('Add New Product', 'vendor-dashboard-pro'); ?>
+                <?php esc_html_e('Add New Listing', 'vendor-dashboard-pro'); ?>
             </a>
         </div>
     </div>
@@ -53,7 +53,7 @@ if (!defined('ABSPATH')) {
             <thead>
                 <tr>
                     <th class="vdp-column-image"><?php esc_html_e('Image', 'vendor-dashboard-pro'); ?></th>
-                    <th class="vdp-column-title"><?php esc_html_e('Product', 'vendor-dashboard-pro'); ?></th>
+                    <th class="vdp-column-title"><?php esc_html_e('Listing', 'vendor-dashboard-pro'); ?></th>
                     <th class="vdp-column-price"><?php esc_html_e('Price', 'vendor-dashboard-pro'); ?></th>
                     <th class="vdp-column-category"><?php esc_html_e('Category', 'vendor-dashboard-pro'); ?></th>
                     <th class="vdp-column-status"><?php esc_html_e('Status', 'vendor-dashboard-pro'); ?></th>
@@ -69,9 +69,9 @@ if (!defined('ABSPATH')) {
                                 <div class="vdp-empty-icon">
                                     <i class="fas fa-box-open"></i>
                                 </div>
-                                <p><?php esc_html_e('No products yet. Add your first product!', 'vendor-dashboard-pro'); ?></p>
+                                <p><?php esc_html_e('No listings yet. Add your first listing!', 'vendor-dashboard-pro'); ?></p>
                                 <a href="<?php echo esc_url(vdp_get_dashboard_url('products/add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
-                                    <i class="fas fa-plus"></i> <?php esc_html_e('Add Product', 'vendor-dashboard-pro'); ?>
+                                    <i class="fas fa-plus"></i> <?php esc_html_e('Add Listing', 'vendor-dashboard-pro'); ?>
                                 </a>
                             </div>
                         </td>
@@ -108,7 +108,7 @@ if (!defined('ABSPATH')) {
                                     <?php endif; ?>
                                     
                                     <?php if ($listing->is_featured()) : ?>
-                                        <span class="vdp-featured-badge" title="<?php esc_attr_e('Featured Product', 'vendor-dashboard-pro'); ?>">
+                                        <span class="vdp-featured-badge" title="<?php esc_attr_e('Featured Listing', 'vendor-dashboard-pro'); ?>">
                                             <i class="fas fa-star"></i>
                                         </span>
                                     <?php endif; ?>

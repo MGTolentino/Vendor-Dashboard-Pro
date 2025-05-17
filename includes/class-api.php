@@ -73,6 +73,17 @@ class VDP_API {
         // Return empty array in development mode
         return array();
     }
+    
+    /**
+     * Get vendor listing count.
+     *
+     * @param int $vendor_id Vendor ID.
+     * @return int Count of vendor listings.
+     */
+    public function get_vendor_listing_count($vendor_id) {
+        // Default to 0 for count if we can't get real data
+        return 0;
+    }
 
     /**
      * Get vendor featured listings.
@@ -107,6 +118,20 @@ class VDP_API {
     public function get_vendor_statistics($vendor_id) {
         // Return demo statistics
         return vdp_get_demo_statistics();
+    }
+    
+    /**
+     * Get listing categories.
+     *
+     * @return array
+     */
+    public function get_listing_categories() {
+        // Return demo categories
+        return array(
+            1 => 'Category 1',
+            2 => 'Category 2',
+            3 => 'Category 3',
+        );
     }
 
     /**

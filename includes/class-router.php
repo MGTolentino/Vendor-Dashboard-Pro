@@ -136,6 +136,10 @@ class VDP_Router {
                 }
                 break;
                 
+            case 'leads':
+                include(VDP_PLUGIN_DIR . 'templates/leads-content.php');
+                break;
+                
             case 'orders':
                 if ($item) {
                     include(VDP_PLUGIN_DIR . 'templates/order-view-content.php');
@@ -218,8 +222,9 @@ class VDP_Router {
     public static function get_page_title($action, $item = '') {
         $titles = array(
             'dashboard' => __('Dashboard', 'vendor-dashboard-pro'),
-            'products' => __('Products', 'vendor-dashboard-pro'),
+            'products' => __('Listings', 'vendor-dashboard-pro'),
             'orders' => __('Orders', 'vendor-dashboard-pro'),
+            'leads' => __('Leads', 'vendor-dashboard-pro'),
             'messages' => __('Messages', 'vendor-dashboard-pro'),
             'analytics' => __('Analytics', 'vendor-dashboard-pro'),
             'settings' => __('Settings', 'vendor-dashboard-pro'),
@@ -227,9 +232,9 @@ class VDP_Router {
         
         // Special cases for add/edit/view actions
         if ($action === 'products' && $item === 'add') {
-            return __('Add New Product', 'vendor-dashboard-pro');
+            return __('Add New Listing', 'vendor-dashboard-pro');
         } elseif ($action === 'products' && $item === 'edit') {
-            return __('Edit Product', 'vendor-dashboard-pro');
+            return __('Edit Listing', 'vendor-dashboard-pro');
         } elseif ($action === 'orders' && $item) {
             return __('Order Details', 'vendor-dashboard-pro');
         } elseif ($action === 'messages' && $item) {
