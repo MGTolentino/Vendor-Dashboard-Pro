@@ -10,27 +10,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Helper functions to access vendor properties safely
-function vdp_get_vendor_id($vendor) {
-    if (is_object($vendor) && method_exists($vendor, 'get_id')) {
-        return $vendor->get_id();
-    } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
-        $callback = $vendor->get_id;
-        return $callback();
-    }
-    return 1;
-}
-
-function vdp_get_vendor_name($vendor) {
-    if (is_object($vendor) && method_exists($vendor, 'get_name')) {
-        return $vendor->get_name();
-    } elseif (is_object($vendor) && isset($vendor->get_name) && is_callable($vendor->get_name)) {
-        $callback = $vendor->get_name;
-        return $callback();
-    }
-    return 'Test Vendor';
-}
-
 // Get statistics if not provided
 if (!isset($statistics) || empty($statistics)) {
     $statistics = VDP_Dashboard::get_demo_statistics();
@@ -47,6 +26,15 @@ $quick_actions = VDP_Dashboard::get_quick_actions();
 
 // Get greeting
 $greeting = VDP_Dashboard::get_greeting();
+
+// Get vendor name safely
+$vendor_name = 'Vendor';
+if (is_object($vendor) && method_exists($vendor, 'get_name')) {
+    $vendor_name = $vendor->get_name();
+} elseif (is_object($vendor) && isset($vendor->get_name) && is_callable($vendor->get_name)) {
+    $callback = $vendor->get_name;
+    $vendor_name = $callback();
+}
 ?>
 
 <div class="vdp-dashboard-content">
@@ -54,7 +42,7 @@ $greeting = VDP_Dashboard::get_greeting();
     <div class="vdp-welcome-section">
         <div class="vdp-welcome-header">
             <h2 class="vdp-welcome-title">
-                <?php echo esc_html($greeting); ?>, <?php echo esc_html(vdp_get_vendor_name($vendor)); ?>!
+                <?php echo esc_html($greeting); ?>, <?php echo esc_html($vendor_name); ?>!
             </h2>
             <p class="vdp-welcome-subtitle">
                 <?php esc_html_e('Here\'s what\'s happening with your store today.', 'vendor-dashboard-pro'); ?>

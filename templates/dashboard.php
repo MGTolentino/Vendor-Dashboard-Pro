@@ -47,42 +47,7 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
     $page_title = isset($page_titles[$current_action]) ? $page_titles[$current_action] : $page_titles['dashboard'];
 }
 
-// Helper functions to access vendor attributes safely
-function vdp_get_vendor_id($vendor) {
-    if (is_object($vendor) && method_exists($vendor, 'get_id')) {
-        return $vendor->get_id();
-    } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
-        return $vendor->get_id();
-    }
-    return 1;
-}
-
-function vdp_get_vendor_name($vendor) {
-    if (is_object($vendor) && method_exists($vendor, 'get_name')) {
-        return $vendor->get_name();
-    } elseif (is_object($vendor) && isset($vendor->get_name) && is_callable($vendor->get_name)) {
-        return $vendor->get_name();
-    }
-    return 'Test Vendor';
-}
-
-function vdp_get_vendor_image_url($vendor, $size = 'thumbnail') {
-    if (is_object($vendor) && method_exists($vendor, 'get_image__url')) {
-        return $vendor->get_image__url($size);
-    } elseif (is_object($vendor) && isset($vendor->get_image__url) && is_callable($vendor->get_image__url)) {
-        return $vendor->get_image__url($size);
-    }
-    return false;
-}
-
-function vdp_is_vendor_verified($vendor) {
-    if (is_object($vendor) && method_exists($vendor, 'is_verified')) {
-        return $vendor->is_verified();
-    } elseif (is_object($vendor) && isset($vendor->is_verified) && is_callable($vendor->is_verified)) {
-        return $vendor->is_verified();
-    }
-    return true;
-}
+// Use safe vendor access functions from functions.php
 ?>
 
 <div class="vdp-wrapper">
@@ -98,8 +63,10 @@ function vdp_is_vendor_verified($vendor) {
                 <!-- Vendor Profile -->
                 <div class="vdp-vendor-profile">
                     <div class="vdp-vendor-avatar">
-                        <?php if (vdp_get_vendor_image_url($vendor, 'thumbnail')) : ?>
-                            <img src="<?php echo esc_url(vdp_get_vendor_image_url($vendor, 'thumbnail')); ?>" alt="<?php echo esc_attr(vdp_get_vendor_name($vendor)); ?>">
+                        <?php if (is_object($vendor) && method_exists($vendor, 'get_image__url') && $vendor->get_image__url('thumbnail')) : ?>
+                            <img src="<?php echo esc_url($vendor->get_image__url('thumbnail')); ?>" alt="<?php echo esc_attr((is_object($vendor) && method_exists($vendor, 'get_name')) ? $vendor->get_name() : 'Vendor'); ?>">
+                        <?php elseif (is_object($vendor) && isset($vendor->get_image__url) && is_callable($vendor->get_image__url) && ($vendor->get_image__url)('thumbnail')) : ?>
+                            <img src="<?php echo esc_url(($vendor->get_image__url)('thumbnail')); ?>" alt="<?php echo esc_attr(is_callable($vendor->get_name) ? ($vendor->get_name)() : 'Vendor'); ?>">
                         <?php else : ?>
                             <div class="vdp-avatar-placeholder">
                                 <i class="fas fa-store"></i>
@@ -108,8 +75,25 @@ function vdp_is_vendor_verified($vendor) {
                     </div>
                     <div class="vdp-vendor-info">
                         <h3 class="vdp-vendor-name">
-                            <?php echo esc_html(vdp_get_vendor_name($vendor)); ?>
-                            <?php if (vdp_is_vendor_verified($vendor)) : ?>
+                            <?php 
+                            if (is_object($vendor) && method_exists($vendor, 'get_name')) {
+                                echo esc_html($vendor->get_name());
+                            } elseif (is_object($vendor) && isset($vendor->get_name) && is_callable($vendor->get_name)) {
+                                echo esc_html(($vendor->get_name)());
+                            } else {
+                                echo esc_html('Test Vendor');
+                            }
+                            ?>
+                            <?php 
+                            $is_verified = false;
+                            if (is_object($vendor) && method_exists($vendor, 'is_verified')) {
+                                $is_verified = $vendor->is_verified();
+                            } elseif (is_object($vendor) && isset($vendor->is_verified) && is_callable($vendor->is_verified)) {
+                                $is_verified = ($vendor->is_verified)();
+                            }
+                            
+                            if ($is_verified) : 
+                            ?>
                                 <span class="vdp-verified-badge" title="<?php esc_attr_e('Verified Seller', 'vendor-dashboard-pro'); ?>">
                                     <i class="fas fa-check-circle"></i>
                                 </span>
@@ -166,7 +150,15 @@ function vdp_is_vendor_verified($vendor) {
                 
                 <!-- Original HivePress Link -->
                 <div class="vdp-sidebar-footer">
-                    <a href="<?php echo esc_url(get_permalink(vdp_get_vendor_id($vendor))); ?>" class="vdp-hivepress-link" target="_blank">
+                    <?php
+                    $vendor_id = 1;
+                    if (is_object($vendor) && method_exists($vendor, 'get_id')) {
+                        $vendor_id = $vendor->get_id();
+                    } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
+                        $vendor_id = ($vendor->get_id)();
+                    }
+                    ?>
+                    <a href="<?php echo esc_url(get_permalink($vendor_id)); ?>" class="vdp-hivepress-link" target="_blank">
                         <i class="fas fa-external-link-alt"></i>
                         <?php esc_html_e('View Original Profile', 'vendor-dashboard-pro'); ?>
                     </a>
@@ -238,44 +230,55 @@ function vdp_is_vendor_verified($vendor) {
                 <!-- Content Area -->
                 <div class="vdp-content-area">
                     <?php
-                    // Display content based on current action
+                    // Check if template exists before including
+                    $template_path = '';
+                    
                     switch ($current_action) {
                         case 'products':
                             if (isset($_GET['add']) || isset($_GET['edit'])) {
-                                include(VDP_PLUGIN_DIR . 'templates/products-edit-content.php');
+                                $template_path = VDP_PLUGIN_DIR . 'templates/products-edit-content.php';
                             } else {
-                                include(VDP_PLUGIN_DIR . 'templates/products-content.php');
+                                $template_path = VDP_PLUGIN_DIR . 'templates/products-content.php';
                             }
                             break;
                             
                         case 'orders':
                             if ($current_item) {
-                                include(VDP_PLUGIN_DIR . 'templates/order-view-content.php');
+                                $template_path = VDP_PLUGIN_DIR . 'templates/order-view-content.php';
                             } else {
-                                include(VDP_PLUGIN_DIR . 'templates/orders-content.php');
+                                $template_path = VDP_PLUGIN_DIR . 'templates/orders-content.php';
                             }
                             break;
                             
                         case 'messages':
                             if ($current_item) {
-                                include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
+                                $template_path = VDP_PLUGIN_DIR . 'templates/message-view-content.php';
                             } else {
-                                include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
+                                $template_path = VDP_PLUGIN_DIR . 'templates/messages-content.php';
                             }
                             break;
                             
                         case 'analytics':
-                            include(VDP_PLUGIN_DIR . 'templates/analytics-content.php');
+                            $template_path = VDP_PLUGIN_DIR . 'templates/analytics-content.php';
                             break;
                             
                         case 'settings':
-                            include(VDP_PLUGIN_DIR . 'templates/settings-content.php');
+                            $template_path = VDP_PLUGIN_DIR . 'templates/settings-content.php';
                             break;
                             
                         case 'dashboard':
                         default:
-                            include(VDP_PLUGIN_DIR . 'templates/dashboard-content.php');
+                            $template_path = VDP_PLUGIN_DIR . 'templates/dashboard-content.php';
                             break;
+                    }
+                    
+                    // Only include if template exists
+                    if (file_exists($template_path)) {
+                        include($template_path);
+                    } else {
+                        echo '<div class="vdp-notice vdp-notice-error">';
+                        echo '<p>' . esc_html__('Template not found.', 'vendor-dashboard-pro') . '</p>';
+                        echo '</div>';
                     }
                     ?>
                 </div>
