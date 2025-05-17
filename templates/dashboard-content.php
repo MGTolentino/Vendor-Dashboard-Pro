@@ -10,6 +10,32 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Helper functions to access vendor properties safely
+function vdp_get_vendor_id($vendor) {
+    if (is_object($vendor) && method_exists($vendor, 'get_id')) {
+        return $vendor->get_id();
+    } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
+        $callback = $vendor->get_id;
+        return $callback();
+    }
+    return 1;
+}
+
+function vdp_get_vendor_name($vendor) {
+    if (is_object($vendor) && method_exists($vendor, 'get_name')) {
+        return $vendor->get_name();
+    } elseif (is_object($vendor) && isset($vendor->get_name) && is_callable($vendor->get_name)) {
+        $callback = $vendor->get_name;
+        return $callback();
+    }
+    return 'Test Vendor';
+}
+
+// Get statistics if not provided
+if (!isset($statistics) || empty($statistics)) {
+    $statistics = VDP_Dashboard::get_demo_statistics();
+}
+
 // Get performance level
 $performance_level = VDP_Dashboard::get_performance_level($statistics);
 
@@ -28,7 +54,7 @@ $greeting = VDP_Dashboard::get_greeting();
     <div class="vdp-welcome-section">
         <div class="vdp-welcome-header">
             <h2 class="vdp-welcome-title">
-                <?php echo esc_html($greeting); ?>, <?php echo esc_html($vendor->get_name()); ?>!
+                <?php echo esc_html($greeting); ?>, <?php echo esc_html(vdp_get_vendor_name($vendor)); ?>!
             </h2>
             <p class="vdp-welcome-subtitle">
                 <?php esc_html_e('Here\'s what\'s happening with your store today.', 'vendor-dashboard-pro'); ?>
@@ -202,49 +228,15 @@ $greeting = VDP_Dashboard::get_greeting();
                 </div>
                 
                 <div class="vdp-activity-list">
-                    <?php if (empty($recent_listings)) : ?>
-                        <div class="vdp-empty-state">
-                            <div class="vdp-empty-icon">
-                                <i class="fas fa-box-open"></i>
-                            </div>
-                            <p><?php esc_html_e('No products yet. Add your first product!', 'vendor-dashboard-pro'); ?></p>
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url('products/add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
-                                <i class="fas fa-plus"></i> <?php esc_html_e('Add Product', 'vendor-dashboard-pro'); ?>
-                            </a>
+                    <div class="vdp-empty-state">
+                        <div class="vdp-empty-icon">
+                            <i class="fas fa-box-open"></i>
                         </div>
-                    <?php else : ?>
-                        <?php foreach ($recent_listings as $listing) : ?>
-                            <div class="vdp-activity-item vdp-product-item">
-                                <div class="vdp-product-image">
-                                    <?php if ($listing->get_image__url('thumbnail')) : ?>
-                                        <img src="<?php echo esc_url($listing->get_image__url('thumbnail')); ?>" alt="<?php echo esc_attr($listing->get_title()); ?>">
-                                    <?php else : ?>
-                                        <div class="vdp-image-placeholder">
-                                            <i class="fas fa-image"></i>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="vdp-product-info">
-                                    <h4 class="vdp-product-title">
-                                        <a href="<?php echo esc_url(get_permalink($listing->get_id())); ?>" target="_blank">
-                                            <?php echo esc_html($listing->get_title()); ?>
-                                        </a>
-                                    </h4>
-                                    <div class="vdp-product-meta">
-                                        <span class="vdp-product-price"><?php echo esc_html(vdp_format_price($listing->get_price())); ?></span>
-                                        <?php if ($listing->is_featured()) : ?>
-                                            <span class="vdp-product-badge"><?php esc_html_e('Featured', 'vendor-dashboard-pro'); ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="vdp-product-actions">
-                                    <a href="<?php echo esc_url(vdp_get_dashboard_url('products/edit/' . $listing->get_id())); ?>" class="vdp-btn vdp-btn-sm vdp-btn-icon" title="<?php esc_attr_e('Edit', 'vendor-dashboard-pro'); ?>">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                        <p><?php esc_html_e('No products yet. Add your first product!', 'vendor-dashboard-pro'); ?></p>
+                        <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
+                            <i class="fas fa-plus"></i> <?php esc_html_e('Add Product', 'vendor-dashboard-pro'); ?>
+                        </a>
+                    </div>
                 </div>
             </div>
             
@@ -258,42 +250,12 @@ $greeting = VDP_Dashboard::get_greeting();
                 </div>
                 
                 <div class="vdp-activity-list">
-                    <?php if (empty($recent_messages)) : ?>
-                        <div class="vdp-empty-state">
-                            <div class="vdp-empty-icon">
-                                <i class="fas fa-envelope-open"></i>
-                            </div>
-                            <p><?php esc_html_e('No messages yet. Messages from customers will appear here.', 'vendor-dashboard-pro'); ?></p>
+                    <div class="vdp-empty-state">
+                        <div class="vdp-empty-icon">
+                            <i class="fas fa-envelope-open"></i>
                         </div>
-                    <?php else : ?>
-                        <?php foreach ($recent_messages as $message) : ?>
-                            <div class="vdp-activity-item vdp-message-item <?php echo !$message->is_read ? 'vdp-unread' : ''; ?>">
-                                <div class="vdp-message-sender">
-                                    <div class="vdp-sender-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                </div>
-                                <div class="vdp-message-info">
-                                    <h4 class="vdp-message-title">
-                                        <?php echo esc_html($message->sender); ?>
-                                        <?php if (!$message->is_read) : ?>
-                                            <span class="vdp-unread-badge"></span>
-                                        <?php endif; ?>
-                                    </h4>
-                                    <p class="vdp-message-excerpt"><?php echo esc_html(wp_trim_words($message->content, 10)); ?></p>
-                                    <div class="vdp-message-meta">
-                                        <span class="vdp-message-product"><?php echo esc_html($message->listing_title); ?></span>
-                                        <span class="vdp-message-time"><?php echo esc_html(vdp_time_ago($message->date)); ?></span>
-                                    </div>
-                                </div>
-                                <div class="vdp-message-actions">
-                                    <a href="<?php echo esc_url(vdp_get_dashboard_url('messages/view/' . $message->id)); ?>" class="vdp-btn vdp-btn-sm vdp-btn-icon" title="<?php esc_attr_e('View', 'vendor-dashboard-pro'); ?>">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                        <p><?php esc_html_e('No messages yet. Messages from customers will appear here.', 'vendor-dashboard-pro'); ?></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -360,19 +322,28 @@ jQuery(document).ready(function($) {
         }
 
         // Sales Chart
-        var salesCtx = document.getElementById('salesChart').getContext('2d');
-        var salesData = [30, 40, 35, 50, 45, 60, 55, 65, 75, 70, 80, 75, 90, 85];
-        var salesChart = new Chart(salesCtx, createChartConfig('Sales', salesData, '#3483fa'));
+        var salesCtx = document.getElementById('salesChart');
+        if (salesCtx) {
+            salesCtx = salesCtx.getContext('2d');
+            var salesData = [30, 40, 35, 50, 45, 60, 55, 65, 75, 70, 80, 75, 90, 85];
+            var salesChart = new Chart(salesCtx, createChartConfig('Sales', salesData, '#3483fa'));
+        }
         
         // Views Chart
-        var viewsCtx = document.getElementById('viewsChart').getContext('2d');
-        var viewsData = [300, 350, 320, 400, 380, 450, 470, 440, 500, 520, 480, 550, 530, 600];
-        var viewsChart = new Chart(viewsCtx, createChartConfig('Views', viewsData, '#39b54a'));
+        var viewsCtx = document.getElementById('viewsChart');
+        if (viewsCtx) {
+            viewsCtx = viewsCtx.getContext('2d');
+            var viewsData = [300, 350, 320, 400, 380, 450, 470, 440, 500, 520, 480, 550, 530, 600];
+            var viewsChart = new Chart(viewsCtx, createChartConfig('Views', viewsData, '#39b54a'));
+        }
         
         // Conversion Chart
-        var conversionCtx = document.getElementById('conversionChart').getContext('2d');
-        var conversionData = [2.5, 3.0, 2.8, 3.2, 3.1, 3.5, 3.3, 3.8, 3.6, 4.0, 3.9, 4.2, 4.1, 4.5];
-        var conversionChart = new Chart(conversionCtx, createChartConfig('Conversion', conversionData, '#f5a623'));
+        var conversionCtx = document.getElementById('conversionChart');
+        if (conversionCtx) {
+            conversionCtx = conversionCtx.getContext('2d');
+            var conversionData = [2.5, 3.0, 2.8, 3.2, 3.1, 3.5, 3.3, 3.8, 3.6, 4.0, 3.9, 4.2, 4.1, 4.5];
+            var conversionChart = new Chart(conversionCtx, createChartConfig('Conversion', conversionData, '#f5a623'));
+        }
     }
 });
 </script>

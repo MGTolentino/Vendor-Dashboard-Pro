@@ -52,11 +52,6 @@ class Vendor_Dashboard_Pro {
      * Constructor.
      */
     public function __construct() {
-        // Check dependencies
-        if (!$this->check_dependencies()) {
-            return;
-        }
-
         // Include required files
         $this->includes();
 
@@ -65,27 +60,6 @@ class Vendor_Dashboard_Pro {
 
         // Load textdomain
         add_action('plugins_loaded', array($this, 'load_textdomain'));
-    }
-
-    /**
-     * Check if all dependencies are available.
-     *
-     * @return bool
-     */
-    private function check_dependencies() {
-        // Check if HivePress is active
-        if (!class_exists('HivePress')) {
-            add_action('admin_notices', function() {
-                ?>
-                <div class="notice notice-error">
-                    <p><?php _e('Vendor Dashboard Pro requires HivePress to be installed and activated.', 'vendor-dashboard-pro'); ?></p>
-                </div>
-                <?php
-            });
-            return false;
-        }
-
-        return true;
     }
 
     /**

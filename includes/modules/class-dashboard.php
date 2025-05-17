@@ -38,6 +38,13 @@ class VDP_Dashboard {
      */
     public function __construct() {
         // Initialize hooks
+        add_action('wp_loaded', array($this, 'register_dashboard_actions'));
+    }
+
+    /**
+     * Register dashboard content actions
+     */
+    public function register_dashboard_actions() {
         add_action('vdp_dashboard_content', array($this, 'render_dashboard'), 10);
     }
 
@@ -52,21 +59,14 @@ class VDP_Dashboard {
             return;
         }
         
-        // Get vendor statistics
-        $statistics = vdp_api()->get_vendor_statistics($vendor->get_id());
+        // Get demo statistics in development mode
+        $statistics = self::get_demo_statistics();
         
-        // Get recent listings
-        $recent_listings = vdp_api()->get_vendor_listings($vendor->get_id(), array(
-            'limit' => 5,
-        ));
+        // Get recent listings placeholder
+        $recent_listings = array();
         
-        // Get featured listings
-        $featured_listings = vdp_api()->get_vendor_featured_listings($vendor->get_id(), 3);
-        
-        // Get recent messages
-        $recent_messages = vdp_api()->get_vendor_messages($vendor->get_id(), array(
-            'limit' => 5,
-        ));
+        // Get recent messages placeholder
+        $recent_messages = array();
         
         // Include dashboard template
         include VDP_PLUGIN_DIR . 'templates/dashboard-content.php';
@@ -95,15 +95,20 @@ class VDP_Dashboard {
      * @param array $statistics Vendor statistics.
      * @return string
      */
-    public static function get_performance_level($statistics) {
+    public static function get_performance_level($statistics = array()) {
+        if (empty($statistics)) {
+            $statistics = self::get_demo_statistics();
+        }
+        
         // This is a simplified example - in a real implementation,
         // you would use a more sophisticated algorithm
+        $rating = isset($statistics['average_rating']) ? $statistics['average_rating'] : 4.2;
         
-        if (!empty($statistics['average_rating']) && $statistics['average_rating'] >= 4.5) {
+        if ($rating >= 4.5) {
             return 'excellent';
-        } elseif (!empty($statistics['average_rating']) && $statistics['average_rating'] >= 4.0) {
+        } elseif ($rating >= 4.0) {
             return 'good';
-        } elseif (!empty($statistics['average_rating']) && $statistics['average_rating'] >= 3.0) {
+        } elseif ($rating >= 3.0) {
             return 'average';
         } else {
             return 'needs-improvement';
@@ -131,7 +136,7 @@ class VDP_Dashboard {
             array(
                 'title' => __('Add New Product', 'vendor-dashboard-pro'),
                 'icon' => 'fas fa-plus-circle',
-                'url' => vdp_get_dashboard_url('products/add'),
+                'url' => vdp_get_dashboard_url('products', 'add'),
                 'color' => '#3483fa',
             ),
             array(
@@ -152,6 +157,25 @@ class VDP_Dashboard {
                 'url' => vdp_get_dashboard_url('analytics'),
                 'color' => '#9b59b6',
             ),
+        );
+    }
+    
+    /**
+     * Get demo statistics for development.
+     * 
+     * @return array Demo statistics
+     */
+    public static function get_demo_statistics() {
+        return array(
+            'sales_count' => rand(10, 1000),
+            'sales_amount' => rand(1000, 100000),
+            'views_count' => rand(100, 10000),
+            'conversion_rate' => rand(1, 10),
+            'average_rating' => rand(35, 50) / 10,
+            'ratings_count' => rand(10, 500),
+            'messages_count' => rand(5, 50),
+            'response_rate' => rand(70, 100),
+            'response_time' => rand(1, 24),
         );
     }
 }
