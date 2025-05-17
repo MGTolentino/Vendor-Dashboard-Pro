@@ -11,8 +11,8 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<div class="vdp-product-edit-content">
-    <form id="vdp-product-form" class="vdp-form" enctype="multipart/form-data">
+<div class="vdp-listing-edit-content">
+    <form id="vdp-listing-form" class="vdp-form" enctype="multipart/form-data">
         <?php
         // Add hidden field for listing ID if editing
         if ($listing) {
@@ -77,13 +77,13 @@ if (!defined('ABSPATH')) {
                     </div>
                     
                     <div class="vdp-form-group">
-                        <label class="vdp-form-label"><?php esc_html_e('Featured Product', 'vendor-dashboard-pro'); ?></label>
+                        <label class="vdp-form-label"><?php esc_html_e('Featured Listing', 'vendor-dashboard-pro'); ?></label>
                         <div class="vdp-toggle-control">
                             <label class="vdp-toggle">
                                 <input type="checkbox" name="listing_data[featured]" value="1" <?php echo ($listing && $listing->is_featured()) ? 'checked' : ''; ?>>
                                 <span class="vdp-toggle-switch"></span>
                             </label>
-                            <span class="vdp-toggle-label"><?php esc_html_e('Mark this product as featured', 'vendor-dashboard-pro'); ?></span>
+                            <span class="vdp-toggle-label"><?php esc_html_e('Mark this listing as featured', 'vendor-dashboard-pro'); ?></span>
                         </div>
                     </div>
                     
@@ -164,7 +164,7 @@ if (!defined('ABSPATH')) {
         <!-- Form Actions -->
         <div class="vdp-form-actions">
             <button type="submit" class="vdp-btn vdp-btn-primary vdp-btn-lg">
-                <i class="fas fa-save"></i> <?php esc_html_e('Save Product', 'vendor-dashboard-pro'); ?>
+                <i class="fas fa-save"></i> <?php esc_html_e('Save Listing', 'vendor-dashboard-pro'); ?>
             </button>
             
             <a href="<?php echo esc_url(vdp_get_dashboard_url('products')); ?>" class="vdp-btn vdp-btn-text">

@@ -62,7 +62,9 @@ class Vendor_Dashboard_Pro {
         add_action('plugins_loaded', array($this, 'load_textdomain'));
         
         // Register the 'leads' module
-        require_once VDP_PLUGIN_DIR . 'includes/modules/class-leads.php';
+        if (file_exists(VDP_PLUGIN_DIR . 'includes/modules/class-leads.php')) {
+            require_once VDP_PLUGIN_DIR . 'includes/modules/class-leads.php';
+        }
     }
 
     /**

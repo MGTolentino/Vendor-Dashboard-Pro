@@ -131,15 +131,24 @@ function vdp_create_vendor_from_post($post) {
     $vendor = new stdClass();
     
     // Get vendor metadata
-    $name = get_post_meta($post->ID, 'hp_name', true) ?: $post->post_title;
+    // Use post_name first, then try post_title, then fallback to user display name
+    $name = $post->post_name;
     $verified = get_post_meta($post->ID, 'hp_verified', true) ?: false;
     $user_id = get_post_meta($post->ID, 'hp_user_id', true);
     
     // Get user data for additional info
     $user_info = get_userdata($user_id);
-    if ($user_info && empty($name)) {
+    if (empty($name) && $post->post_title) {
+        $name = $post->post_title;
+    } elseif ($user_info && empty($name)) {
         $name = $user_info->display_name;
     }
+    
+    // Debug log
+    error_log('Vendor ID: ' . $post->ID);
+    error_log('Vendor post_name: ' . $post->post_name);
+    error_log('Vendor post_title: ' . $post->post_title);
+    error_log('Final vendor name: ' . $name);
     
     // Add methods to the vendor object
     $vendor->get_id = function() use ($post) {

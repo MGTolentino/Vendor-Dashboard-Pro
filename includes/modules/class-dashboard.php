@@ -145,7 +145,7 @@ class VDP_Dashboard {
     public static function get_quick_actions() {
         return array(
             array(
-                'title' => __('Add New Product', 'vendor-dashboard-pro'),
+                'title' => __('Add New Listing', 'vendor-dashboard-pro'),
                 'icon' => 'fas fa-plus-circle',
                 'url' => vdp_get_dashboard_url('products', 'add'),
                 'color' => '#3483fa',

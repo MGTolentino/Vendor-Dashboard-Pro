@@ -356,8 +356,8 @@
                 }
             });
 
-            // Product form submission
-            $('#vdp-product-form').on('submit', function(e) {
+            // Listing form submission
+            $('#vdp-listing-form').on('submit', function(e) {
                 e.preventDefault();
                 VDP.saveProduct($(this));
             });

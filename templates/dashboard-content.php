@@ -148,7 +148,7 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
                     <?php echo esc_html(vdp_format_number($statistics['views_count'])); ?>
                 </div>
                 <div class="vdp-stat-footer">
-                    <?php esc_html_e('Total product views', 'vendor-dashboard-pro'); ?>
+                    <?php esc_html_e('Total listing views', 'vendor-dashboard-pro'); ?>
                 </div>
                 <canvas class="vdp-stat-chart" id="viewsChart" width="100%" height="60"></canvas>
             </div>
@@ -209,7 +209,7 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
             <!-- Recent Products -->
             <div class="vdp-activity-column">
                 <div class="vdp-activity-header">
-                    <h3><?php esc_html_e('Recent Products', 'vendor-dashboard-pro'); ?></h3>
+                    <h3><?php esc_html_e('Recent Listings', 'vendor-dashboard-pro'); ?></h3>
                     <a href="<?php echo esc_url(vdp_get_dashboard_url('products')); ?>" class="vdp-link-arrow">
                         <?php esc_html_e('View All', 'vendor-dashboard-pro'); ?> <i class="fas fa-arrow-right"></i>
                     </a>
@@ -220,9 +220,9 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
                         <div class="vdp-empty-icon">
                             <i class="fas fa-box-open"></i>
                         </div>
-                        <p><?php esc_html_e('No products yet. Add your first product!', 'vendor-dashboard-pro'); ?></p>
+                        <p><?php esc_html_e('No listings yet. Add your first listing!', 'vendor-dashboard-pro'); ?></p>
                         <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
-                            <i class="fas fa-plus"></i> <?php esc_html_e('Add Product', 'vendor-dashboard-pro'); ?>
+                            <i class="fas fa-plus"></i> <?php esc_html_e('Add Listing', 'vendor-dashboard-pro'); ?>
                         </a>
                     </div>
                 </div>

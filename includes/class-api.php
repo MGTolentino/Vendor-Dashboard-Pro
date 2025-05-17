@@ -143,13 +143,21 @@ class VDP_API {
         // Create a simple dummy object with required methods
         $vendor = new stdClass();
         
+        // Get current user data for better dummy values
+        $user_id = get_current_user_id();
+        $user_info = get_userdata($user_id);
+        
         // Add methods to the dummy vendor
         $vendor->get_id = function() {
             return 1;
         };
         
-        $vendor->get_name = function() {
-            return 'Test Vendor';
+        $vendor->get_name = function() use ($user_info) {
+            // Use user display name or username if available
+            if ($user_info) {
+                return $user_info->display_name ?: $user_info->user_login;
+            }
+            return 'Vendor Store';
         };
         
         $vendor->get_image__url = function() {
@@ -160,9 +168,20 @@ class VDP_API {
             return true;
         };
         
-        $vendor->get_user__id = function() {
-            return get_current_user_id();
+        $vendor->get_user__id = function() use ($user_id) {
+            return $user_id;
         };
+        
+        // Add slug method for URLs
+        $vendor->get_slug = function() use ($user_info) {
+            if ($user_info) {
+                return sanitize_title($user_info->display_name ?: $user_info->user_login);
+            }
+            return 'vendor-store';
+        };
+        
+        // Add debug log
+        error_log('Using dummy vendor object - Name: ' . $vendor->get_name());
         
         return $vendor;
     }
