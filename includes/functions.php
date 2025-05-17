@@ -59,28 +59,118 @@ function vdp_get_current_vendor() {
 }
 
 /**
- * Check if we're on the my-store page.
+ * Check if we're on a vendor dashboard page.
  *
  * @return bool
  */
-function vdp_is_my_store() {
-    return get_query_var('vdp_dashboard', false) !== false;
+function vdp_is_dashboard_page() {
+    global $post;
+    
+    // Check if it's an AJAX request
+    if (isset($_GET['vdp_ajax']) && $_GET['vdp_ajax']) {
+        return true;
+    }
+    
+    // Check if we're on a page with our shortcode
+    if (is_a($post, 'WP_Post')) {
+        return has_shortcode($post->post_content, 'vendor_dashboard_pro');
+    }
+    
+    return false;
 }
 
 /**
- * Get the my-store URL.
+ * Get the URL for a dashboard section.
  *
- * @param string $section Optional dashboard section.
+ * @param string $action Optional dashboard action/section.
+ * @param string $item Optional item ID.
  * @return string
  */
-function vdp_get_dashboard_url($section = '') {
-    $url = home_url('my-store/');
+function vdp_get_dashboard_url($action = '', $item = '') {
+    // Get the URL of the page with the shortcode
+    $dashboard_page_id = vdp_get_dashboard_page_id();
     
-    if (!empty($section)) {
-        $url = trailingslashit($url) . $section . '/';
+    if (!$dashboard_page_id) {
+        // Fallback to current page if we can't find a dashboard page
+        $url = get_permalink();
+    } else {
+        $url = get_permalink($dashboard_page_id);
+    }
+    
+    // Add action
+    if (!empty($action) && $action !== 'dashboard') {
+        $url = add_query_arg('vdp-action', $action, $url);
+    }
+    
+    // Add item
+    if (!empty($item)) {
+        $url = add_query_arg('vdp-item', $item, $url);
     }
     
     return $url;
+}
+
+/**
+ * Get the ID of the page containing the vendor dashboard shortcode.
+ *
+ * @return int|null Page ID or null if not found.
+ */
+function vdp_get_dashboard_page_id() {
+    static $dashboard_page_id = null;
+    
+    if ($dashboard_page_id !== null) {
+        return $dashboard_page_id;
+    }
+    
+    // Find the page with our shortcode
+    $args = array(
+        'post_type' => 'page',
+        'post_status' => 'publish',
+        'posts_per_page' => 1,
+        's' => '[vendor_dashboard_pro'
+    );
+    
+    $query = new WP_Query($args);
+    
+    if ($query->have_posts()) {
+        $dashboard_page_id = $query->posts[0]->ID;
+    } else {
+        $dashboard_page_id = 0; // No page found
+    }
+    
+    return $dashboard_page_id;
+}
+
+/**
+ * Get current dashboard action.
+ *
+ * @return string
+ */
+function vdp_get_current_action() {
+    global $vdp_current_action;
+    
+    if (isset($vdp_current_action)) {
+        return $vdp_current_action;
+    }
+    
+    // Fallback to URL parameter
+    return isset($_GET['vdp-action']) ? sanitize_key($_GET['vdp-action']) : 'dashboard';
+}
+
+/**
+ * Get current dashboard item.
+ *
+ * @return string
+ */
+function vdp_get_current_item() {
+    global $vdp_current_item;
+    
+    if (isset($vdp_current_item)) {
+        return $vdp_current_item;
+    }
+    
+    // Fallback to URL parameter
+    return isset($_GET['vdp-item']) ? sanitize_key($_GET['vdp-item']) : '';
 }
 
 /**
@@ -168,17 +258,6 @@ function vdp_time_ago($date) {
     }
     
     return __('just now', 'vendor-dashboard-pro');
-}
-
-/**
- * Get current dashboard section.
- *
- * @return string
- */
-function vdp_get_current_section() {
-    $section = get_query_var('vdp_section', 'dashboard');
-    
-    return sanitize_key($section);
 }
 
 /**

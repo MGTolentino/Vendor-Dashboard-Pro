@@ -10,72 +10,52 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Get current section
-$current_section = vdp_get_current_section();
+// Get current action and item
+$current_action = vdp_get_current_action();
+$current_item = vdp_get_current_item();
 
 // Get vendor
 $vendor = vdp_get_current_vendor();
 
 if (!$vendor) {
-    wp_redirect(home_url());
-    exit;
+    echo '<div class="vdp-notice vdp-notice-error">';
+    echo '<p>' . esc_html__('You must be a registered vendor to access this dashboard.', 'vendor-dashboard-pro') . '</p>';
+    echo '</div>';
+    return;
 }
 
-// Get page title
-$page_title = get_the_title();
+// Get page title based on current action
+$page_titles = array(
+    'dashboard' => __('Dashboard', 'vendor-dashboard-pro'),
+    'products' => __('Products', 'vendor-dashboard-pro'),
+    'orders' => __('Orders', 'vendor-dashboard-pro'),
+    'messages' => __('Messages', 'vendor-dashboard-pro'),
+    'analytics' => __('Analytics', 'vendor-dashboard-pro'),
+    'settings' => __('Settings', 'vendor-dashboard-pro'),
+);
 
-// Set custom page title based on section
-switch ($current_section) {
-    case 'products':
-        $action = get_query_var('vdp_action', '');
-        if ($action === 'add') {
-            $page_title = __('Add New Product', 'vendor-dashboard-pro');
-        } elseif ($action === 'edit') {
-            $page_title = __('Edit Product', 'vendor-dashboard-pro');
-        } else {
-            $page_title = __('Products', 'vendor-dashboard-pro');
-        }
-        break;
-        
-    case 'orders':
-        $action = get_query_var('vdp_action', '');
-        if ($action === 'view') {
-            $page_title = __('Order Details', 'vendor-dashboard-pro');
-        } else {
-            $page_title = __('Orders', 'vendor-dashboard-pro');
-        }
-        break;
-        
-    case 'messages':
-        $action = get_query_var('vdp_action', '');
-        if ($action === 'view') {
-            $page_title = __('Message Details', 'vendor-dashboard-pro');
-        } else {
-            $page_title = __('Messages', 'vendor-dashboard-pro');
-        }
-        break;
-        
-    case 'analytics':
-        $page_title = __('Analytics', 'vendor-dashboard-pro');
-        break;
-        
-    case 'settings':
-        $page_title = __('Settings', 'vendor-dashboard-pro');
-        break;
-        
-    case 'dashboard':
-    default:
-        $page_title = __('Dashboard', 'vendor-dashboard-pro');
-        break;
+// If we have a specific action like 'edit' or 'view'
+if ($current_action === 'products' && isset($_GET['edit'])) {
+    $page_title = __('Edit Product', 'vendor-dashboard-pro');
+} elseif ($current_action === 'products' && isset($_GET['add'])) {
+    $page_title = __('Add Product', 'vendor-dashboard-pro');
+} elseif ($current_action === 'orders' && $current_item) {
+    $page_title = __('Order Details', 'vendor-dashboard-pro');
+} elseif ($current_action === 'messages' && $current_item) {
+    $page_title = __('Message Details', 'vendor-dashboard-pro');
+} else {
+    $page_title = isset($page_titles[$current_action]) ? $page_titles[$current_action] : $page_titles['dashboard'];
 }
-
-// Get header and footer
-get_header();
 ?>
 
 <div class="vdp-wrapper">
     <div class="vdp-container">
         <div class="vdp-dashboard">
+            <!-- Mobile Menu Toggle -->
+            <div class="vdp-mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            
             <!-- Sidebar -->
             <div class="vdp-sidebar">
                 <!-- Vendor Profile -->
@@ -106,40 +86,40 @@ get_header();
                 </div>
                 
                 <!-- Navigation -->
-                <nav class="vdp-navigation">
+                <nav class="vdp-sidebar-nav">
                     <ul class="vdp-nav-list">
-                        <li class="vdp-nav-item <?php echo $current_section === 'dashboard' ? 'vdp-active' : ''; ?>">
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url()); ?>" class="vdp-nav-link">
+                        <li class="vdp-nav-item <?php echo $current_action === 'dashboard' ? 'vdp-active' : ''; ?>">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url()); ?>" class="vdp-nav-link vdp-ajax-link" data-action="dashboard">
                                 <i class="fas fa-home"></i>
                                 <span><?php esc_html_e('Dashboard', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_section === 'products' ? 'vdp-active' : ''; ?>">
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url('products')); ?>" class="vdp-nav-link">
+                        <li class="vdp-nav-item <?php echo $current_action === 'products' ? 'vdp-active' : ''; ?>">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('products')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="products">
                                 <i class="fas fa-box"></i>
                                 <span><?php esc_html_e('Products', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_section === 'orders' ? 'vdp-active' : ''; ?>">
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url('orders')); ?>" class="vdp-nav-link">
+                        <li class="vdp-nav-item <?php echo $current_action === 'orders' ? 'vdp-active' : ''; ?>">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('orders')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="orders">
                                 <i class="fas fa-shopping-cart"></i>
                                 <span><?php esc_html_e('Orders', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_section === 'messages' ? 'vdp-active' : ''; ?>">
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url('messages')); ?>" class="vdp-nav-link">
+                        <li class="vdp-nav-item <?php echo $current_action === 'messages' ? 'vdp-active' : ''; ?>">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('messages')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="messages">
                                 <i class="fas fa-envelope"></i>
                                 <span><?php esc_html_e('Messages', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_section === 'analytics' ? 'vdp-active' : ''; ?>">
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url('analytics')); ?>" class="vdp-nav-link">
+                        <li class="vdp-nav-item <?php echo $current_action === 'analytics' ? 'vdp-active' : ''; ?>">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('analytics')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="analytics">
                                 <i class="fas fa-chart-line"></i>
                                 <span><?php esc_html_e('Analytics', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_section === 'settings' ? 'vdp-active' : ''; ?>">
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url('settings')); ?>" class="vdp-nav-link">
+                        <li class="vdp-nav-item <?php echo $current_action === 'settings' ? 'vdp-active' : ''; ?>">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('settings')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="settings">
                                 <i class="fas fa-cog"></i>
                                 <span><?php esc_html_e('Settings', 'vendor-dashboard-pro'); ?></span>
                             </a>
@@ -165,8 +145,8 @@ get_header();
                     </div>
                     
                     <div class="vdp-header-actions">
-                        <?php if ($current_section === 'products' && empty(get_query_var('vdp_action'))) : ?>
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url('products/add')); ?>" class="vdp-btn vdp-btn-primary">
+                        <?php if ($current_action === 'products') : ?>
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-ajax-link" data-action="products" data-item="add">
                                 <i class="fas fa-plus"></i>
                                 <?php esc_html_e('Add New Product', 'vendor-dashboard-pro'); ?>
                             </a>
@@ -218,49 +198,46 @@ get_header();
                     </div>
                 </header>
                 
-                <!-- Content -->
-                <div class="vdp-content">
+                <!-- Content Area -->
+                <div class="vdp-content-area">
                     <?php
-                    // Display content based on current section
-                    switch ($current_section) {
+                    // Display content based on current action
+                    switch ($current_action) {
                         case 'products':
-                            $action = get_query_var('vdp_action', '');
-                            if ($action === 'add' || $action === 'edit') {
-                                do_action('vdp_product_edit_content');
+                            if (isset($_GET['add']) || isset($_GET['edit'])) {
+                                include(VDP_PLUGIN_DIR . 'templates/products-edit-content.php');
                             } else {
-                                do_action('vdp_products_content');
+                                include(VDP_PLUGIN_DIR . 'templates/products-content.php');
                             }
                             break;
                             
                         case 'orders':
-                            $action = get_query_var('vdp_action', '');
-                            if ($action === 'view') {
-                                do_action('vdp_order_view_content');
+                            if ($current_item) {
+                                include(VDP_PLUGIN_DIR . 'templates/order-view-content.php');
                             } else {
-                                do_action('vdp_orders_content');
+                                include(VDP_PLUGIN_DIR . 'templates/orders-content.php');
                             }
                             break;
                             
                         case 'messages':
-                            $action = get_query_var('vdp_action', '');
-                            if ($action === 'view') {
-                                do_action('vdp_message_view_content');
+                            if ($current_item) {
+                                include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
                             } else {
-                                do_action('vdp_messages_content');
+                                include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
                             }
                             break;
                             
                         case 'analytics':
-                            do_action('vdp_analytics_content');
+                            include(VDP_PLUGIN_DIR . 'templates/analytics-content.php');
                             break;
                             
                         case 'settings':
-                            do_action('vdp_settings_content');
+                            include(VDP_PLUGIN_DIR . 'templates/settings-content.php');
                             break;
                             
                         case 'dashboard':
                         default:
-                            do_action('vdp_dashboard_content');
+                            include(VDP_PLUGIN_DIR . 'templates/dashboard-content.php');
                             break;
                     }
                     ?>
@@ -269,6 +246,3 @@ get_header();
         </div>
     </div>
 </div>
-
-<?php
-get_footer();

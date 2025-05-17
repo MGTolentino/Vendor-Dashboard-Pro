@@ -118,13 +118,19 @@ class Vendor_Dashboard_Pro {
      */
     private function init_hooks() {
         // Initialize router
-        add_action('init', array('VDP_Router', 'init'), 10);
+        add_action('init', array('VDP_Router', 'init'));
         
         // Initialize assets
-        add_action('init', array('VDP_Assets', 'init'), 10);
+        add_action('init', array('VDP_Assets', 'init'));
         
         // Initialize Ajax handler
-        add_action('init', array('VDP_Ajax_Handler', 'init'), 10);
+        add_action('init', array('VDP_Ajax_Handler', 'init'));
+        
+        // Register shortcode
+        add_shortcode('vendor_dashboard_pro', array('VDP_Router', 'shortcode_callback'));
+        
+        // Register AJAX handler for content loading
+        add_action('wp_ajax_vdp_load_content', array('VDP_Router', 'ajax_load_content'));
     }
 
     /**
@@ -138,10 +144,7 @@ class Vendor_Dashboard_Pro {
      * Activate plugin.
      */
     public static function activate() {
-        // Add rewrite rules
-        VDP_Router::add_rewrite_rules();
-        
-        // Flush rewrite rules
+        // No need to set up rewrite rules for shortcode approach
         flush_rewrite_rules();
     }
 

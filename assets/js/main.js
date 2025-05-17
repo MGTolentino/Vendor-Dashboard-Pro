@@ -24,6 +24,132 @@
             this.initMobileMenu();
             this.initForms();
             this.initAjaxLoading();
+            this.initNavigation();
+        },
+
+        /**
+         * Initialize navigation
+         */
+        initNavigation: function() {
+            // Handle menu item clicks
+            $('.vdp-sidebar-nav a').on('click', function(e) {
+                e.preventDefault();
+                var action = $(this).data('action');
+                var url = VDP.buildDashboardUrl(action);
+                VDP.loadContent(url, action);
+            });
+            
+            // Handle AJAX navigation
+            $(document).on('click', '.vdp-content-area a.vdp-ajax-link', function(e) {
+                e.preventDefault();
+                var url = $(this).attr('href');
+                var action = $(this).data('action');
+                var item = $(this).data('item');
+                
+                if (url && action) {
+                    VDP.loadContent(url, action, item);
+                }
+            });
+            
+            // Handle browser back/forward buttons
+            $(window).on('popstate', function(e) {
+                if (e.originalEvent.state) {
+                    var state = e.originalEvent.state;
+                    var url = state.url;
+                    var action = state.action;
+                    var item = state.item;
+                    
+                    VDP.loadContent(url, action, item, false);
+                }
+            });
+        },
+        
+        /**
+         * Build dashboard URL with action and item parameters
+         * 
+         * @param {string} action Action name
+         * @param {string|number} item Item ID (optional)
+         * @returns {string} URL
+         */
+        buildDashboardUrl: function(action, item) {
+            var url = vdpSettings.dashboardUrl;
+            var separator = url.indexOf('?') !== -1 ? '&' : '?';
+            
+            if (action) {
+                url += separator + 'vdp-action=' + action;
+                separator = '&';
+            }
+            
+            if (item) {
+                url += separator + 'vdp-item=' + item;
+            }
+            
+            return url;
+        },
+        
+        /**
+         * Load content via AJAX
+         * 
+         * @param {string} url URL to load
+         * @param {string} action Current action
+         * @param {string|number} item Current item ID (optional)
+         * @param {boolean} updateHistory Whether to update browser history (default: true)
+         */
+        loadContent: function(url, action, item, updateHistory) {
+            // Default updateHistory to true if not specified
+            updateHistory = (updateHistory !== false);
+            
+            // Show loading indicator
+            VDP.showLoading();
+            
+            // Update active menu item
+            $('.vdp-sidebar-nav a').removeClass('vdp-active');
+            $('.vdp-sidebar-nav a[data-action="' + action + '"]').addClass('vdp-active');
+            
+            // Load content via AJAX
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    vdp_ajax: 1
+                },
+                success: function(response) {
+                    // Update content area
+                    $('.vdp-content-area').html(response);
+                    
+                    // Reinitialize components based on loaded content
+                    if (action === 'dashboard') {
+                        VDP.initCharts();
+                    } else if (action === 'products') {
+                        VDP.initProducts();
+                    } else if (action === 'messages') {
+                        VDP.initMessages();
+                    } else if (action === 'settings') {
+                        VDP.initSettings();
+                    }
+                    
+                    // Update browser history
+                    if (updateHistory) {
+                        var state = {
+                            url: url,
+                            action: action,
+                            item: item
+                        };
+                        
+                        var title = 'Vendor Dashboard - ' + action.charAt(0).toUpperCase() + action.slice(1);
+                        window.history.pushState(state, title, url);
+                    }
+                    
+                    // Scroll to top
+                    window.scrollTo(0, 0);
+                },
+                error: function() {
+                    VDP.showNotice(vdpSettings.i18n.error, 'error');
+                },
+                complete: function() {
+                    VDP.hideLoading();
+                }
+            });
         },
 
         /**

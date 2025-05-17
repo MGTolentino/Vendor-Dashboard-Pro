@@ -24,6 +24,9 @@ class VDP_Assets {
         
         // Admin assets
         add_action('admin_enqueue_scripts', array(__CLASS__, 'register_admin_assets'));
+        
+        // Add shortcode
+        add_shortcode('vendor_dashboard_pro', array('VDP_Router', 'shortcode_callback'));
     }
 
     /**
@@ -76,6 +79,8 @@ class VDP_Assets {
                     'saving' => __('Saving...', 'vendor-dashboard-pro'),
                     'saved' => __('Saved!', 'vendor-dashboard-pro'),
                     'error' => __('Error', 'vendor-dashboard-pro'),
+                    'sendReply' => __('Send Reply', 'vendor-dashboard-pro'),
+                    'sending' => __('Sending...', 'vendor-dashboard-pro'),
                 ),
             )
         );
@@ -85,17 +90,34 @@ class VDP_Assets {
      * Enqueue assets on frontend.
      */
     public static function enqueue_assets() {
-        // Only enqueue on dashboard pages
-        if (vdp_is_my_store()) {
+        // If we're on a page with the vendor dashboard shortcode or AJAX request
+        if (vdp_is_dashboard_page() || (isset($_GET['vdp_ajax']) && $_GET['vdp_ajax'])) {
             wp_enqueue_style('vdp-main');
             wp_enqueue_script('vdp-main');
         }
     }
 
     /**
+     * Check if shortcode exists on the current page.
+     *
+     * @return bool Whether the shortcode exists.
+     */
+    public static function has_shortcode() {
+        global $post;
+        
+        // Return false if no post object or post content
+        if (!is_a($post, 'WP_Post') || !$post->post_content) {
+            return false;
+        }
+        
+        // Check for shortcode in content
+        return has_shortcode($post->post_content, 'vendor_dashboard_pro');
+    }
+
+    /**
      * Register admin assets.
      */
-    public static function register_admin_assets() {
+    public static function register_admin_assets($hook) {
         wp_register_style(
             'vdp-admin',
             VDP_PLUGIN_URL . 'assets/css/admin.css',
@@ -110,5 +132,21 @@ class VDP_Assets {
             VDP_VERSION,
             true
         );
+        
+        // Only load on the plugin's settings page
+        if ('toplevel_page_vendor-dashboard-pro' === $hook) {
+            wp_enqueue_style('vdp-admin');
+            wp_enqueue_script('vdp-admin');
+            
+            // Localize admin script
+            wp_localize_script(
+                'vdp-admin',
+                'vdpAdmin',
+                array(
+                    'ajaxUrl' => admin_url('admin-ajax.php'),
+                    'nonce' => wp_create_nonce('vdp-admin-nonce'),
+                )
+            );
+        }
     }
 }
