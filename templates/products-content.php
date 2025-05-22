@@ -26,9 +26,11 @@ if (!defined('ABSPATH')) {
         <div class="vdp-filter-group">
             <select class="vdp-filter-select" name="category">
                 <option value=""><?php esc_html_e('All Categories', 'vendor-dashboard-pro'); ?></option>
-                <?php foreach ($categories as $id => $name) : ?>
-                    <option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option>
-                <?php endforeach; ?>
+                <?php if (!empty($categories)) : ?>
+                    <?php foreach ($categories as $id => $name) : ?>
+                        <option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($name); ?></option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </select>
             
             <select class="vdp-filter-select" name="status">
@@ -40,167 +42,240 @@ if (!defined('ABSPATH')) {
         </div>
         
         <div class="vdp-filter-actions">
-            <a href="<?php echo esc_url(vdp_get_dashboard_url('products/add')); ?>" class="vdp-btn vdp-btn-primary">
+            <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-add-listing-btn">
                 <i class="fas fa-plus"></i>
                 <?php esc_html_e('Add New Listing', 'vendor-dashboard-pro'); ?>
             </a>
         </div>
     </div>
     
-    <!-- Products Table -->
-    <div class="vdp-table-responsive">
-        <table class="vdp-table vdp-products-table">
-            <thead>
-                <tr>
-                    <th class="vdp-column-image"><?php esc_html_e('Image', 'vendor-dashboard-pro'); ?></th>
-                    <th class="vdp-column-title"><?php esc_html_e('Listing', 'vendor-dashboard-pro'); ?></th>
-                    <th class="vdp-column-price"><?php esc_html_e('Price', 'vendor-dashboard-pro'); ?></th>
-                    <th class="vdp-column-category"><?php esc_html_e('Category', 'vendor-dashboard-pro'); ?></th>
-                    <th class="vdp-column-status"><?php esc_html_e('Status', 'vendor-dashboard-pro'); ?></th>
-                    <th class="vdp-column-date"><?php esc_html_e('Date', 'vendor-dashboard-pro'); ?></th>
-                    <th class="vdp-column-actions"><?php esc_html_e('Actions', 'vendor-dashboard-pro'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($listings)) : ?>
-                    <tr>
-                        <td colspan="7" class="vdp-no-items">
-                            <div class="vdp-empty-state">
-                                <div class="vdp-empty-icon">
-                                    <i class="fas fa-box-open"></i>
-                                </div>
-                                <p><?php esc_html_e('No listings yet. Add your first listing!', 'vendor-dashboard-pro'); ?></p>
-                                <a href="<?php echo esc_url(vdp_get_dashboard_url('products/add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
-                                    <i class="fas fa-plus"></i> <?php esc_html_e('Add Listing', 'vendor-dashboard-pro'); ?>
-                                </a>
+    <!-- Listings Grid -->
+    <div class="vdp-listings-grid">
+        <?php if (empty($listings)) : ?>
+            <div class="vdp-empty-state">
+                <div class="vdp-empty-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h3><?php esc_html_e('No listings found', 'vendor-dashboard-pro'); ?></h3>
+                <p><?php esc_html_e('You haven\'t created any listings yet. Create your first listing to get started!', 'vendor-dashboard-pro'); ?></p>
+                <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-add-listing-btn">
+                    <i class="fas fa-plus"></i>
+                    <?php esc_html_e('Add Your First Listing', 'vendor-dashboard-pro'); ?>
+                </a>
+            </div>
+        <?php else : ?>
+            <?php foreach ($listings as $listing) : ?>
+                <div class="vdp-listing-card" data-status="<?php echo esc_attr($listing['status']); ?>" data-id="<?php echo esc_attr($listing['id']); ?>">
+                    <div class="vdp-listing-thumbnail">
+                        <?php if (!empty($listing['thumbnail'])) : ?>
+                            <img src="<?php echo esc_url($listing['thumbnail']); ?>" alt="<?php echo esc_attr($listing['title']); ?>">
+                        <?php else : ?>
+                            <div class="vdp-listing-placeholder">
+                                <i class="fas fa-image"></i>
                             </div>
-                        </td>
-                    </tr>
-                <?php else : ?>
-                    <?php foreach ($listings as $listing) : ?>
-                        <?php
-                        // Get category
-                        $category_id = 0;
-                        $category_name = '';
+                        <?php endif; ?>
                         
-                        if (taxonomy_exists('hp_listing_category')) {
-                            $terms = get_the_terms($listing->get_id(), 'hp_listing_category');
-                            if (!empty($terms) && !is_wp_error($terms)) {
-                                $category_id = $terms[0]->term_id;
-                                $category_name = $terms[0]->name;
-                            }
-                        }
+                        <div class="vdp-listing-status">
+                            <span class="vdp-status-badge vdp-status-<?php echo esc_attr($listing['status']); ?>">
+                                <?php echo esc_html(ucfirst($listing['status'])); ?>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="vdp-listing-content">
+                        <h3 class="vdp-listing-title">
+                            <?php echo esc_html($listing['title']); ?>
+                        </h3>
                         
-                        // Get status
-                        $status = $listing->get_status();
-                        $status_label = VDP_Products::get_status_label($status);
-                        $status_class = VDP_Products::get_status_class($status);
-                        ?>
-                        <tr class="vdp-product-row" data-product-id="<?php echo esc_attr($listing->get_id()); ?>" data-category="<?php echo esc_attr($category_id); ?>" data-status="<?php echo esc_attr($status); ?>">
-                            <td class="vdp-column-image">
-                                <div class="vdp-product-image">
-                                    <?php if ($listing->get_image__url('thumbnail')) : ?>
-                                        <img src="<?php echo esc_url($listing->get_image__url('thumbnail')); ?>" alt="<?php echo esc_attr($listing->get_title()); ?>">
-                                    <?php else : ?>
-                                        <div class="vdp-image-placeholder">
-                                            <i class="fas fa-image"></i>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($listing->is_featured()) : ?>
-                                        <span class="vdp-featured-badge" title="<?php esc_attr_e('Featured Listing', 'vendor-dashboard-pro'); ?>">
-                                            <i class="fas fa-star"></i>
-                                        </span>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                            <td class="vdp-column-title">
-                                <div class="vdp-product-title">
-                                    <a href="<?php echo esc_url(get_permalink($listing->get_id())); ?>" target="_blank">
-                                        <?php echo esc_html($listing->get_title()); ?>
-                                    </a>
-                                </div>
-                                <div class="vdp-product-views">
-                                    <i class="fas fa-eye"></i> <?php echo esc_html(number_format(rand(10, 1000))); ?> <?php esc_html_e('views', 'vendor-dashboard-pro'); ?>
-                                </div>
-                            </td>
-                            <td class="vdp-column-price">
-                                <div class="vdp-product-price">
-                                    <?php echo esc_html(vdp_format_price($listing->get_price())); ?>
-                                </div>
-                            </td>
-                            <td class="vdp-column-category">
-                                <?php if (!empty($category_name)) : ?>
-                                    <div class="vdp-product-category">
-                                        <?php echo esc_html($category_name); ?>
-                                    </div>
-                                <?php else : ?>
-                                    <div class="vdp-product-category vdp-product-no-category">
-                                        <?php esc_html_e('Uncategorized', 'vendor-dashboard-pro'); ?>
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-                            <td class="vdp-column-status">
-                                <div class="vdp-status-badge <?php echo esc_attr($status_class); ?>">
-                                    <?php echo esc_html($status_label); ?>
-                                </div>
-                            </td>
-                            <td class="vdp-column-date">
-                                <div class="vdp-product-date">
-                                    <?php echo esc_html(vdp_format_date($listing->get_created_date())); ?>
-                                </div>
-                                <div class="vdp-product-time">
-                                    <?php echo esc_html(date_i18n(get_option('time_format'), strtotime($listing->get_created_date()))); ?>
-                                </div>
-                            </td>
-                            <td class="vdp-column-actions">
-                                <div class="vdp-table-actions">
-                                    <a href="<?php echo esc_url(vdp_get_dashboard_url('products/edit/' . $listing->get_id())); ?>" class="vdp-btn vdp-btn-sm vdp-btn-icon" title="<?php esc_attr_e('Edit', 'vendor-dashboard-pro'); ?>">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="<?php echo esc_url(get_permalink($listing->get_id())); ?>" class="vdp-btn vdp-btn-sm vdp-btn-icon" target="_blank" title="<?php esc_attr_e('View', 'vendor-dashboard-pro'); ?>">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <button type="button" class="vdp-btn vdp-btn-sm vdp-btn-icon vdp-delete-product" data-product-id="<?php echo esc_attr($listing->get_id()); ?>" title="<?php esc_attr_e('Delete', 'vendor-dashboard-pro'); ?>">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                        <div class="vdp-listing-price">
+                            <?php if ($listing['price'] > 0) : ?>
+                                <span class="vdp-price"><?php echo esc_html(vdp_format_price($listing['price'])); ?></span>
+                            <?php else : ?>
+                                <span class="vdp-price vdp-price-free"><?php esc_html_e('Free', 'vendor-dashboard-pro'); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="vdp-listing-meta">
+                            <span class="vdp-listing-date">
+                                <i class="fas fa-calendar"></i>
+                                <?php echo esc_html(vdp_format_date($listing['date'])); ?>
+                            </span>
+                        </div>
+                        
+                        <div class="vdp-listing-actions">
+                            <a href="<?php echo esc_url($listing['edit_url']); ?>" class="vdp-btn vdp-btn-secondary vdp-btn-sm">
+                                <i class="fas fa-edit"></i>
+                                <?php esc_html_e('Edit', 'vendor-dashboard-pro'); ?>
+                            </a>
+                            
+                            <a href="<?php echo esc_url(get_permalink($listing['id'])); ?>" class="vdp-btn vdp-btn-outline vdp-btn-sm" target="_blank">
+                                <i class="fas fa-external-link-alt"></i>
+                                <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
+                            </a>
+                            
+                            <button class="vdp-btn vdp-btn-danger vdp-btn-sm vdp-delete-listing" data-listing-id="<?php echo esc_attr($listing['id']); ?>">
+                                <i class="fas fa-trash"></i>
+                                <?php esc_html_e('Delete', 'vendor-dashboard-pro'); ?>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
     
     <!-- Pagination -->
-    <?php if ($total_pages > 1) : ?>
+    <?php if (!empty($listings) && isset($total_pages) && $total_pages > 1) : ?>
         <div class="vdp-pagination">
-            <ul class="vdp-pagination-list">
-                <?php if ($paged > 1) : ?>
-                    <li class="vdp-pagination-item">
-                        <a href="<?php echo esc_url(add_query_arg('paged', $paged - 1, vdp_get_dashboard_url('products'))); ?>" class="vdp-pagination-link">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                <?php endif; ?>
-                
-                <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
-                    <li class="vdp-pagination-item <?php echo $i === $paged ? 'vdp-active' : ''; ?>">
-                        <a href="<?php echo esc_url(add_query_arg('paged', $i, vdp_get_dashboard_url('products'))); ?>" class="vdp-pagination-link">
-                            <?php echo esc_html($i); ?>
-                        </a>
-                    </li>
-                <?php endfor; ?>
-                
-                <?php if ($paged < $total_pages) : ?>
-                    <li class="vdp-pagination-item">
-                        <a href="<?php echo esc_url(add_query_arg('paged', $paged + 1, vdp_get_dashboard_url('products'))); ?>" class="vdp-pagination-link">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                <?php endif; ?>
-            </ul>
+            <?php
+            $current_page = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
+            $current_url = vdp_get_dashboard_url('products');
+            
+            // Previous page
+            if ($current_page > 1) {
+                $prev_url = add_query_arg('paged', $current_page - 1, $current_url);
+                echo '<a href="' . esc_url($prev_url) . '" class="vdp-pagination-item vdp-pagination-prev">';
+                echo '<i class="fas fa-chevron-left"></i> ' . esc_html__('Previous', 'vendor-dashboard-pro');
+                echo '</a>';
+            }
+            
+            // Page numbers
+            $start_page = max(1, $current_page - 2);
+            $end_page = min($total_pages, $current_page + 2);
+            
+            for ($i = $start_page; $i <= $end_page; $i++) {
+                if ($i == $current_page) {
+                    echo '<span class="vdp-pagination-item vdp-pagination-current">' . esc_html($i) . '</span>';
+                } else {
+                    $page_url = add_query_arg('paged', $i, $current_url);
+                    echo '<a href="' . esc_url($page_url) . '" class="vdp-pagination-item">' . esc_html($i) . '</a>';
+                }
+            }
+            
+            // Next page
+            if ($current_page < $total_pages) {
+                $next_url = add_query_arg('paged', $current_page + 1, $current_url);
+                echo '<a href="' . esc_url($next_url) . '" class="vdp-pagination-item vdp-pagination-next">';
+                echo esc_html__('Next', 'vendor-dashboard-pro') . ' <i class="fas fa-chevron-right"></i>';
+                echo '</a>';
+            }
+            ?>
         </div>
     <?php endif; ?>
 </div>
+
+<style>
+.vdp-listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.vdp-listing-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.vdp-listing-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.vdp-listing-thumbnail {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.vdp-listing-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.vdp-listing-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 48px;
+}
+
+.vdp-listing-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.vdp-status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.vdp-status-publish {
+    background: #d4edda;
+    color: #155724;
+}
+
+.vdp-status-draft {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.vdp-status-pending {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.vdp-listing-content {
+    padding: 15px;
+}
+
+.vdp-listing-title {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.vdp-listing-price {
+    margin-bottom: 10px;
+}
+
+.vdp-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: #3483fa;
+}
+
+.vdp-price-free {
+    color: #28a745;
+}
+
+.vdp-listing-meta {
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 14px;
+}
+
+.vdp-listing-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.vdp-btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+</style>

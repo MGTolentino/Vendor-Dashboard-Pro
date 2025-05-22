@@ -36,12 +36,6 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
     $vendor_name = $callback();
 }
 
-// Debug log for template
-error_log('VDP DEBUG TEMPLATE - Vendor object type: ' . gettype($vendor));
-if (is_object($vendor)) {
-    error_log('VDP DEBUG TEMPLATE - Vendor methods: ' . print_r(get_class_methods($vendor), true));
-}
-error_log('VDP DEBUG TEMPLATE - Final vendor name in template: ' . $vendor_name);
 ?>
 
 <div class="vdp-dashboard-content">

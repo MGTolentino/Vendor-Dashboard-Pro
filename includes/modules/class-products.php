@@ -60,19 +60,16 @@ class VDP_Products {
         $per_page = 10;
         
         // Get vendor listings
-        $listings = vdp_api()->get_vendor_listings($vendor->get_id(), array(
-            'limit' => $per_page,
-            'offset' => ($paged - 1) * $per_page,
-        ));
+        $listings = self::get_vendor_listings($vendor->get_id(), $per_page, ($paged - 1) * $per_page);
         
         // Get total listings count
-        $total_listings = vdp_api()->get_vendor_listing_count($vendor->get_id());
+        $total_listings = self::get_vendor_listing_count($vendor->get_id());
         
         // Calculate total pages
         $total_pages = ceil($total_listings / $per_page);
         
         // Get listing categories
-        $categories = vdp_api()->get_listing_categories();
+        $categories = self::get_listing_categories();
         
         // Include products list template
         include VDP_PLUGIN_DIR . 'templates/products-content.php';
@@ -153,6 +150,88 @@ class VDP_Products {
         );
         
         return isset($classes[$status]) ? $classes[$status] : '';
+    }
+    
+    /**
+     * Get vendor listings from database.
+     *
+     * @param int $vendor_id Vendor ID.
+     * @param int $limit Number of listings to get.
+     * @param int $offset Offset for pagination.
+     * @return array Array of listing objects.
+     */
+    public static function get_vendor_listings($vendor_id, $limit = 10, $offset = 0) {
+        global $wpdb;
+        
+        $listings = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_listing' 
+            AND post_parent = %d 
+            AND post_status IN ('publish', 'draft', 'pending')
+            ORDER BY post_date DESC
+            LIMIT %d OFFSET %d",
+            $vendor_id, $limit, $offset
+        ));
+        
+        $formatted_listings = array();
+        
+        foreach ($listings as $listing) {
+            $price = get_post_meta($listing->ID, 'hp_price', true);
+            $thumbnail_id = get_post_thumbnail_id($listing->ID);
+            $thumbnail_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'medium') : '';
+            
+            $formatted_listings[] = array(
+                'id' => $listing->ID,
+                'title' => $listing->post_title,
+                'status' => $listing->post_status,
+                'date' => $listing->post_date,
+                'price' => $price ? $price : 0,
+                'thumbnail' => $thumbnail_url,
+                'edit_url' => vdp_get_dashboard_url('products', $listing->ID),
+            );
+        }
+        
+        return $formatted_listings;
+    }
+    
+    /**
+     * Get total count of vendor listings.
+     *
+     * @param int $vendor_id Vendor ID.
+     * @return int Total count.
+     */
+    public static function get_vendor_listing_count($vendor_id) {
+        global $wpdb;
+        
+        return (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_listing' 
+            AND post_parent = %d 
+            AND post_status IN ('publish', 'draft', 'pending')",
+            $vendor_id
+        ));
+    }
+    
+    /**
+     * Get listing categories.
+     *
+     * @return array Array of categories.
+     */
+    public static function get_listing_categories() {
+        $categories = get_terms(array(
+            'taxonomy' => 'hp_listing_category',
+            'hide_empty' => false,
+        ));
+        
+        $formatted_categories = array();
+        
+        if (!is_wp_error($categories)) {
+            foreach ($categories as $category) {
+                $formatted_categories[$category->term_id] = $category->name;
+            }
+        }
+        
+        return $formatted_categories;
     }
 }
 

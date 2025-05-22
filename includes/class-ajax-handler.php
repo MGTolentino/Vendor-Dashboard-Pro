@@ -285,13 +285,24 @@ class VDP_Ajax_Handler {
             return;
         }
         
-        // Apply HivePress filter for listing submit form
-        $form_url = apply_filters('hivepress/v1/forms/listing_submit', '');
+        // Try to get HivePress listing submit URL
+        $form_url = '';
         
-        // If filter doesn't work, try to get HivePress listing submit URL
-        if (empty($form_url) && function_exists('hivepress')) {
+        if (function_exists('hivepress')) {
             try {
-                $form_url = hivepress()->router->get_url('listing_submit_page');
+                // Try different possible page names for listing submission
+                $possible_pages = array('listing_submit_page', 'listing_add_page', 'submit_listing_page');
+                
+                foreach ($possible_pages as $page_name) {
+                    try {
+                        $form_url = hivepress()->router->get_url($page_name);
+                        if (!empty($form_url)) {
+                            break;
+                        }
+                    } catch (Exception $e) {
+                        continue;
+                    }
+                }
             } catch (Exception $e) {
                 $form_url = '';
             }

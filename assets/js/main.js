@@ -186,10 +186,8 @@
                 return;
             }
 
-            // Cleanup any existing charts to prevent errors
-            Chart.helpers.each(Chart.instances, function(instance) {
-                instance.destroy();
-            });
+            // Destroy existing charts to prevent Canvas reuse errors
+            this.destroyExistingCharts();
 
             // Helper to create gradient
             function createGradient(ctx, startColor, endColor) {
@@ -237,6 +235,24 @@
                     period: period
                 },
                 success: callback
+            });
+        },
+
+        /**
+         * Destroy existing charts to prevent Canvas reuse errors
+         */
+        destroyExistingCharts: function() {
+            // Destroy charts by canvas ID
+            var chartIds = ['salesChart', 'viewsChart', 'conversionChart'];
+            
+            chartIds.forEach(function(chartId) {
+                var canvas = document.getElementById(chartId);
+                if (canvas) {
+                    var existingChart = Chart.getChart(canvas);
+                    if (existingChart) {
+                        existingChart.destroy();
+                    }
+                }
             });
         },
 
@@ -362,18 +378,18 @@
                 VDP.filterProducts();
             });
 
-            // Delete product
-            $('.vdp-delete-product').on('click', function(e) {
+            // Delete product/listing
+            $(document).on('click', '.vdp-delete-product, .vdp-delete-listing', function(e) {
                 e.preventDefault();
                 
-                var productId = $(this).data('product-id');
+                var itemId = $(this).data('product-id') || $(this).data('listing-id');
                 
-                if (!productId) {
+                if (!itemId) {
                     return;
                 }
                 
                 if (confirm(vdp_vars.texts.confirm_delete)) {
-                    VDP.deleteProduct(productId);
+                    VDP.deleteProduct(itemId);
                 }
             });
 
@@ -385,27 +401,30 @@
         },
 
         /**
-         * Filter products
+         * Filter products/listings
          */
         filterProducts: function() {
             var category = $('.vdp-filter-select[name="category"]').val();
             var status = $('.vdp-filter-select[name="status"]').val();
             var search = $('.vdp-search-products').val().toLowerCase();
             
-            $('.vdp-product-row').each(function() {
-                var $row = $(this);
-                var productCategory = $row.data('category');
-                var productStatus = $row.data('status');
-                var productTitle = $row.find('.vdp-product-title').text().toLowerCase();
+            // Handle both old product rows and new listing cards
+            var $items = $('.vdp-product-row, .vdp-listing-card');
+            
+            $items.each(function() {
+                var $item = $(this);
+                var itemCategory = $item.data('category');
+                var itemStatus = $item.data('status');
+                var itemTitle = $item.find('.vdp-product-title, .vdp-listing-title').text().toLowerCase();
                 
-                var categoryMatch = !category || category === productCategory;
-                var statusMatch = !status || status === productStatus;
-                var searchMatch = !search || productTitle.indexOf(search) !== -1;
+                var categoryMatch = !category || category === itemCategory;
+                var statusMatch = !status || status === itemStatus;
+                var searchMatch = !search || itemTitle.indexOf(search) !== -1;
                 
                 if (categoryMatch && statusMatch && searchMatch) {
-                    $row.show();
+                    $item.show();
                 } else {
-                    $row.hide();
+                    $item.hide();
                 }
             });
         },
@@ -430,8 +449,8 @@
                 success: function(response) {
                     if (response.success) {
                         VDP.showNotice(response.data.message, 'success');
-                        // Remove product row
-                        $('.vdp-product-row[data-product-id="' + productId + '"]').fadeOut(300, function() {
+                        // Remove product row or listing card
+                        $('.vdp-product-row[data-product-id="' + productId + '"], .vdp-listing-card[data-id="' + productId + '"]').fadeOut(300, function() {
                             $(this).remove();
                         });
                     } else {
