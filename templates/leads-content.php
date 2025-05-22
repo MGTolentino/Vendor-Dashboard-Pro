@@ -65,11 +65,13 @@ if (!isset($paged)) {
 // Get lead status labels and classes
 function vdp_get_lead_status_label($status) {
     $labels = array(
-        'nuevo' => __('Nuevo', 'vendor-dashboard-pro'),
+        'inicial' => __('Inicial', 'vendor-dashboard-pro'),
         'contactado' => __('Contactado', 'vendor-dashboard-pro'),
-        'interesado' => __('Interesado', 'vendor-dashboard-pro'),
-        'contratado' => __('Contratado', 'vendor-dashboard-pro'),
-        'perdido' => __('Perdido', 'vendor-dashboard-pro'),
+        'cita-agendada' => __('Cita Agendada', 'vendor-dashboard-pro'),
+        'propuesta-enviada' => __('Propuesta Enviada', 'vendor-dashboard-pro'),
+        'negociacion' => __('Negociación', 'vendor-dashboard-pro'),
+        'cerrado-ganado' => __('Cerrado Ganado', 'vendor-dashboard-pro'),
+        'cerrado-perdido' => __('Cerrado Perdido', 'vendor-dashboard-pro'),
     );
     
     return isset($labels[$status]) ? $labels[$status] : ucfirst($status);
@@ -77,11 +79,13 @@ function vdp_get_lead_status_label($status) {
 
 function vdp_get_lead_status_class($status) {
     $classes = array(
-        'nuevo' => 'vdp-status-new',
+        'inicial' => 'vdp-status-new',
         'contactado' => 'vdp-status-contacted',
-        'interesado' => 'vdp-status-qualified',
-        'contratado' => 'vdp-status-converted',
-        'perdido' => 'vdp-status-lost',
+        'cita-agendada' => 'vdp-status-scheduled',
+        'propuesta-enviada' => 'vdp-status-proposal',
+        'negociacion' => 'vdp-status-negotiation',
+        'cerrado-ganado' => 'vdp-status-won',
+        'cerrado-perdido' => 'vdp-status-lost',
     );
     
     return isset($classes[$status]) ? $classes[$status] : 'vdp-status-default';
@@ -102,13 +106,16 @@ function vdp_get_lead_source_label($source) {
 
 // Get lead statistics from data
 $total_leads_count = $stats['total'];
-$new_leads = $stats['nuevo'] ?? 0;
+$inicial_leads = $stats['inicial'] ?? 0;
 $contacted_leads = $stats['contactado'] ?? 0;
-$qualified_leads = $stats['interesado'] ?? 0;
-$converted_leads = $stats['contratado'] ?? 0;
+$scheduled_leads = $stats['cita-agendada'] ?? 0;
+$proposal_leads = $stats['propuesta-enviada'] ?? 0;
+$negotiation_leads = $stats['negociacion'] ?? 0;
+$won_leads = $stats['cerrado-ganado'] ?? 0;
+$lost_leads = $stats['cerrado-perdido'] ?? 0;
 
 // Calculate conversion rate
-$conversion_rate = $total_leads_count > 0 ? round(($converted_leads / $total_leads_count) * 100, 1) : 0;
+$conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_count) * 100, 1) : 0;
 ?>
 
 <div class="vdp-leads-content">
@@ -125,14 +132,14 @@ $conversion_rate = $total_leads_count > 0 ? round(($converted_leads / $total_lea
                 </div>
             </div>
             
-            <!-- New Leads -->
+            <!-- Initial Leads -->
             <div class="vdp-stat-box">
                 <div class="vdp-stat-icon vdp-status-new">
                     <i class="fas fa-bell"></i>
                 </div>
                 <div class="vdp-stat-content">
-                    <div class="vdp-stat-value"><?php echo esc_html($new_leads); ?></div>
-                    <div class="vdp-stat-label"><?php esc_html_e('Nuevos', 'vendor-dashboard-pro'); ?></div>
+                    <div class="vdp-stat-value"><?php echo esc_html($inicial_leads); ?></div>
+                    <div class="vdp-stat-label"><?php esc_html_e('Iniciales', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
             
@@ -147,25 +154,25 @@ $conversion_rate = $total_leads_count > 0 ? round(($converted_leads / $total_lea
                 </div>
             </div>
             
-            <!-- Interested -->
+            <!-- In Progress -->
             <div class="vdp-stat-box">
-                <div class="vdp-stat-icon vdp-status-qualified">
-                    <i class="fas fa-thumbs-up"></i>
+                <div class="vdp-stat-icon vdp-status-negotiation">
+                    <i class="fas fa-handshake"></i>
                 </div>
                 <div class="vdp-stat-content">
-                    <div class="vdp-stat-value"><?php echo esc_html($qualified_leads); ?></div>
-                    <div class="vdp-stat-label"><?php esc_html_e('Interesados', 'vendor-dashboard-pro'); ?></div>
+                    <div class="vdp-stat-value"><?php echo esc_html($scheduled_leads + $proposal_leads + $negotiation_leads); ?></div>
+                    <div class="vdp-stat-label"><?php esc_html_e('En Proceso', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
             
-            <!-- Contracted -->
+            <!-- Won -->
             <div class="vdp-stat-box">
-                <div class="vdp-stat-icon vdp-status-converted">
+                <div class="vdp-stat-icon vdp-status-won">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="vdp-stat-content">
-                    <div class="vdp-stat-value"><?php echo esc_html($converted_leads); ?></div>
-                    <div class="vdp-stat-label"><?php esc_html_e('Contratados', 'vendor-dashboard-pro'); ?></div>
+                    <div class="vdp-stat-value"><?php echo esc_html($won_leads); ?></div>
+                    <div class="vdp-stat-label"><?php esc_html_e('Ganados', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
             
@@ -189,11 +196,13 @@ $conversion_rate = $total_leads_count > 0 ? round(($converted_leads / $total_lea
                 <div class="vdp-filters">
                     <select class="vdp-filter-select" id="lead-status-filter">
                         <option value=""><?php esc_html_e('Todos los Estados', 'vendor-dashboard-pro'); ?></option>
-                        <option value="nuevo"><?php esc_html_e('Nuevo', 'vendor-dashboard-pro'); ?></option>
+                        <option value="inicial"><?php esc_html_e('Inicial', 'vendor-dashboard-pro'); ?></option>
                         <option value="contactado"><?php esc_html_e('Contactado', 'vendor-dashboard-pro'); ?></option>
-                        <option value="interesado"><?php esc_html_e('Interesado', 'vendor-dashboard-pro'); ?></option>
-                        <option value="contratado"><?php esc_html_e('Contratado', 'vendor-dashboard-pro'); ?></option>
-                        <option value="perdido"><?php esc_html_e('Perdido', 'vendor-dashboard-pro'); ?></option>
+                        <option value="cita-agendada"><?php esc_html_e('Cita Agendada', 'vendor-dashboard-pro'); ?></option>
+                        <option value="propuesta-enviada"><?php esc_html_e('Propuesta Enviada', 'vendor-dashboard-pro'); ?></option>
+                        <option value="negociacion"><?php esc_html_e('Negociación', 'vendor-dashboard-pro'); ?></option>
+                        <option value="cerrado-ganado"><?php esc_html_e('Cerrado Ganado', 'vendor-dashboard-pro'); ?></option>
+                        <option value="cerrado-perdido"><?php esc_html_e('Cerrado Perdido', 'vendor-dashboard-pro'); ?></option>
                     </select>
                     
                     <div class="vdp-search-filter">
@@ -612,6 +621,26 @@ jQuery(document).ready(function($) {
 .vdp-status-lost {
     color: #e74c3c;
     background-color: rgba(231, 76, 60, 0.1);
+}
+
+.vdp-status-scheduled {
+    color: #17a2b8;
+    background-color: rgba(23, 162, 184, 0.1);
+}
+
+.vdp-status-proposal {
+    color: #6f42c1;
+    background-color: rgba(111, 66, 193, 0.1);
+}
+
+.vdp-status-negotiation {
+    color: #fd7e14;
+    background-color: rgba(253, 126, 20, 0.1);
+}
+
+.vdp-status-won {
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
 }
 
 .vdp-lead-contact {

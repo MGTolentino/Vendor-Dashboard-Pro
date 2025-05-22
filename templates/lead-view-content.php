@@ -33,11 +33,13 @@ if (!$lead || !$leads_handler->can_access_lead($vendor->ID, $lead_id)) {
 // Get lead status labels and classes
 function vdp_get_lead_status_label($status) {
     $labels = array(
-        'nuevo' => __('Nuevo', 'vendor-dashboard-pro'),
+        'inicial' => __('Inicial', 'vendor-dashboard-pro'),
         'contactado' => __('Contactado', 'vendor-dashboard-pro'),
-        'interesado' => __('Interesado', 'vendor-dashboard-pro'),
-        'contratado' => __('Contratado', 'vendor-dashboard-pro'),
-        'perdido' => __('Perdido', 'vendor-dashboard-pro'),
+        'cita-agendada' => __('Cita Agendada', 'vendor-dashboard-pro'),
+        'propuesta-enviada' => __('Propuesta Enviada', 'vendor-dashboard-pro'),
+        'negociacion' => __('Negociación', 'vendor-dashboard-pro'),
+        'cerrado-ganado' => __('Cerrado Ganado', 'vendor-dashboard-pro'),
+        'cerrado-perdido' => __('Cerrado Perdido', 'vendor-dashboard-pro'),
     );
     
     return isset($labels[$status]) ? $labels[$status] : ucfirst($status);
@@ -45,11 +47,13 @@ function vdp_get_lead_status_label($status) {
 
 function vdp_get_lead_status_class($status) {
     $classes = array(
-        'nuevo' => 'vdp-status-new',
+        'inicial' => 'vdp-status-new',
         'contactado' => 'vdp-status-contacted',
-        'interesado' => 'vdp-status-qualified',
-        'contratado' => 'vdp-status-converted',
-        'perdido' => 'vdp-status-lost',
+        'cita-agendada' => 'vdp-status-scheduled',
+        'propuesta-enviada' => 'vdp-status-proposal',
+        'negociacion' => 'vdp-status-negotiation',
+        'cerrado-ganado' => 'vdp-status-won',
+        'cerrado-perdido' => 'vdp-status-lost',
     );
     
     return isset($classes[$status]) ? $classes[$status] : 'vdp-status-default';
@@ -245,11 +249,13 @@ function vdp_get_lead_status_class($status) {
                 <div class="vdp-form-row">
                     <label for="lead-status"><?php esc_html_e('Nuevo Estado:', 'vendor-dashboard-pro'); ?></label>
                     <select name="lead_status" id="lead-status" class="vdp-form-control">
-                        <option value="nuevo" <?php selected($lead->lead_status, 'nuevo'); ?>><?php esc_html_e('Nuevo', 'vendor-dashboard-pro'); ?></option>
+                        <option value="inicial" <?php selected($lead->lead_status, 'inicial'); ?>><?php esc_html_e('Inicial', 'vendor-dashboard-pro'); ?></option>
                         <option value="contactado" <?php selected($lead->lead_status, 'contactado'); ?>><?php esc_html_e('Contactado', 'vendor-dashboard-pro'); ?></option>
-                        <option value="interesado" <?php selected($lead->lead_status, 'interesado'); ?>><?php esc_html_e('Interesado', 'vendor-dashboard-pro'); ?></option>
-                        <option value="contratado" <?php selected($lead->lead_status, 'contratado'); ?>><?php esc_html_e('Contratado', 'vendor-dashboard-pro'); ?></option>
-                        <option value="perdido" <?php selected($lead->lead_status, 'perdido'); ?>><?php esc_html_e('Perdido', 'vendor-dashboard-pro'); ?></option>
+                        <option value="cita-agendada" <?php selected($lead->lead_status, 'cita-agendada'); ?>><?php esc_html_e('Cita Agendada', 'vendor-dashboard-pro'); ?></option>
+                        <option value="propuesta-enviada" <?php selected($lead->lead_status, 'propuesta-enviada'); ?>><?php esc_html_e('Propuesta Enviada', 'vendor-dashboard-pro'); ?></option>
+                        <option value="negociacion" <?php selected($lead->lead_status, 'negociacion'); ?>><?php esc_html_e('Negociación', 'vendor-dashboard-pro'); ?></option>
+                        <option value="cerrado-ganado" <?php selected($lead->lead_status, 'cerrado-ganado'); ?>><?php esc_html_e('Cerrado Ganado', 'vendor-dashboard-pro'); ?></option>
+                        <option value="cerrado-perdido" <?php selected($lead->lead_status, 'cerrado-perdido'); ?>><?php esc_html_e('Cerrado Perdido', 'vendor-dashboard-pro'); ?></option>
                     </select>
                 </div>
                 <div class="vdp-form-row">
@@ -472,13 +478,23 @@ jQuery(document).ready(function($) {
     color: white;
 }
 
-.vdp-status-qualified {
-    background-color: #39b54a;
+.vdp-status-scheduled {
+    background-color: #17a2b8;
     color: white;
 }
 
-.vdp-status-converted {
-    background-color: #27ae60;
+.vdp-status-proposal {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.vdp-status-negotiation {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.vdp-status-won {
+    background-color: #28a745;
     color: white;
 }
 

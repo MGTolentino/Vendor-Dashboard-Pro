@@ -481,6 +481,35 @@ class VDP_Leads {
         
         return $grouped;
     }
+
+    /**
+     * Get vendor lead statistics.
+     *
+     * @param int $vendor_id Vendor ID.
+     * @return array Lead statistics by status.
+     */
+    public function get_vendor_lead_stats($vendor_id) {
+        $leads_data = $this->get_vendor_leads($vendor_id);
+        $leads = $leads_data['leads'] ?? array();
+        
+        // Initialize stats
+        $stats = array('total' => count($leads));
+        
+        // Initialize all status counts to 0
+        foreach ($this->get_status_options() as $status => $label) {
+            $stats[$status] = 0;
+        }
+        
+        // Count leads by status
+        foreach ($leads as $lead) {
+            $status = $lead->lead_status ?: 'inicial';
+            if (isset($stats[$status])) {
+                $stats[$status]++;
+            }
+        }
+        
+        return $stats;
+    }
 }
 
 // Initialize Leads module
