@@ -23,45 +23,18 @@ function vdp_is_user_vendor() {
     // Get current user ID
     $user_id = get_current_user_id();
     
-    // Direct database query approach - more reliable across different setups
+    // Query for hp_vendor post where current user is the author
     global $wpdb;
     
-    // Query for hp_vendor post type associated with the current user
     $vendor_count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$wpdb->posts} p 
-        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
-        WHERE p.post_type = 'hp_vendor' 
-        AND p.post_status = 'publish' 
-        AND pm.meta_key = 'hp_user_id' 
-        AND pm.meta_value = %d",
+        "SELECT COUNT(*) FROM {$wpdb->posts} 
+        WHERE post_type = 'hp_vendor' 
+        AND post_author = %d 
+        AND post_status IN ('publish', 'draft', 'pending')",
         $user_id
     ));
     
-    // If we found a vendor post for this user
-    if ($vendor_count > 0) {
-        return true;
-    }
-    
-    // Try HivePress API as fallback if available
-    if (class_exists('\HivePress\Models\Vendor')) {
-        try {
-            // Check if user has a vendor profile using HivePress API
-            $vendor = \HivePress\Models\Vendor::query()->filter(
-                array(
-                    'user' => $user_id,
-                    'status' => 'publish',
-                )
-            )->get_first();
-            
-            return !empty($vendor);
-        } catch (Exception $e) {
-            // If HivePress API fails, we already tried direct DB query
-            return false;
-        }
-    }
-    
-    // No vendor found for this user
-    return false;
+    return $vendor_count > 0;
 }
 
 /**
@@ -77,17 +50,14 @@ function vdp_get_current_vendor() {
     // Get current user ID
     $user_id = get_current_user_id();
     
-    // Try direct database query first - more reliable across different setups
+    // Query for hp_vendor post where current user is the author
     global $wpdb;
     
-    // Query for hp_vendor post associated with current user
     $vendor_post = $wpdb->get_row($wpdb->prepare(
-        "SELECT p.* FROM {$wpdb->posts} p 
-        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
-        WHERE p.post_type = 'hp_vendor' 
-        AND p.post_status IN ('publish', 'draft', 'pending') 
-        AND pm.meta_key = 'hp_user_id' 
-        AND pm.meta_value = %d 
+        "SELECT * FROM {$wpdb->posts} 
+        WHERE post_type = 'hp_vendor' 
+        AND post_author = %d 
+        AND post_status IN ('publish', 'draft', 'pending') 
         LIMIT 1",
         $user_id
     ));
@@ -95,25 +65,6 @@ function vdp_get_current_vendor() {
     if ($vendor_post) {
         // Create a vendor object from post data
         return vdp_create_vendor_from_post($vendor_post);
-    }
-    
-    // Try HivePress API as fallback if available
-    if (class_exists('\HivePress\Models\Vendor')) {
-        try {
-            // Get vendor using HivePress API
-            $vendor = \HivePress\Models\Vendor::query()->filter(
-                array(
-                    'user' => $user_id,
-                    'status' => array('publish', 'draft', 'pending'),
-                )
-            )->get_first();
-            
-            if (!empty($vendor)) {
-                return $vendor;
-            }
-        } catch (Exception $e) {
-            // If HivePress API fails, we already tried direct DB query
-        }
     }
     
     // No vendor found for this user
