@@ -117,7 +117,7 @@ class VDP_Leads {
             return;
         }
 
-        $vendor_id = $vendor->get_id();
+        $vendor_id = $vendor->ID;
         
         // Check if leads tables exist
         if (!$this->check_leads_tables()) {
@@ -406,7 +406,7 @@ class VDP_Leads {
      */
     private function get_current_vendor_id() {
         $vendor = vdp_get_current_vendor();
-        return $vendor ? $vendor->get_id() : null;
+        return $vendor ? $vendor->ID : null;
     }
 
     /**
