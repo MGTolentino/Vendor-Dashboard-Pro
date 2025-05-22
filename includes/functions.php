@@ -131,15 +131,15 @@ function vdp_create_vendor_from_post($post) {
     $vendor = new stdClass();
     
     // Get vendor metadata
-    // Use post_name first, then try post_title, then fallback to user display name
-    $name = $post->post_name;
+    // Use post_title first, then try post_name, then fallback to user display name
+    $name = $post->post_title;
     $verified = get_post_meta($post->ID, 'hp_verified', true) ?: false;
     $user_id = get_post_meta($post->ID, 'hp_user_id', true);
     
     // Get user data for additional info
     $user_info = get_userdata($user_id);
-    if (empty($name) && $post->post_title) {
-        $name = $post->post_title;
+    if (empty($name) && $post->post_name) {
+        $name = $post->post_name;
     } elseif ($user_info && empty($name)) {
         $name = $user_info->display_name;
     }
@@ -186,6 +186,35 @@ function vdp_create_vendor_from_post($post) {
     
     $vendor->get_user_id = function() use ($user_id) {
         return $user_id;
+    };
+    
+    $vendor->is_active_seller = function() use ($post) {
+        // Check if vendor is active based on several criteria:
+        // 1. Account is verified (if verification is enabled)
+        // 2. Has at least one published listing
+        // 3. Profile is complete (has description)
+        // 4. Has been active in the last 30 days (last login or activity)
+        
+        $is_active = true;
+        
+        // Check if has published listings
+        $listings_count = wp_count_posts('hp_listing');
+        $has_listings = isset($listings_count->publish) && $listings_count->publish > 0;
+        
+        // Check if profile is complete
+        $has_description = !empty($post->post_content);
+        
+        // Check recent activity (last login)
+        $user_id = get_post_meta($post->ID, 'hp_user_id', true);
+        $last_login = get_user_meta($user_id, 'vdp_last_login', true);
+        $thirty_days_ago = strtotime('-30 days');
+        $recently_active = empty($last_login) || strtotime($last_login) > $thirty_days_ago;
+        
+        // Vendor is active if they meet most criteria
+        $active_criteria = array($has_listings, $has_description, $recently_active);
+        $criteria_met = count(array_filter($active_criteria));
+        
+        return $criteria_met >= 2; // Must meet at least 2 out of 3 criteria
     };
     
     return $vendor;

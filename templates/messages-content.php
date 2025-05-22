@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
                     <i class="fas fa-envelope"></i>
                 </div>
                 <div class="vdp-stat-content">
-                    <div class="vdp-stat-value"><?php echo esc_html(count($messages)); ?></div>
+                    <div class="vdp-stat-value"><?php echo esc_html(is_array($messages) ? count($messages) : 0); ?></div>
                     <div class="vdp-stat-label"><?php esc_html_e('Total Messages', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
@@ -32,9 +32,11 @@ if (!defined('ABSPATH')) {
                     <div class="vdp-stat-value">
                         <?php
                         $unread_count = 0;
-                        foreach ($messages as $message) {
-                            if (!$message['is_read']) {
-                                $unread_count++;
+                        if (is_array($messages)) {
+                            foreach ($messages as $message) {
+                                if (!$message['is_read']) {
+                                    $unread_count++;
+                                }
                             }
                         }
                         echo esc_html($unread_count);
@@ -53,9 +55,11 @@ if (!defined('ABSPATH')) {
                         <?php
                         $today_count = 0;
                         $today = date('Y-m-d');
-                        foreach ($messages as $message) {
-                            if (date('Y-m-d', strtotime($message['date'])) === $today) {
-                                $today_count++;
+                        if (is_array($messages)) {
+                            foreach ($messages as $message) {
+                                if (date('Y-m-d', strtotime($message['date'])) === $today) {
+                                    $today_count++;
+                                }
                             }
                         }
                         echo esc_html($today_count);
@@ -73,9 +77,11 @@ if (!defined('ABSPATH')) {
                     <div class="vdp-stat-value">
                         <?php
                         $responded_count = 0;
-                        foreach ($messages as $message) {
-                            if ($message['has_response']) {
-                                $responded_count++;
+                        if (is_array($messages)) {
+                            foreach ($messages as $message) {
+                                if ($message['has_response']) {
+                                    $responded_count++;
+                                }
                             }
                         }
                         echo esc_html($responded_count);
@@ -143,7 +149,7 @@ if (!defined('ABSPATH')) {
                                     <div class="vdp-message-meta">
                                         <span class="vdp-message-time"><?php echo esc_html(vdp_time_ago($message['date'])); ?></span>
                                         <span class="vdp-message-product">
-                                            <i class="fas fa-tag"></i> <?php echo esc_html($message['product_title']); ?>
+                                            <i class="fas fa-tag"></i> <?php echo esc_html($message['listing_title']); ?>
                                         </span>
                                     </div>
                                 </div>

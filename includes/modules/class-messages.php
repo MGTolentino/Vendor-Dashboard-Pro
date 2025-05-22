@@ -129,6 +129,7 @@ class VDP_Messages {
                 'is_read' => $is_read,
                 'listing_id' => rand(1, 100),
                 'listing_title' => 'Sample Product ' . rand(1, 100),
+                'has_response' => rand(0, 1) == 1,
             );
         }
         

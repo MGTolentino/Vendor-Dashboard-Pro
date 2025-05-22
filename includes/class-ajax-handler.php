@@ -24,6 +24,7 @@ class VDP_Ajax_Handler {
         add_action('wp_ajax_vdp_get_dashboard_data', array(__CLASS__, 'get_dashboard_data'));
         add_action('wp_ajax_vdp_save_vendor_settings', array(__CLASS__, 'save_vendor_settings'));
         add_action('wp_ajax_vdp_get_chart_data', array(__CLASS__, 'get_chart_data'));
+        add_action('wp_ajax_vdp_trigger_listing_form', array(__CLASS__, 'trigger_listing_form'));
     }
 
     /**
@@ -273,5 +274,46 @@ class VDP_Ajax_Handler {
         wp_send_json_success(array(
             'chart_data' => $chart_data,
         ));
+    }
+    
+    /**
+     * Trigger HivePress listing form Ajax handler.
+     */
+    public static function trigger_listing_form() {
+        // Verify request
+        if (!self::verify_ajax_request()) {
+            return;
+        }
+        
+        // Apply HivePress filter for listing submit form
+        $form_url = apply_filters('hivepress/v1/forms/listing_submit', '');
+        
+        // If filter doesn't work, try to get HivePress listing submit URL
+        if (empty($form_url) && function_exists('hivepress')) {
+            try {
+                $form_url = hivepress()->router->get_url('listing_submit_page');
+            } catch (Exception $e) {
+                $form_url = '';
+            }
+        }
+        
+        // If still no URL, try to find listing submit page in WordPress
+        if (empty($form_url)) {
+            $submit_page = get_option('hp_listing_submit_page');
+            if ($submit_page) {
+                $form_url = get_permalink($submit_page);
+            }
+        }
+        
+        if (!empty($form_url)) {
+            wp_send_json_success(array(
+                'form_url' => $form_url,
+                'message' => __('Redirecting to listing form...', 'vendor-dashboard-pro'),
+            ));
+        } else {
+            wp_send_json_error(array(
+                'message' => __('Listing form not available.', 'vendor-dashboard-pro'),
+            ));
+        }
     }
 }

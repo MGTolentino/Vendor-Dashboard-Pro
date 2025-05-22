@@ -68,18 +68,19 @@ class VDP_Assets {
         // Localize script
         wp_localize_script(
             'vdp-main',
-            'vdpSettings',
+            'vdp_vars',
             array(
-                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('vdp-ajax-nonce'),
-                'dashboardUrl' => vdp_get_dashboard_url(),
-                'i18n' => array(
-                    'confirmDelete' => __('Are you sure you want to delete this item?', 'vendor-dashboard-pro'),
-                    'saveChanges' => __('Save Changes', 'vendor-dashboard-pro'),
+                'dashboard_url' => vdp_get_dashboard_url(),
+                'texts' => array(
+                    'confirm_delete' => __('Are you sure you want to delete this item?', 'vendor-dashboard-pro'),
+                    'save_changes' => __('Save Changes', 'vendor-dashboard-pro'),
+                    'loading' => __('Loading...', 'vendor-dashboard-pro'),
                     'saving' => __('Saving...', 'vendor-dashboard-pro'),
                     'saved' => __('Saved!', 'vendor-dashboard-pro'),
-                    'error' => __('Error', 'vendor-dashboard-pro'),
-                    'sendReply' => __('Send Reply', 'vendor-dashboard-pro'),
+                    'error' => __('An error occurred. Please try again.', 'vendor-dashboard-pro'),
+                    'send_reply' => __('Send Reply', 'vendor-dashboard-pro'),
                     'sending' => __('Sending...', 'vendor-dashboard-pro'),
                 ),
             )

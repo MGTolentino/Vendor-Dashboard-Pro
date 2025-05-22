@@ -33,7 +33,7 @@ if (!$vendor) {
 // Get page title based on current action
 $page_titles = array(
     'dashboard' => __('Dashboard', 'vendor-dashboard-pro'),
-    'products' => __('Products', 'vendor-dashboard-pro'),
+    'products' => __('Listings', 'vendor-dashboard-pro'),
     'orders' => __('Orders', 'vendor-dashboard-pro'),
     'messages' => __('Messages', 'vendor-dashboard-pro'),
     'analytics' => __('Analytics', 'vendor-dashboard-pro'),
@@ -42,9 +42,9 @@ $page_titles = array(
 
 // If we have a specific action like 'edit' or 'view'
 if ($current_action === 'products' && isset($_GET['edit'])) {
-    $page_title = __('Edit Product', 'vendor-dashboard-pro');
+    $page_title = __('Edit Listing', 'vendor-dashboard-pro');
 } elseif ($current_action === 'products' && isset($_GET['add'])) {
-    $page_title = __('Add Product', 'vendor-dashboard-pro');
+    $page_title = __('Add Listing', 'vendor-dashboard-pro');
 } elseif ($current_action === 'orders' && $current_item) {
     $page_title = __('Order Details', 'vendor-dashboard-pro');
 } elseif ($current_action === 'messages' && $current_item) {
@@ -106,8 +106,19 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                             <?php endif; ?>
                         </h3>
                         <div class="vdp-vendor-status">
-                            <span class="vdp-status-indicator vdp-status-active"></span>
-                            <?php esc_html_e('Active Seller', 'vendor-dashboard-pro'); ?>
+                            <?php 
+                            $is_active = false;
+                            if (is_object($vendor) && method_exists($vendor, 'is_active_seller')) {
+                                $is_active = $vendor->is_active_seller();
+                            } elseif (is_object($vendor) && isset($vendor->is_active_seller) && is_callable($vendor->is_active_seller)) {
+                                $is_active = ($vendor->is_active_seller)();
+                            }
+                            
+                            $status_class = $is_active ? 'vdp-status-active' : 'vdp-status-inactive';
+                            $status_text = $is_active ? __('Active Seller', 'vendor-dashboard-pro') : __('Inactive Seller', 'vendor-dashboard-pro');
+                            ?>
+                            <span class="vdp-status-indicator <?php echo esc_attr($status_class); ?>"></span>
+                            <?php echo esc_html($status_text); ?>
                         </div>
                     </div>
                 </div>
@@ -182,15 +193,27 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                     $profile_url = '#';
                     if (class_exists('\HivePress\Models\Vendor') && function_exists('hivepress') && $vendor_id) {
                         // Try using HivePress URL
-                        $profile_url = hivepress()->router->get_url('vendor_view_page', ['id' => $vendor_id]);
+                        try {
+                            $profile_url = hivepress()->router->get_url('vendor_view_page', ['id' => $vendor_id]);
+                        } catch (Exception $e) {
+                            $profile_url = get_permalink($vendor_id);
+                        }
                     } elseif ($vendor_id) {
                         // Fallback to post permalink
                         $profile_url = get_permalink($vendor_id);
                     } elseif (!empty($vendor_slug)) {
-                        // Try to construct URL from slug
-                        $vendor_page = get_option('hp_vendor_view_page');
-                        if ($vendor_page) {
-                            $profile_url = get_permalink($vendor_page) . $vendor_slug . '/';
+                        // Try to construct URL from slug - check both Spanish and English patterns
+                        $base_url = home_url('/');
+                        $possible_urls = array(
+                            $base_url . 'official-store-for/' . $vendor_slug . '/',
+                            $base_url . 'tienda-oficial-de/' . $vendor_slug . '/',
+                        );
+                        
+                        // Check which URL exists by making a quick HEAD request or checking pages
+                        foreach ($possible_urls as $test_url) {
+                            // For now, we'll use the first one as default
+                            $profile_url = $test_url;
+                            break;
                         }
                     }
                     ?>
@@ -213,7 +236,7 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                         <?php if ($current_action === 'products') : ?>
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-ajax-link" data-action="products" data-item="add">
                                 <i class="fas fa-plus"></i>
-                                <?php esc_html_e('Add New Product', 'vendor-dashboard-pro'); ?>
+                                <?php esc_html_e('Add New Listing', 'vendor-dashboard-pro'); ?>
                             </a>
                         <?php endif; ?>
                         
@@ -256,7 +279,7 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                                     </a>
                                 </div>
                                 <div class="vdp-notification-footer">
-                                    <a href="#"><?php esc_html_e('View All Notifications', 'vendor-dashboard-pro'); ?></a>
+                                    <a href="<?php echo esc_url(vdp_get_dashboard_url('notifications')); ?>"><?php esc_html_e('View All Notifications', 'vendor-dashboard-pro'); ?></a>
                                 </div>
                             </div>
                         </div>

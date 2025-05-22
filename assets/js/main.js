@@ -39,6 +39,12 @@
                 VDP.loadContent(url, action);
             });
             
+            // Handle Add Listing button clicks
+            $(document).on('click', '.vdp-add-listing-btn', function(e) {
+                e.preventDefault();
+                VDP.triggerAddListingForm();
+            });
+            
             // Handle AJAX navigation
             $(document).on('click', '.vdp-content-area a.vdp-ajax-link', function(e) {
                 e.preventDefault();
@@ -725,6 +731,47 @@
                     $notice.remove();
                 }, 300);
             }, 3000);
+        },
+        
+        /**
+         * Trigger HivePress add listing form
+         */
+        triggerAddListingForm: function() {
+            // Try to trigger HivePress listing submit form
+            if (typeof hivepress !== 'undefined' && hivepress.getComponent) {
+                try {
+                    // Get the listing form component
+                    var listingForm = hivepress.getComponent('listing-submit-form');
+                    if (listingForm) {
+                        listingForm.show();
+                        return;
+                    }
+                } catch (e) {
+                    console.log('HivePress listing form not available');
+                }
+            }
+            
+            // Fallback: trigger WordPress filter for HivePress
+            $.ajax({
+                url: vdp_vars.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'vdp_trigger_listing_form',
+                    nonce: vdp_vars.nonce
+                },
+                success: function(response) {
+                    if (response.success && response.data.form_url) {
+                        window.location.href = response.data.form_url;
+                    } else {
+                        // Final fallback - redirect to products page
+                        window.location.href = VDP.buildDashboardUrl('products', 'add');
+                    }
+                },
+                error: function() {
+                    // Final fallback - redirect to products page
+                    window.location.href = VDP.buildDashboardUrl('products', 'add');
+                }
+            });
         }
     };
 

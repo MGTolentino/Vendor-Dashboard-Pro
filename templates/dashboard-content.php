@@ -221,7 +221,7 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
                             <i class="fas fa-box-open"></i>
                         </div>
                         <p><?php esc_html_e('No listings yet. Add your first listing!', 'vendor-dashboard-pro'); ?></p>
-                        <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
+                        <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm vdp-add-listing-btn">
                             <i class="fas fa-plus"></i> <?php esc_html_e('Add Listing', 'vendor-dashboard-pro'); ?>
                         </a>
                     </div>
