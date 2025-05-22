@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Leads module class.
+ * Leads module class for vendor-specific lead management.
  */
 class VDP_Leads {
     /**
@@ -20,6 +20,12 @@ class VDP_Leads {
      * @var VDP_Leads
      */
     protected static $instance = null;
+
+    /**
+     * Database tables
+     */
+    private $leads_table;
+    private $eventos_table;
 
     /**
      * Get the instance of this class.
@@ -37,37 +43,91 @@ class VDP_Leads {
      * Constructor.
      */
     public function __construct() {
+        global $wpdb;
+        $this->leads_table = $wpdb->prefix . 'jet_cct_leads';
+        $this->eventos_table = $wpdb->prefix . 'jet_cct_eventos';
+        
         // Initialize hooks
-        add_action('vdp_leads_content', array($this, 'render_leads_list'), 10);
+        add_action('vdp_leads_content', array($this, 'render_leads_dashboard'), 10);
         add_action('vdp_lead_view_content', array($this, 'render_lead_view'), 10);
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
     }
 
     /**
-     * Render leads list.
+     * Enqueue leads assets when on leads page.
      */
-    public function render_leads_list() {
+    public function enqueue_assets() {
+        if (!vdp_is_dashboard_page() || vdp_get_current_action() !== 'leads') {
+            return;
+        }
+
+        // Copy styles from leads management plugin
+        wp_enqueue_style(
+            'vdp-leads-admin',
+            VDP_PLUGIN_URL . 'assets/css/leads.css',
+            array(),
+            VDP_VERSION
+        );
+
+        wp_enqueue_style(
+            'vdp-leads-pipeline',
+            VDP_PLUGIN_URL . 'assets/css/leads-pipeline.css',
+            array(),
+            VDP_VERSION
+        );
+
+        // jQuery UI for datepicker
+        wp_enqueue_style(
+            'jquery-ui-style',
+            'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css',
+            array(),
+            '1.13.2'
+        );
+
+        wp_enqueue_script('jquery-ui-datepicker');
+        
+        wp_enqueue_script(
+            'vdp-leads-pipeline',
+            VDP_PLUGIN_URL . 'assets/js/leads-pipeline.js',
+            array('jquery', 'jquery-ui-datepicker'),
+            VDP_VERSION,
+            true
+        );
+
+        wp_localize_script('vdp-leads-pipeline', 'vdpLeads', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('vdp_leads_nonce'),
+            'site_url' => site_url(),
+            'vendor_id' => $this->get_current_vendor_id(),
+            'statusOptions' => $this->get_status_options()
+        ));
+    }
+
+    /**
+     * Render leads dashboard.
+     */
+    public function render_leads_dashboard() {
         // Get vendor
         $vendor = vdp_get_current_vendor();
         
         if (!$vendor) {
+            echo '<div class="vdp-notice vdp-notice-error">';
+            echo '<p>' . esc_html__('Vendor information not found.', 'vendor-dashboard-pro') . '</p>';
+            echo '</div>';
             return;
         }
+
+        $vendor_id = $vendor->get_id();
         
-        // Get current page
-        $paged = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
-        
-        // Get leads per page
-        $per_page = 10;
-        
-        // For demo purposes, we'll create sample leads
-        // In a real implementation, you would get actual leads from a database or API
-        $leads = self::get_demo_leads();
-        
-        // Calculate total pages (for demo)
-        $total_leads = count($leads);
-        $total_pages = ceil($total_leads / $per_page);
-        
-        // Include leads list template
+        // Check if leads tables exist
+        if (!$this->check_leads_tables()) {
+            echo '<div class="vdp-notice vdp-notice-warning">';
+            echo '<p>' . esc_html__('Leads Management plugin tables not found. Please make sure the Leads Management plugin is installed and activated.', 'vendor-dashboard-pro') . '</p>';
+            echo '</div>';
+            return;
+        }
+
+        // Include leads dashboard template
         include VDP_PLUGIN_DIR . 'templates/leads-content.php';
     }
 
@@ -92,244 +152,334 @@ class VDP_Leads {
             return;
         }
         
-        // For demo purposes, we'll get a sample lead
-        // In a real implementation, you would get the actual lead from a database or API
-        $lead = self::get_demo_lead($lead_id);
+        // Get lead details
+        $lead = $this->get_lead_details($lead_id);
         
         if (!$lead) {
             echo '<div class="vdp-notice vdp-notice-error">';
-            echo '<p>' . esc_html__('Lead not found.', 'vendor-dashboard-pro') . '</p>';
+            echo '<p>' . esc_html__('Lead not found or you don\'t have permission to view it.', 'vendor-dashboard-pro') . '</p>';
             echo '</div>';
             return;
         }
+        
+        // Set global for template compatibility
+        $GLOBALS['ltb_lead_data'] = $lead;
         
         // Include lead view template
         include VDP_PLUGIN_DIR . 'templates/lead-view-content.php';
     }
 
     /**
-     * Get demo leads for testing.
+     * Get leads for current vendor.
      *
-     * @return array
+     * @param array $args Query arguments.
+     * @return array Array of leads.
      */
-    public static function get_demo_leads() {
-        $statuses = array('new', 'contacted', 'qualified', 'converted', 'lost');
-        $sources = array('contact_form', 'website', 'referral', 'social_media', 'google');
+    public function get_vendor_leads($args = array()) {
+        $defaults = array(
+            'fecha_inicio' => '',
+            'fecha_fin' => '',
+            'fecha_evento_inicio' => '',
+            'fecha_evento_fin' => '',
+            'orderby' => 'fecha_solicitud',
+            'order' => 'DESC',
+            'per_page' => 20,
+            'paged' => 1,
+            'search' => '',
+            'status' => ''
+        );
+
+        $args = wp_parse_args($args, $defaults);
+        $vendor_id = $this->get_current_vendor_id();
         
-        $leads = array();
+        if (!$vendor_id) {
+            return array();
+        }
+
+        global $wpdb;
         
-        for ($i = 1; $i <= 15; $i++) {
-            $status = $statuses[array_rand($statuses)];
-            $source = $sources[array_rand($sources)];
-            $date = date('Y-m-d H:i:s', strtotime('-' . rand(1, 30) . ' days'));
-            
-            $leads[] = array(
-                'id' => $i,
-                'name' => 'Lead ' . $i,
-                'email' => 'lead' . $i . '@example.com',
-                'phone' => rand(1, 2) == 1 ? '555-' . rand(100, 999) . '-' . rand(1000, 9999) : '',
-                'message' => 'This is a sample lead message ' . $i . '. In a real implementation, this would contain actual message content.',
-                'date' => $date,
-                'status' => $status,
-                'source' => $source,
-            );
+        $where = array('1=1');
+        $values = array();
+
+        // Base query - filter by vendor's listings
+        $query = "
+            SELECT DISTINCT
+                l._ID as lead_id,
+                l.cct_created as fecha_solicitud,
+                l.lead_razon_social,
+                l.lead_nombre,
+                l.lead_apellido,
+                l.lead_celular,
+                l.lead_e_mail,
+                e._ID as evento_id,
+                e.evento_status,
+                e.fecha_de_evento,
+                e.tipo_de_evento,
+                e.evento_servicio_de_interes,
+                (SELECT COUNT(*) FROM {$this->eventos_table} WHERE lead_id = l._ID) as total_eventos
+            FROM {$this->leads_table} l
+            LEFT JOIN (
+                SELECT e1.*
+                FROM {$this->eventos_table} e1
+                LEFT JOIN {$this->eventos_table} e2
+                ON e1.lead_id = e2.lead_id AND e1.fecha_de_evento < e2.fecha_de_evento
+                WHERE e2.lead_id IS NULL
+            ) e ON e.lead_id = l._ID
+            INNER JOIN {$wpdb->posts} listings ON listings.post_title = e.evento_servicio_de_interes
+            WHERE listings.post_type = 'hp_listing' 
+            AND listings.post_parent = %d
+        ";
+        
+        array_unshift($values, $vendor_id);
+
+        // Add filters
+        if (!empty($args['fecha_inicio'])) {
+            $where[] = "l.cct_created >= %s";
+            $values[] = $args['fecha_inicio'];
         }
         
-        return $leads;
+        if (!empty($args['fecha_fin'])) {
+            $where[] = "l.cct_created <= %s";
+            $values[] = $args['fecha_fin'];
+        }
+
+        if (!empty($args['status'])) {
+            $where[] = "e.evento_status = %s";
+            $values[] = $args['status'];
+        }
+
+        if (!empty($args['search'])) {
+            $where[] = "(l.lead_nombre LIKE %s OR l.lead_apellido LIKE %s OR l.lead_e_mail LIKE %s OR l.lead_razon_social LIKE %s)";
+            $search_term = '%' . $wpdb->esc_like($args['search']) . '%';
+            $values[] = $search_term;
+            $values[] = $search_term;
+            $values[] = $search_term;
+            $values[] = $search_term;
+        }
+
+        // Build final query
+        if (!empty($where)) {
+            $query .= ' AND ' . implode(' AND ', $where);
+        }
+
+        $query .= " ORDER BY {$args['orderby']} {$args['order']}";
+
+        // Add pagination
+        if ($args['per_page'] > 0) {
+            $offset = ($args['paged'] - 1) * $args['per_page'];
+            $query .= $wpdb->prepare(" LIMIT %d OFFSET %d", $args['per_page'], $offset);
+        }
+
+        return $wpdb->get_results($wpdb->prepare($query, $values));
     }
 
     /**
-     * Get a demo lead by ID.
+     * Get total count of vendor leads.
+     *
+     * @param array $args Query arguments.
+     * @return int Total count.
+     */
+    public function get_vendor_leads_count($args = array()) {
+        $vendor_id = $this->get_current_vendor_id();
+        
+        if (!$vendor_id) {
+            return 0;
+        }
+
+        global $wpdb;
+        
+        $where = array('1=1');
+        $values = array($vendor_id);
+
+        $query = "
+            SELECT COUNT(DISTINCT l._ID)
+            FROM {$this->leads_table} l
+            LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
+            INNER JOIN {$wpdb->posts} listings ON listings.post_title = e.evento_servicio_de_interes
+            WHERE listings.post_type = 'hp_listing' 
+            AND listings.post_parent = %d
+        ";
+
+        // Add same filters as get_vendor_leads
+        if (!empty($args['fecha_inicio'])) {
+            $where[] = "l.cct_created >= %s";
+            $values[] = $args['fecha_inicio'];
+        }
+        
+        if (!empty($args['fecha_fin'])) {
+            $where[] = "l.cct_created <= %s";
+            $values[] = $args['fecha_fin'];
+        }
+
+        if (!empty($args['status'])) {
+            $where[] = "e.evento_status = %s";
+            $values[] = $args['status'];
+        }
+
+        if (!empty($args['search'])) {
+            $where[] = "(l.lead_nombre LIKE %s OR l.lead_apellido LIKE %s OR l.lead_e_mail LIKE %s OR l.lead_razon_social LIKE %s)";
+            $search_term = '%' . $wpdb->esc_like($args['search']) . '%';
+            $values[] = $search_term;
+            $values[] = $search_term;
+            $values[] = $search_term;
+            $values[] = $search_term;
+        }
+
+        if (!empty($where)) {
+            $query .= ' AND ' . implode(' AND ', $where);
+        }
+
+        return (int) $wpdb->get_var($wpdb->prepare($query, $values));
+    }
+
+    /**
+     * Get lead details.
      *
      * @param int $lead_id Lead ID.
-     * @return array|null
+     * @return object|null Lead data.
      */
-    public static function get_demo_lead($lead_id) {
-        $leads = self::get_demo_leads();
+    public function get_lead_details($lead_id) {
+        if (!$this->can_access_lead($lead_id)) {
+            return null;
+        }
+
+        global $wpdb;
+
+        // Get lead basic info
+        $lead = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->leads_table} WHERE _ID = %d",
+            $lead_id
+        ));
+
+        if (!$lead) {
+            return null;
+        }
+
+        // Get all events for this lead
+        $eventos = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->eventos_table} 
+            WHERE lead_id = %d 
+            ORDER BY fecha_de_evento DESC",
+            $lead_id
+        ));
+
+        $lead->eventos = $eventos;
+        $lead->fecha_solicitud = date('Y-m-d H:i:s', strtotime($lead->cct_created));
+
+        return $lead;
+    }
+
+    /**
+     * Check if current vendor can access a specific lead.
+     *
+     * @param int $lead_id Lead ID.
+     * @return bool True if can access.
+     */
+    public function can_access_lead($lead_id) {
+        $vendor_id = $this->get_current_vendor_id();
         
+        if (!$vendor_id) {
+            return false;
+        }
+
+        global $wpdb;
+
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*)
+            FROM {$this->leads_table} l
+            INNER JOIN {$this->eventos_table} e ON e.lead_id = l._ID
+            INNER JOIN {$wpdb->posts} listings ON listings.post_title = e.evento_servicio_de_interes
+            WHERE l._ID = %d 
+            AND listings.post_type = 'hp_listing' 
+            AND listings.post_parent = %d",
+            $lead_id,
+            $vendor_id
+        ));
+
+        return $count > 0;
+    }
+
+    /**
+     * Get current vendor ID.
+     *
+     * @return int|null Vendor ID.
+     */
+    private function get_current_vendor_id() {
+        $vendor = vdp_get_current_vendor();
+        return $vendor ? $vendor->get_id() : null;
+    }
+
+    /**
+     * Check if leads tables exist.
+     *
+     * @return bool True if tables exist.
+     */
+    private function check_leads_tables() {
+        global $wpdb;
+        
+        $leads_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->leads_table}'") === $this->leads_table;
+        $eventos_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->eventos_table}'") === $this->eventos_table;
+        
+        return $leads_exists && $eventos_exists;
+    }
+
+    /**
+     * Get status options for leads.
+     *
+     * @return array Status options.
+     */
+    public function get_status_options() {
+        // Based on the original leads plugin structure
+        return array(
+            'inicial' => __('Inicial', 'vendor-dashboard-pro'),
+            'contactado' => __('Contactado', 'vendor-dashboard-pro'),
+            'cita-agendada' => __('Cita Agendada', 'vendor-dashboard-pro'),
+            'propuesta-enviada' => __('Propuesta Enviada', 'vendor-dashboard-pro'),
+            'negociacion' => __('Negociación', 'vendor-dashboard-pro'),
+            'cerrado-ganado' => __('Cerrado Ganado', 'vendor-dashboard-pro'),
+            'cerrado-perdido' => __('Cerrado Perdido', 'vendor-dashboard-pro')
+        );
+    }
+
+    /**
+     * Get active status options (excluding closed states for pipeline).
+     *
+     * @return array Active status options.
+     */
+    public function get_active_status_options() {
+        $all_statuses = $this->get_status_options();
+        
+        // Remove closed states for pipeline view
+        unset($all_statuses['cerrado-ganado']);
+        unset($all_statuses['cerrado-perdido']);
+        
+        return $all_statuses;
+    }
+
+    /**
+     * Get leads grouped by status for pipeline view.
+     *
+     * @param array $args Query arguments.
+     * @return array Leads grouped by status.
+     */
+    public function get_leads_by_status($args = array()) {
+        $leads = $this->get_vendor_leads($args);
+        $grouped = array();
+        
+        // Initialize groups
+        foreach ($this->get_status_options() as $status => $label) {
+            $grouped[$status] = array();
+        }
+        
+        // Group leads by status
         foreach ($leads as $lead) {
-            if ($lead['id'] == $lead_id) {
-                // Add more details for the single lead view
-                $lead['notes'] = self::get_demo_lead_notes();
-                $lead['activities'] = self::get_demo_lead_activities();
-                
-                return $lead;
+            $status = $lead->evento_status ?: 'inicial';
+            if (isset($grouped[$status])) {
+                $grouped[$status][] = $lead;
             }
         }
         
-        return null;
-    }
-
-    /**
-     * Get demo lead notes.
-     *
-     * @return array
-     */
-    public static function get_demo_lead_notes() {
-        $notes = array();
-        $num_notes = rand(1, 3);
-        
-        for ($i = 1; $i <= $num_notes; $i++) {
-            $notes[] = array(
-                'id' => $i,
-                'content' => 'This is a note ' . $i . ' about the lead.',
-                'date' => date('Y-m-d H:i:s', strtotime('-' . (5 - $i) . ' days')),
-                'author' => 'Vendor',
-            );
-        }
-        
-        return $notes;
-    }
-
-    /**
-     * Get demo lead activities.
-     *
-     * @return array
-     */
-    public static function get_demo_lead_activities() {
-        $activities = array();
-        $num_activities = rand(3, 6);
-        
-        $types = array(
-            'email' => 'Sent email',
-            'call' => 'Phone call',
-            'meeting' => 'Meeting scheduled',
-            'status' => 'Status changed',
-            'note' => 'Note added',
-        );
-        
-        for ($i = 1; $i <= $num_activities; $i++) {
-            $type = array_rand($types);
-            $date = date('Y-m-d H:i:s', strtotime('-' . ($num_activities - $i) . ' days'));
-            
-            $activities[] = array(
-                'id' => $i,
-                'type' => $type,
-                'description' => $types[$type] . ': ' . self::get_activity_description($type),
-                'date' => $date,
-                'user' => 'Vendor',
-            );
-        }
-        
-        // Sort by date, newest first
-        usort($activities, function($a, $b) {
-            return strtotime($b['date']) - strtotime($a['date']);
-        });
-        
-        return $activities;
-    }
-
-    /**
-     * Get random activity description.
-     *
-     * @param string $type Activity type.
-     * @return string
-     */
-    public static function get_activity_description($type) {
-        switch ($type) {
-            case 'email':
-                $subjects = array(
-                    'Follow-up on your inquiry',
-                    'Information about our services',
-                    'Special offer for new customers',
-                    'Thank you for your interest',
-                );
-                return $subjects[array_rand($subjects)];
-                
-            case 'call':
-                $results = array(
-                    'Left voicemail',
-                    'Discussed product options',
-                    'Scheduled follow-up call',
-                    'No answer',
-                );
-                return $results[array_rand($results)];
-                
-            case 'meeting':
-                $types = array(
-                    'Initial consultation',
-                    'Product demo',
-                    'Proposal review',
-                    'Contract signing',
-                );
-                return $types[array_rand($types)];
-                
-            case 'status':
-                $statuses = array(
-                    'New to Contacted',
-                    'Contacted to Qualified',
-                    'Qualified to Converted',
-                    'Qualified to Lost',
-                );
-                return $statuses[array_rand($statuses)];
-                
-            case 'note':
-                $notes = array(
-                    'Customer seems very interested',
-                    'Need to follow up next week',
-                    'Requested more information about pricing',
-                    'Interested in premium package',
-                );
-                return $notes[array_rand($notes)];
-                
-            default:
-                return 'Activity recorded';
-        }
-    }
-
-    /**
-     * Get lead status label.
-     *
-     * @param string $status Lead status.
-     * @return string
-     */
-    public static function get_status_label($status) {
-        $statuses = array(
-            'new' => __('New', 'vendor-dashboard-pro'),
-            'contacted' => __('Contacted', 'vendor-dashboard-pro'),
-            'qualified' => __('Qualified', 'vendor-dashboard-pro'),
-            'converted' => __('Converted', 'vendor-dashboard-pro'),
-            'lost' => __('Lost', 'vendor-dashboard-pro'),
-        );
-        
-        return isset($statuses[$status]) ? $statuses[$status] : $status;
-    }
-
-    /**
-     * Get lead status class.
-     *
-     * @param string $status Lead status.
-     * @return string
-     */
-    public static function get_status_class($status) {
-        $classes = array(
-            'new' => 'vdp-status-new',
-            'contacted' => 'vdp-status-contacted',
-            'qualified' => 'vdp-status-qualified',
-            'converted' => 'vdp-status-converted',
-            'lost' => 'vdp-status-lost',
-        );
-        
-        return isset($classes[$status]) ? $classes[$status] : '';
-    }
-
-    /**
-     * Get lead source label.
-     *
-     * @param string $source Lead source.
-     * @return string
-     */
-    public static function get_source_label($source) {
-        $sources = array(
-            'contact_form' => __('Contact Form', 'vendor-dashboard-pro'),
-            'website' => __('Website', 'vendor-dashboard-pro'),
-            'referral' => __('Referral', 'vendor-dashboard-pro'),
-            'social_media' => __('Social Media', 'vendor-dashboard-pro'),
-            'google' => __('Google', 'vendor-dashboard-pro'),
-            'other' => __('Other', 'vendor-dashboard-pro'),
-        );
-        
-        return isset($sources[$source]) ? $sources[$source] : $source;
+        return $grouped;
     }
 }
 

@@ -10,61 +10,48 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Initialize leads array with demo data if not set
-if (!isset($leads) || !is_array($leads)) {
-    $leads = array(
-        array(
-            'id' => 1,
-            'name' => 'John Smith',
-            'email' => 'john.smith@example.com',
-            'phone' => '555-123-4567',
-            'message' => 'I am interested in your services for my upcoming event.',
-            'date' => date('Y-m-d H:i:s', strtotime('-2 days')),
-            'status' => 'new',
-            'source' => 'contact_form',
-        ),
-        array(
-            'id' => 2,
-            'name' => 'Maria Lopez',
-            'email' => 'maria.lopez@example.com',
-            'phone' => '555-987-6543',
-            'message' => 'Need information about pricing and availability.',
-            'date' => date('Y-m-d H:i:s', strtotime('-5 days')),
-            'status' => 'contacted',
-            'source' => 'referral',
-        ),
-        array(
-            'id' => 3,
-            'name' => 'David Johnson',
-            'email' => 'david.johnson@example.com',
-            'phone' => '555-678-9012',
-            'message' => 'Looking for a quote for corporate event, approx 50 people.',
-            'date' => date('Y-m-d H:i:s', strtotime('-1 week')),
-            'status' => 'qualified',
-            'source' => 'website',
-        ),
-        array(
-            'id' => 4,
-            'name' => 'Sarah Wilson',
-            'email' => 'sarah.wilson@example.com',
-            'phone' => '555-345-6789',
-            'message' => 'Would like to schedule a consultation next week.',
-            'date' => date('Y-m-d H:i:s', strtotime('-3 days')),
-            'status' => 'converted',
-            'source' => 'social_media',
-        ),
-        array(
-            'id' => 5,
-            'name' => 'Michael Chen',
-            'email' => 'michael.chen@example.com',
-            'phone' => '555-234-5678',
-            'message' => 'Interested in your product. Please send more information.',
-            'date' => date('Y-m-d H:i:s', strtotime('-2 days')),
-            'status' => 'lost',
-            'source' => 'google',
-        ),
-    );
+// Get current vendor and initialize leads class
+$current_user_id = get_current_user_id();
+$vendor = vdp_get_current_vendor();
+
+if (!$vendor) {
+    echo '<div class="vdp-notice vdp-notice-error">' . __('Vendor not found.', 'vendor-dashboard-pro') . '</div>';
+    return;
 }
+
+// Initialize VDP_Leads class
+$leads_handler = new VDP_Leads();
+
+// Get pagination parameters
+$paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+$per_page = 10;
+$offset = ($paged - 1) * $per_page;
+
+// Get filter parameters
+$status_filter = isset($_GET['status_filter']) ? sanitize_text_field($_GET['status_filter']) : '';
+$source_filter = isset($_GET['source_filter']) ? sanitize_text_field($_GET['source_filter']) : '';
+$search_filter = isset($_GET['search_filter']) ? sanitize_text_field($_GET['search_filter']) : '';
+
+// Build filters array
+$filters = array();
+if (!empty($status_filter)) {
+    $filters['status'] = $status_filter;
+}
+if (!empty($source_filter)) {
+    $filters['source'] = $source_filter;
+}
+if (!empty($search_filter)) {
+    $filters['search'] = $search_filter;
+}
+
+// Get vendor leads
+$leads_data = $leads_handler->get_vendor_leads($vendor->ID, $per_page, $offset, $filters);
+$leads = $leads_data['leads'];
+$total_leads = $leads_data['total'];
+$total_pages = ceil($total_leads / $per_page);
+
+// Get lead statistics
+$stats = $leads_handler->get_vendor_lead_stats($vendor->ID);
 
 // Initialize total pages and current page for pagination
 if (!isset($total_pages)) {
@@ -78,23 +65,23 @@ if (!isset($paged)) {
 // Get lead status labels and classes
 function vdp_get_lead_status_label($status) {
     $labels = array(
-        'new' => __('New', 'vendor-dashboard-pro'),
-        'contacted' => __('Contacted', 'vendor-dashboard-pro'),
-        'qualified' => __('Qualified', 'vendor-dashboard-pro'),
-        'converted' => __('Converted', 'vendor-dashboard-pro'),
-        'lost' => __('Lost', 'vendor-dashboard-pro'),
+        'nuevo' => __('Nuevo', 'vendor-dashboard-pro'),
+        'contactado' => __('Contactado', 'vendor-dashboard-pro'),
+        'interesado' => __('Interesado', 'vendor-dashboard-pro'),
+        'contratado' => __('Contratado', 'vendor-dashboard-pro'),
+        'perdido' => __('Perdido', 'vendor-dashboard-pro'),
     );
     
-    return isset($labels[$status]) ? $labels[$status] : $status;
+    return isset($labels[$status]) ? $labels[$status] : ucfirst($status);
 }
 
 function vdp_get_lead_status_class($status) {
     $classes = array(
-        'new' => 'vdp-status-new',
-        'contacted' => 'vdp-status-contacted',
-        'qualified' => 'vdp-status-qualified',
-        'converted' => 'vdp-status-converted',
-        'lost' => 'vdp-status-lost',
+        'nuevo' => 'vdp-status-new',
+        'contactado' => 'vdp-status-contacted',
+        'interesado' => 'vdp-status-qualified',
+        'contratado' => 'vdp-status-converted',
+        'perdido' => 'vdp-status-lost',
     );
     
     return isset($classes[$status]) ? $classes[$status] : 'vdp-status-default';
@@ -113,32 +100,15 @@ function vdp_get_lead_source_label($source) {
     return isset($labels[$source]) ? $labels[$source] : $source;
 }
 
-// Calculate lead statistics
-$total_leads = count($leads);
-$new_leads = 0;
-$contacted_leads = 0;
-$qualified_leads = 0;
-$converted_leads = 0;
-
-foreach ($leads as $lead) {
-    switch ($lead['status']) {
-        case 'new':
-            $new_leads++;
-            break;
-        case 'contacted':
-            $contacted_leads++;
-            break;
-        case 'qualified':
-            $qualified_leads++;
-            break;
-        case 'converted':
-            $converted_leads++;
-            break;
-    }
-}
+// Get lead statistics from data
+$total_leads_count = $stats['total'];
+$new_leads = $stats['nuevo'] ?? 0;
+$contacted_leads = $stats['contactado'] ?? 0;
+$qualified_leads = $stats['interesado'] ?? 0;
+$converted_leads = $stats['contratado'] ?? 0;
 
 // Calculate conversion rate
-$conversion_rate = $total_leads > 0 ? round(($converted_leads / $total_leads) * 100, 1) : 0;
+$conversion_rate = $total_leads_count > 0 ? round(($converted_leads / $total_leads_count) * 100, 1) : 0;
 ?>
 
 <div class="vdp-leads-content">
@@ -150,7 +120,7 @@ $conversion_rate = $total_leads > 0 ? round(($converted_leads / $total_leads) * 
                     <i class="fas fa-user-plus"></i>
                 </div>
                 <div class="vdp-stat-content">
-                    <div class="vdp-stat-value"><?php echo esc_html($total_leads); ?></div>
+                    <div class="vdp-stat-value"><?php echo esc_html($total_leads_count); ?></div>
                     <div class="vdp-stat-label"><?php esc_html_e('Total Leads', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
@@ -162,40 +132,40 @@ $conversion_rate = $total_leads > 0 ? round(($converted_leads / $total_leads) * 
                 </div>
                 <div class="vdp-stat-content">
                     <div class="vdp-stat-value"><?php echo esc_html($new_leads); ?></div>
-                    <div class="vdp-stat-label"><?php esc_html_e('New', 'vendor-dashboard-pro'); ?></div>
+                    <div class="vdp-stat-label"><?php esc_html_e('Nuevos', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
             
-            <!-- In Progress -->
+            <!-- Contacted -->
             <div class="vdp-stat-box">
                 <div class="vdp-stat-icon vdp-status-contacted">
                     <i class="fas fa-phone"></i>
                 </div>
                 <div class="vdp-stat-content">
                     <div class="vdp-stat-value"><?php echo esc_html($contacted_leads); ?></div>
-                    <div class="vdp-stat-label"><?php esc_html_e('Contacted', 'vendor-dashboard-pro'); ?></div>
+                    <div class="vdp-stat-label"><?php esc_html_e('Contactados', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
             
-            <!-- Qualified -->
+            <!-- Interested -->
             <div class="vdp-stat-box">
                 <div class="vdp-stat-icon vdp-status-qualified">
                     <i class="fas fa-thumbs-up"></i>
                 </div>
                 <div class="vdp-stat-content">
                     <div class="vdp-stat-value"><?php echo esc_html($qualified_leads); ?></div>
-                    <div class="vdp-stat-label"><?php esc_html_e('Qualified', 'vendor-dashboard-pro'); ?></div>
+                    <div class="vdp-stat-label"><?php esc_html_e('Interesados', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
             
-            <!-- Converted -->
+            <!-- Contracted -->
             <div class="vdp-stat-box">
                 <div class="vdp-stat-icon vdp-status-converted">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="vdp-stat-content">
                     <div class="vdp-stat-value"><?php echo esc_html($converted_leads); ?></div>
-                    <div class="vdp-stat-label"><?php esc_html_e('Converted', 'vendor-dashboard-pro'); ?></div>
+                    <div class="vdp-stat-label"><?php esc_html_e('Contratados', 'vendor-dashboard-pro'); ?></div>
                 </div>
             </div>
             
@@ -214,40 +184,25 @@ $conversion_rate = $total_leads > 0 ? round(($converted_leads / $total_leads) * 
     
     <div class="vdp-section vdp-leads-list-section">
         <div class="vdp-section-header">
-            <h2 class="vdp-section-title"><?php esc_html_e('All Leads', 'vendor-dashboard-pro'); ?></h2>
+            <h2 class="vdp-section-title"><?php esc_html_e('Mis Leads', 'vendor-dashboard-pro'); ?></h2>
             <div class="vdp-section-actions">
                 <div class="vdp-filters">
                     <select class="vdp-filter-select" id="lead-status-filter">
-                        <option value=""><?php esc_html_e('All Statuses', 'vendor-dashboard-pro'); ?></option>
-                        <option value="new"><?php esc_html_e('New', 'vendor-dashboard-pro'); ?></option>
-                        <option value="contacted"><?php esc_html_e('Contacted', 'vendor-dashboard-pro'); ?></option>
-                        <option value="qualified"><?php esc_html_e('Qualified', 'vendor-dashboard-pro'); ?></option>
-                        <option value="converted"><?php esc_html_e('Converted', 'vendor-dashboard-pro'); ?></option>
-                        <option value="lost"><?php esc_html_e('Lost', 'vendor-dashboard-pro'); ?></option>
-                    </select>
-                    
-                    <select class="vdp-filter-select" id="lead-source-filter">
-                        <option value=""><?php esc_html_e('All Sources', 'vendor-dashboard-pro'); ?></option>
-                        <option value="contact_form"><?php esc_html_e('Contact Form', 'vendor-dashboard-pro'); ?></option>
-                        <option value="website"><?php esc_html_e('Website', 'vendor-dashboard-pro'); ?></option>
-                        <option value="referral"><?php esc_html_e('Referral', 'vendor-dashboard-pro'); ?></option>
-                        <option value="social_media"><?php esc_html_e('Social Media', 'vendor-dashboard-pro'); ?></option>
-                        <option value="google"><?php esc_html_e('Google', 'vendor-dashboard-pro'); ?></option>
-                        <option value="other"><?php esc_html_e('Other', 'vendor-dashboard-pro'); ?></option>
+                        <option value=""><?php esc_html_e('Todos los Estados', 'vendor-dashboard-pro'); ?></option>
+                        <option value="nuevo"><?php esc_html_e('Nuevo', 'vendor-dashboard-pro'); ?></option>
+                        <option value="contactado"><?php esc_html_e('Contactado', 'vendor-dashboard-pro'); ?></option>
+                        <option value="interesado"><?php esc_html_e('Interesado', 'vendor-dashboard-pro'); ?></option>
+                        <option value="contratado"><?php esc_html_e('Contratado', 'vendor-dashboard-pro'); ?></option>
+                        <option value="perdido"><?php esc_html_e('Perdido', 'vendor-dashboard-pro'); ?></option>
                     </select>
                     
                     <div class="vdp-search-filter">
-                        <input type="text" class="vdp-search-input" id="lead-search" placeholder="<?php esc_attr_e('Search leads...', 'vendor-dashboard-pro'); ?>">
+                        <input type="text" class="vdp-search-input" id="lead-search" placeholder="<?php esc_attr_e('Buscar leads...', 'vendor-dashboard-pro'); ?>">
                         <button class="vdp-search-btn">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
                 </div>
-                
-                <a href="#" class="vdp-btn vdp-btn-primary vdp-add-lead-btn">
-                    <i class="fas fa-plus"></i>
-                    <?php esc_html_e('Add New Lead', 'vendor-dashboard-pro'); ?>
-                </a>
             </div>
         </div>
         
@@ -255,12 +210,12 @@ $conversion_rate = $total_leads > 0 ? round(($converted_leads / $total_leads) * 
             <table class="vdp-table vdp-leads-table">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e('Name', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Contact', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Source', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Date', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Status', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Actions', 'vendor-dashboard-pro'); ?></th>
+                        <th><?php esc_html_e('Cliente', 'vendor-dashboard-pro'); ?></th>
+                        <th><?php esc_html_e('Contacto', 'vendor-dashboard-pro'); ?></th>
+                        <th><?php esc_html_e('Evento', 'vendor-dashboard-pro'); ?></th>
+                        <th><?php esc_html_e('Fecha', 'vendor-dashboard-pro'); ?></th>
+                        <th><?php esc_html_e('Estado', 'vendor-dashboard-pro'); ?></th>
+                        <th><?php esc_html_e('Acciones', 'vendor-dashboard-pro'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -271,57 +226,51 @@ $conversion_rate = $total_leads > 0 ? round(($converted_leads / $total_leads) * 
                                     <div class="vdp-empty-icon">
                                         <i class="fas fa-user-plus"></i>
                                     </div>
-                                    <p><?php esc_html_e('No leads found.', 'vendor-dashboard-pro'); ?></p>
-                                    <a href="#" class="vdp-btn vdp-btn-primary vdp-btn-sm vdp-add-lead-btn">
-                                        <i class="fas fa-plus"></i> <?php esc_html_e('Add New Lead', 'vendor-dashboard-pro'); ?>
-                                    </a>
+                                    <p><?php esc_html_e('No tienes leads aún. Los leads aparecerán aquí cuando los clientes se interesen en tus servicios.', 'vendor-dashboard-pro'); ?></p>
                                 </div>
                             </td>
                         </tr>
                     <?php else : ?>
                         <?php foreach ($leads as $lead) : ?>
-                            <tr class="vdp-lead-row" data-status="<?php echo esc_attr($lead['status']); ?>" data-source="<?php echo esc_attr($lead['source']); ?>">
+                            <tr class="vdp-lead-row" data-status="<?php echo esc_attr($lead->lead_status); ?>" data-source="<?php echo esc_attr($lead->lead_source ?? 'website'); ?>">
                                 <td class="vdp-lead-name">
-                                    <a href="#" class="vdp-lead-view" data-lead-id="<?php echo esc_attr($lead['id']); ?>">
-                                        <?php echo esc_html($lead['name']); ?>
+                                    <a href="<?php echo esc_url(add_query_arg('lead_id', $lead->_ID, vdp_get_dashboard_url('lead-view'))); ?>" class="vdp-lead-view" data-lead-id="<?php echo esc_attr($lead->_ID); ?>">
+                                        <?php echo esc_html($lead->lead_name); ?>
                                     </a>
                                 </td>
                                 <td class="vdp-lead-contact">
                                     <div class="vdp-lead-email">
-                                        <i class="fas fa-envelope"></i> <?php echo esc_html($lead['email']); ?>
+                                        <i class="fas fa-envelope"></i> <?php echo esc_html($lead->lead_email); ?>
                                     </div>
-                                    <?php if (!empty($lead['phone'])) : ?>
+                                    <?php if (!empty($lead->lead_phone)) : ?>
                                         <div class="vdp-lead-phone">
-                                            <i class="fas fa-phone"></i> <?php echo esc_html($lead['phone']); ?>
+                                            <i class="fas fa-phone"></i> <?php echo esc_html($lead->lead_phone); ?>
                                         </div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="vdp-lead-source">
-                                    <?php echo esc_html(vdp_get_lead_source_label($lead['source'])); ?>
+                                    <?php echo esc_html($lead->event_name); ?>
                                 </td>
                                 <td class="vdp-lead-date">
                                     <div class="vdp-lead-date-display">
-                                        <?php echo esc_html(vdp_format_date($lead['date'])); ?>
+                                        <?php echo esc_html(date_i18n('M j, Y', strtotime($lead->lead_created_date))); ?>
                                     </div>
                                     <div class="vdp-lead-time-ago">
-                                        <?php echo esc_html(vdp_time_ago($lead['date'])); ?>
+                                        <?php echo esc_html(human_time_diff(strtotime($lead->lead_created_date), current_time('timestamp')) . ' ago'); ?>
                                     </div>
                                 </td>
                                 <td class="vdp-lead-status">
-                                    <span class="vdp-status-badge <?php echo esc_attr(vdp_get_lead_status_class($lead['status'])); ?>">
-                                        <?php echo esc_html(vdp_get_lead_status_label($lead['status'])); ?>
+                                    <span class="vdp-status-badge <?php echo esc_attr(vdp_get_lead_status_class($lead->lead_status)); ?>">
+                                        <?php echo esc_html(vdp_get_lead_status_label($lead->lead_status)); ?>
                                     </span>
                                 </td>
                                 <td class="vdp-lead-actions">
                                     <div class="vdp-table-actions">
-                                        <a href="#" class="vdp-btn vdp-btn-sm vdp-btn-icon vdp-lead-view" data-lead-id="<?php echo esc_attr($lead['id']); ?>" title="<?php esc_attr_e('View', 'vendor-dashboard-pro'); ?>">
+                                        <a href="<?php echo esc_url(add_query_arg('lead_id', $lead->_ID, vdp_get_dashboard_url('lead-view'))); ?>" class="vdp-btn vdp-btn-sm vdp-btn-icon vdp-lead-view" data-lead-id="<?php echo esc_attr($lead->_ID); ?>" title="<?php esc_attr_e('View', 'vendor-dashboard-pro'); ?>">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="#" class="vdp-btn vdp-btn-sm vdp-btn-icon vdp-lead-edit" data-lead-id="<?php echo esc_attr($lead['id']); ?>" title="<?php esc_attr_e('Edit', 'vendor-dashboard-pro'); ?>">
+                                        <button type="button" class="vdp-btn vdp-btn-sm vdp-btn-icon vdp-update-lead-status" data-lead-id="<?php echo esc_attr($lead->_ID); ?>" title="<?php esc_attr_e('Update Status', 'vendor-dashboard-pro'); ?>">
                                             <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="vdp-btn vdp-btn-sm vdp-btn-icon vdp-delete-lead" data-lead-id="<?php echo esc_attr($lead['id']); ?>" title="<?php esc_attr_e('Delete', 'vendor-dashboard-pro'); ?>">
-                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </td>
