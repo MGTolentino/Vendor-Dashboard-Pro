@@ -241,6 +241,21 @@
         },
 
         /**
+         * Create gradient helper function
+         * 
+         * @param {CanvasRenderingContext2D} ctx Canvas context
+         * @param {string} startColor Start color
+         * @param {string} endColor End color
+         * @return {CanvasGradient} Gradient
+         */
+        createGradient: function(ctx, startColor, endColor) {
+            var gradient = ctx.createLinearGradient(0, 0, 0, 160);
+            gradient.addColorStop(0, startColor);
+            gradient.addColorStop(1, endColor);
+            return gradient;
+        },
+
+        /**
          * Render chart
          * 
          * @param {string} chartId Chart canvas ID
@@ -278,7 +293,7 @@
                         fill: true,
                         backgroundColor: function(context) {
                             var ctx = context.chart.ctx;
-                            return createGradient(ctx, color + '40', color + '00');
+                            return VDP.createGradient(ctx, color + '40', color + '00');
                         }
                     }]
                 },

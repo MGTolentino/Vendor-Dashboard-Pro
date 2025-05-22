@@ -144,11 +144,15 @@ function vdp_create_vendor_from_post($post) {
         $name = $user_info->display_name;
     }
     
-    // Debug log
-    error_log('Vendor ID: ' . $post->ID);
-    error_log('Vendor post_name: ' . $post->post_name);
-    error_log('Vendor post_title: ' . $post->post_title);
-    error_log('Final vendor name: ' . $name);
+    // Debug log - Enable for debugging
+    error_log('VDP DEBUG - Vendor ID: ' . $post->ID);
+    error_log('VDP DEBUG - Vendor post_name: ' . $post->post_name);
+    error_log('VDP DEBUG - Vendor post_title: ' . $post->post_title);
+    error_log('VDP DEBUG - User ID: ' . $user_id);
+    if ($user_info) {
+        error_log('VDP DEBUG - User display_name: ' . $user_info->display_name);
+    }
+    error_log('VDP DEBUG - Final vendor name: ' . $name);
     
     // Add methods to the vendor object
     $vendor->get_id = function() use ($post) {

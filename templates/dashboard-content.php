@@ -35,6 +35,13 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
     $callback = $vendor->get_name;
     $vendor_name = $callback();
 }
+
+// Debug log for template
+error_log('VDP DEBUG TEMPLATE - Vendor object type: ' . gettype($vendor));
+if (is_object($vendor)) {
+    error_log('VDP DEBUG TEMPLATE - Vendor methods: ' . print_r(get_class_methods($vendor), true));
+}
+error_log('VDP DEBUG TEMPLATE - Final vendor name in template: ' . $vendor_name);
 ?>
 
 <div class="vdp-dashboard-content">
@@ -278,7 +285,10 @@ jQuery(document).ready(function($) {
                         fill: true,
                         backgroundColor: function(context) {
                             var ctx = context.chart.ctx;
-                            return createGradient(ctx, color + '40', color + '00');
+                            var gradient = ctx.createLinearGradient(0, 0, 0, 60);
+                            gradient.addColorStop(0, color + '40');
+                            gradient.addColorStop(1, color + '00');
+                            return gradient;
                         }
                     }]
                 },
