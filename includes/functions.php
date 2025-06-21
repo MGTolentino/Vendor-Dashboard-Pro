@@ -231,8 +231,22 @@ function vdp_get_dashboard_url($action = '', $item = '') {
         // Para dashboard, no añadir parámetros de acción, usar URL base
         vdp_debug_log("URL para dashboard sin parámetros: " . $url);
     } else {
-        // Para otras secciones, añadir el parámetro vdp-action
-        $url = add_query_arg('vdp-action', $action, $url);
+        // Verificar si la acción incluye una ruta como 'messages/view'
+        if (strpos($action, '/') !== false) {
+            $action_parts = explode('/', $action);
+            $main_action = $action_parts[0]; // 'messages'
+            
+            // Añadir la acción principal
+            $url = add_query_arg('vdp-action', $main_action, $url);
+            
+            // Si hay un tercer componente, usarlo como item
+            if (isset($action_parts[2]) && !empty($action_parts[2])) {
+                $item = $action_parts[2];
+            }
+        } else {
+            // Para otras secciones, añadir el parámetro vdp-action
+            $url = add_query_arg('vdp-action', $action, $url);
+        }
         vdp_debug_log("URL para " . $action . ": " . $url);
     }
     
@@ -581,3 +595,22 @@ function vdp_get_demo_chart_data($metric = 'sales', $days = 30) {
     
     return $data;
 }
+
+/**
+ * Redirige la URL account/vendor/dashboard a my-store
+ */
+function vdp_redirect_vendor_dashboard() {
+    // Obtener la URL actual
+    $current_url = $_SERVER['REQUEST_URI'];
+    
+    // Verificar si la URL es account/vendor/dashboard o similares
+    if (preg_match('|/account/vendor/dashboard/?|', $current_url)) {
+        // Obtener la URL de My Store
+        $my_store_url = home_url('/my-store/');
+        
+        // Redirigir
+        wp_redirect($my_store_url);
+        exit;
+    }
+}
+add_action('template_redirect', 'vdp_redirect_vendor_dashboard');

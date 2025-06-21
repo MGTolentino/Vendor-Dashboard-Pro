@@ -287,12 +287,53 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
                 </div>
                 
                 <div class="vdp-activity-list">
-                    <div class="vdp-empty-state">
-                        <div class="vdp-empty-icon">
-                            <i class="fas fa-envelope-open"></i>
+                    <?php 
+                    $vendor_id = null;
+                    if (is_object($vendor) && method_exists($vendor, 'get_id')) {
+                        $vendor_id = $vendor->get_id();
+                    } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
+                        $vendor_id = ($vendor->get_id)();
+                    }
+
+                    // Obtener mensajes recientes para el dashboard
+                    $recent_messages = array();
+                    if ($vendor_id && class_exists('VDP_Messages')) {
+                        if (method_exists('VDP_Messages', 'get_vendor_messages')) {
+                            $recent_messages = VDP_Messages::get_vendor_messages($vendor_id, 1, 3);
+                        } else {
+                            $recent_messages = VDP_Messages::get_demo_messages();
+                            $recent_messages = array_slice($recent_messages, 0, 3);
+                        }
+                    }
+                    ?>
+                    
+                    <?php if (empty($recent_messages)) : ?>
+                        <div class="vdp-empty-state">
+                            <div class="vdp-empty-icon">
+                                <i class="fas fa-envelope-open"></i>
+                            </div>
+                            <p><?php esc_html_e('No messages yet. Messages from customers will appear here.', 'vendor-dashboard-pro'); ?></p>
                         </div>
-                        <p><?php esc_html_e('No messages yet. Messages from customers will appear here.', 'vendor-dashboard-pro'); ?></p>
-                    </div>
+                    <?php else : ?>
+                        <div class="vdp-recent-messages">
+                            <?php foreach ($recent_messages as $message) : ?>
+                                <div class="vdp-recent-message-item <?php echo !$message['is_read'] ? 'vdp-unread' : ''; ?>">
+                                    <div class="vdp-recent-message-header">
+                                        <div class="vdp-sender-info">
+                                            <span class="vdp-sender-name"><?php echo esc_html($message['sender_name']); ?></span>
+                                            <span class="vdp-message-time"><?php echo esc_html(vdp_time_ago($message['date'])); ?></span>
+                                        </div>
+                                        <a href="<?php echo esc_url(vdp_get_dashboard_url('messages', $message['id'])); ?>" class="vdp-btn vdp-btn-outline vdp-btn-sm">
+                                            <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
+                                        </a>
+                                    </div>
+                                    <div class="vdp-recent-message-preview">
+                                        <?php echo esc_html(wp_trim_words($message['content'], 15)); ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

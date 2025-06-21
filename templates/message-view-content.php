@@ -238,22 +238,59 @@ jQuery(document).ready(function($) {
         
         $button.prop('disabled', true).addClass('vdp-btn-loading');
         
-        // AJAX request would go here in a real implementation
-        setTimeout(function() {
-            $button.removeClass('vdp-btn-loading');
-            $button.html('<i class="fas fa-check"></i> ' + '<?php esc_html_e('Marked as Read', 'vendor-dashboard-pro'); ?>');
-            
-            // Display success message (simulated for demo)
-            var notification = $('<div class="vdp-notification vdp-notification-success">Message marked as read!</div>');
-            $('.vdp-message-view-content').prepend(notification);
-            
-            // Hide notification after 3 seconds
-            setTimeout(function() {
-                notification.fadeOut(function() {
-                    $(this).remove();
-                });
-            }, 3000);
-        }, 1000);
+        // Real AJAX request
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: {
+                action: 'vdp_mark_message_read',
+                nonce: '<?php echo wp_create_nonce('vdp-messages-nonce'); ?>',
+                message_id: messageId
+            },
+            success: function(response) {
+                if (response.success) {
+                    $button.html('<i class="fas fa-check"></i> ' + '<?php esc_html_e('Marked as Read', 'vendor-dashboard-pro'); ?>');
+                    
+                    // Display success message
+                    var notification = $('<div class="vdp-notification vdp-notification-success">' + response.data.message + '</div>');
+                    $('.vdp-message-view-content').prepend(notification);
+                    
+                    // Hide notification after 3 seconds
+                    setTimeout(function() {
+                        notification.fadeOut(function() {
+                            $(this).remove();
+                        });
+                    }, 3000);
+                } else {
+                    // Show error message
+                    var errorMsg = response.data && response.data.message ? response.data.message : '<?php esc_html_e('An error occurred. Please try again.', 'vendor-dashboard-pro'); ?>';
+                    var notification = $('<div class="vdp-notification vdp-notification-error">' + errorMsg + '</div>');
+                    $('.vdp-message-view-content').prepend(notification);
+                    
+                    // Hide notification after 3 seconds
+                    setTimeout(function() {
+                        notification.fadeOut(function() {
+                            $(this).remove();
+                        });
+                    }, 3000);
+                }
+            },
+            error: function() {
+                // Show generic error notification
+                var notification = $('<div class="vdp-notification vdp-notification-error"><?php esc_html_e('Failed to mark message as read. Please try again.', 'vendor-dashboard-pro'); ?></div>');
+                $('.vdp-message-view-content').prepend(notification);
+                
+                // Hide notification after 3 seconds
+                setTimeout(function() {
+                    notification.fadeOut(function() {
+                        $(this).remove();
+                    });
+                }, 3000);
+            },
+            complete: function() {
+                $button.removeClass('vdp-btn-loading');
+            }
+        });
     });
     
     // Archive message
@@ -264,11 +301,58 @@ jQuery(document).ready(function($) {
             var $button = $(this);
             $button.prop('disabled', true).addClass('vdp-btn-loading');
             
-            // AJAX request would go here in a real implementation
-            setTimeout(function() {
-                // Redirect back to messages list (simulated for demo)
-                window.location.href = '<?php echo esc_url(vdp_get_dashboard_url('messages')); ?>';
-            }, 1000);
+            // Real AJAX request
+            $.ajax({
+                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                type: 'POST',
+                data: {
+                    action: 'vdp_archive_message',
+                    nonce: '<?php echo wp_create_nonce('vdp-messages-nonce'); ?>',
+                    message_id: messageId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success notification briefly before redirecting
+                        var notification = $('<div class="vdp-notification vdp-notification-success">' + response.data.message + '</div>');
+                        $('.vdp-message-view-content').prepend(notification);
+                        
+                        // Redirect back to messages list after a short delay
+                        setTimeout(function() {
+                            window.location.href = '<?php echo esc_url(vdp_get_dashboard_url('messages')); ?>';
+                        }, 1000);
+                    } else {
+                        // Show error message
+                        var errorMsg = response.data && response.data.message ? response.data.message : '<?php esc_html_e('An error occurred. Please try again.', 'vendor-dashboard-pro'); ?>';
+                        var notification = $('<div class="vdp-notification vdp-notification-error">' + errorMsg + '</div>');
+                        $('.vdp-message-view-content').prepend(notification);
+                        
+                        // Reset button state
+                        $button.prop('disabled', false).removeClass('vdp-btn-loading');
+                        
+                        // Hide notification after 3 seconds
+                        setTimeout(function() {
+                            notification.fadeOut(function() {
+                                $(this).remove();
+                            });
+                        }, 3000);
+                    }
+                },
+                error: function() {
+                    // Show generic error notification
+                    var notification = $('<div class="vdp-notification vdp-notification-error"><?php esc_html_e('Failed to archive message. Please try again.', 'vendor-dashboard-pro'); ?></div>');
+                    $('.vdp-message-view-content').prepend(notification);
+                    
+                    // Reset button state
+                    $button.prop('disabled', false).removeClass('vdp-btn-loading');
+                    
+                    // Hide notification after 3 seconds
+                    setTimeout(function() {
+                        notification.fadeOut(function() {
+                            $(this).remove();
+                        });
+                    }, 3000);
+                }
+            });
         }
     });
     
@@ -291,48 +375,100 @@ jQuery(document).ready(function($) {
         var $button = $(this);
         $button.prop('disabled', true).addClass('vdp-btn-loading');
         
-        // AJAX request would go here in a real implementation
-        setTimeout(function() {
-            // Add the reply to the conversation (simulated for demo)
-            var now = new Date();
-            var timeString = now.toLocaleString();
-            
-            var replyHtml = '<div class="vdp-conversation-item vdp-vendor-message">' +
-                           '<div class="vdp-message-sender">' +
-                           '<div class="vdp-avatar">' +
-                           '<div class="vdp-avatar-placeholder">' +
-                           '<i class="fas fa-store"></i>' +
-                           '</div>' +
-                           '</div>' +
-                           '<div class="vdp-sender-name">You</div>' +
-                           '</div>' +
-                           '<div class="vdp-message-bubble">' +
-                           '<div class="vdp-message-content">' + 
-                           '<p>' + replyContent.replace(/\n/g, '<br>') + '</p>' +
-                           '</div>' +
-                           '<div class="vdp-message-time">Just now</div>' +
-                           '</div>' +
-                           '</div>';
-            
-            $('.vdp-conversation').append(replyHtml);
-            
-            // Update status
-            $('.vdp-status-badge.vdp-status-awaiting')
-                .removeClass('vdp-status-awaiting')
-                .addClass('vdp-status-responded')
-                .html('<i class="fas fa-check"></i> <?php esc_html_e('Responded', 'vendor-dashboard-pro'); ?>');
-            
-            // Reset form
-            $('#reply_content').val('');
-            
-            // Reset button
-            $button.prop('disabled', false).removeClass('vdp-btn-loading');
-            
-            // Scroll to the new reply
-            $('html, body').animate({
-                scrollTop: $('.vdp-conversation-item:last').offset().top - 100
-            }, 500);
-        }, 1500);
+        // Real AJAX request
+        $.ajax({
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+            type: 'POST',
+            data: {
+                action: 'vdp_send_reply',
+                nonce: '<?php echo wp_create_nonce('vdp-messages-nonce'); ?>',
+                message_id: messageId,
+                content: replyContent
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Obtener la fecha formateada
+                    var dateCreated = response.data.date || '';
+                    var formattedDate = '<?php echo esc_html__('Just now', 'vendor-dashboard-pro'); ?>';
+                    
+                    // Obtener el nombre de usuario actual
+                    var userName = '<?php echo esc_js(wp_get_current_user()->display_name); ?>' || '<?php echo esc_html__('You', 'vendor-dashboard-pro'); ?>';
+                    
+                    // Añadir el HTML de la respuesta
+                    var replyHtml = '<div class="vdp-conversation-item vdp-vendor-message">' +
+                                  '<div class="vdp-message-sender">' +
+                                  '<div class="vdp-avatar">' +
+                                  '<div class="vdp-avatar-placeholder">' +
+                                  '<i class="fas fa-store"></i>' +
+                                  '</div>' +
+                                  '</div>' +
+                                  '<div class="vdp-sender-name">' + userName + '</div>' +
+                                  '</div>' +
+                                  '<div class="vdp-message-bubble">' +
+                                  '<div class="vdp-message-content">' + 
+                                  '<p>' + replyContent.replace(/\n/g, '<br>') + '</p>' +
+                                  '</div>' +
+                                  '<div class="vdp-message-time">' + formattedDate + '</div>' +
+                                  '</div>' +
+                                  '</div>';
+                    
+                    $('.vdp-conversation').append(replyHtml);
+                    
+                    // Update status
+                    $('.vdp-status-badge.vdp-status-awaiting')
+                        .removeClass('vdp-status-awaiting')
+                        .addClass('vdp-status-responded')
+                        .html('<i class="fas fa-check"></i> <?php esc_html_e('Responded', 'vendor-dashboard-pro'); ?>');
+                    
+                    // Reset form
+                    $('#reply_content').val('');
+                    
+                    // Scroll to the new reply
+                    $('html, body').animate({
+                        scrollTop: $('.vdp-conversation-item:last').offset().top - 100
+                    }, 500);
+                    
+                    // Show success notification
+                    var notification = $('<div class="vdp-notification vdp-notification-success">' + response.data.message + '</div>');
+                    $('.vdp-message-view-content').prepend(notification);
+                    
+                    // Hide notification after 3 seconds
+                    setTimeout(function() {
+                        notification.fadeOut(function() {
+                            $(this).remove();
+                        });
+                    }, 3000);
+                } else {
+                    // Show error message
+                    var errorMsg = response.data && response.data.message ? response.data.message : '<?php esc_html_e('An error occurred. Please try again.', 'vendor-dashboard-pro'); ?>';
+                    var notification = $('<div class="vdp-notification vdp-notification-error">' + errorMsg + '</div>');
+                    $('.vdp-message-view-content').prepend(notification);
+                    
+                    // Hide notification after 3 seconds
+                    setTimeout(function() {
+                        notification.fadeOut(function() {
+                            $(this).remove();
+                        });
+                    }, 3000);
+                }
+            },
+            error: function() {
+                // Show generic error notification
+                var notification = $('<div class="vdp-notification vdp-notification-error"><?php esc_html_e('Failed to send reply. Please try again.', 'vendor-dashboard-pro'); ?></div>');
+                $('.vdp-message-view-content').prepend(notification);
+                
+                // Hide notification after 3 seconds
+                setTimeout(function() {
+                    notification.fadeOut(function() {
+                        $(this).remove();
+                    });
+                }, 3000);
+            },
+            complete: function() {
+                // Reset button state
+                $button.prop('disabled', false).removeClass('vdp-btn-loading');
+            }
+        });
     });
 });
 </script>

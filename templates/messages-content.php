@@ -168,7 +168,7 @@ if (!isset($paged)) {
                                 </div>
                                 
                                 <div class="vdp-message-actions">
-                                    <a href="<?php echo esc_url(vdp_get_dashboard_url('messages/view/' . $message['id'])); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
+                                    <a href="<?php echo esc_url(vdp_get_dashboard_url('messages', $message['id'])); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
                                         <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
                                     </a>
                                 </div>
