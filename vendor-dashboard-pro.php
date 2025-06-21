@@ -90,6 +90,7 @@ class Vendor_Dashboard_Pro {
         require_once VDP_PLUGIN_DIR . 'includes/class-assets.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-ajax-handler.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-installer.php';
+        require_once VDP_PLUGIN_DIR . 'includes/class-client-messages.php';
 
         // Module files
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-dashboard.php';

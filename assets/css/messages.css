@@ -62,6 +62,17 @@
     flex: 1;
     min-width: 180px;
     max-width: 25%;
+    margin-bottom: 10px;
+}
+
+@media (min-width: 768px) {
+    .vdp-messages-stats {
+        flex-direction: row;
+    }
+    
+    .vdp-stat-box {
+        margin-bottom: 0;
+    }
 }
 
 /* Messages List Section */
