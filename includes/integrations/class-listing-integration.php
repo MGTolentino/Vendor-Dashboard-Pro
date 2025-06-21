@@ -36,20 +36,137 @@ class VDP_Listing_Integration {
     public static function setup_listing_integration() {
         // Si estamos en una página de listing individual
         if (is_singular('hp_listing')) {
-            // Eliminar botón de mensaje original (se ejecuta antes)
-            // Primero eliminamos la acción del formulario modal
+            // Usamos prioridad alta para ejecutar nuestro código antes que HivePress
+            add_action('wp_head', array(__CLASS__, 'replace_listing_buttons'), 5);
+            
+            // Eliminar botón de mensaje original si existe la acción
             if (has_action('hivepress/v1/templates/listing_view_page/vendor_actions', ['HivePress\Controllers\Message', 'render_send_message_modal'])) {
                 remove_action('hivepress/v1/templates/listing_view_page/vendor_actions', ['HivePress\Controllers\Message', 'render_send_message_modal'], 10);
             }
             
-            // Luego buscamos en la prioridad específica del Kava Child theme (si existe)
-            if (function_exists('remove_all_actions')) {
-                // Eliminar las acciones en el punto de 'vendor_actions'
-                remove_all_actions('hivepress/v1/templates/listing_view_page/vendor_actions');
-            }
+            // Añadir nuestro filtro para el contenido completo de la página
+            add_filter('the_content', array(__CLASS__, 'modify_listing_content'), 999);
+            
+            // Añadir nuestro botón en el hook de acciones del vendedor
+            add_action('hivepress/v1/templates/listing_view_page/vendor_actions', array(__CLASS__, 'replace_contact_button'), 10);
             
             // Añadir nuestro botón en la plantilla del tema hijo de Kava
             add_filter('hivepress/v1/templates/listing_view_page/listing-details-section', array(__CLASS__, 'modify_listing_details'));
+        }
+    }
+    
+    /**
+     * Reemplaza los botones del listing directamente manipulando el DOM con JavaScript.
+     * Este es un enfoque alternativo que funciona en muchos temas, incluido Kava.
+     */
+    public static function replace_listing_buttons() {
+        if (!vdp_is_active()) {
+            return;
+        }
+        
+        // Solo ejecutar el script si estamos en una página de listing
+        if (!is_singular('hp_listing')) {
+            return;
+        }
+        ?>
+        <script>
+        // Ejecutar después de que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Buscar todos los botones de contacto existentes en la página
+            var contactButtons = document.querySelectorAll('.hp-vendor__action--message');
+            
+            // Si encontramos botones, los reemplazamos
+            if (contactButtons.length > 0) {
+                // Obtener los datos del listing y vendedor
+                var listing = <?php 
+                    $listing = hivepress()->request->get_context('listing');
+                    $vendor = $listing ? $listing->get_vendor() : null;
+                    
+                    if ($listing && $vendor) {
+                        echo json_encode(array(
+                            'id' => $listing->get_id(),
+                            'title' => $listing->get_title(),
+                            'vendor_id' => $vendor->get_id(),
+                            'vendor_name' => $vendor->get_name()
+                        ));
+                    } else {
+                        echo 'null';
+                    }
+                ?>;
+                
+                if (listing) {
+                    contactButtons.forEach(function(button) {
+                        // Si el usuario está logueado, crear botón interactivo
+                        if (<?php echo is_user_logged_in() ? 'true' : 'false'; ?>) {
+                            // Crear el nuevo botón
+                            button.classList.add('vdp-contact-button');
+                            button.setAttribute('data-listing-id', listing.id);
+                            button.setAttribute('data-vendor-id', listing.vendor_id);
+                            button.setAttribute('data-vendor-name', listing.vendor_name);
+                            button.setAttribute('data-listing-title', listing.title);
+                        }
+                        
+                        // Asegurarse de que tiene el icono de sobre
+                        if (button.querySelector('i') === null) {
+                            var icon = document.createElement('i');
+                            icon.className = 'fas fa-envelope';
+                            button.insertBefore(icon, button.firstChild);
+                        }
+                        
+                        // Asegurarse de que tiene el texto "Contact Vendor"
+                        var text = button.textContent.trim();
+                        if (!text) {
+                            button.appendChild(document.createTextNode(' <?php esc_html_e('Contact Vendor', 'vendor-dashboard-pro'); ?>'));
+                        }
+                    });
+                }
+            }
+        });
+        </script>
+        <?php
+    }
+    
+    /**
+     * Método para reemplazar el botón de contacto en vendor_actions
+     */
+    public static function replace_contact_button() {
+        // Comprobar si VDP está activo
+        if (!vdp_is_active()) {
+            return;
+        }
+        
+        // Obtener el listing y vendor
+        $listing = hivepress()->request->get_context('listing');
+        $vendor = null;
+        
+        if ($listing && method_exists($listing, 'get_vendor')) {
+            $vendor = $listing->get_vendor();
+        }
+        
+        if (!$vendor) {
+            return; 
+        }
+        
+        if (is_user_logged_in()) {
+            // Botón para usuarios logueados
+            ?>
+            <button type="button" 
+                    class="hp-vendor__action hp-vendor__action--message button button--large button--primary alt vdp-contact-button"
+                    data-listing-id="<?php echo esc_attr($listing->get_id()); ?>"
+                    data-vendor-id="<?php echo esc_attr($vendor->get_id()); ?>"
+                    data-vendor-name="<?php echo esc_attr($vendor->get_name()); ?>"
+                    data-listing-title="<?php echo esc_attr($listing->get_title()); ?>">
+                <i class="fas fa-envelope"></i> <?php esc_html_e('Contact Vendor', 'vendor-dashboard-pro'); ?>
+            </button>
+            <?php
+        } else {
+            // Botón para usuarios no logueados
+            ?>
+            <a href="#user_login_modal" 
+               class="hp-vendor__action hp-vendor__action--message button button--large button--primary alt">
+                <i class="fas fa-envelope"></i> <?php esc_html_e('Contact Vendor', 'vendor-dashboard-pro'); ?>
+            </a>
+            <?php
         }
     }
     

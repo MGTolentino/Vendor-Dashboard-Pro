@@ -65,6 +65,18 @@ class Vendor_Dashboard_Pro {
         if (file_exists(VDP_PLUGIN_DIR . 'includes/modules/class-leads.php')) {
             require_once VDP_PLUGIN_DIR . 'includes/modules/class-leads.php';
         }
+        
+        // Comprobar si necesitamos instalar o actualizar tablas de base de datos
+        add_action('plugins_loaded', array($this, 'check_tables'));
+    }
+    
+    /**
+     * Comprobar si las tablas de la base de datos necesitan ser instaladas o actualizadas.
+     */
+    public function check_tables() {
+        if (class_exists('VDP_Installer') && method_exists('VDP_Installer', 'needs_db_update') && VDP_Installer::needs_db_update()) {
+            VDP_Installer::install();
+        }
     }
 
     /**
@@ -128,7 +140,13 @@ class Vendor_Dashboard_Pro {
      */
     public static function activate() {
         // Create database tables
-        VDP_Installer::install();
+        if (class_exists('VDP_Installer')) {
+            VDP_Installer::install();
+        } else {
+            // Si por alguna razón la clase no existe, cargamos el archivo primero
+            require_once VDP_PLUGIN_DIR . 'includes/class-installer.php';
+            VDP_Installer::install();
+        }
         
         // Flush rewrite rules
         flush_rewrite_rules();

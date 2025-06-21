@@ -9,6 +9,19 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+// Inicializar variables si no están definidas
+if (!isset($messages) || !is_array($messages)) {
+    $messages = array();
+}
+
+if (!isset($total_pages)) {
+    $total_pages = 1;
+}
+
+if (!isset($paged)) {
+    $paged = 1;
+}
 ?>
 
 <div class="vdp-messages-content">
