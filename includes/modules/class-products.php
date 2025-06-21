@@ -183,14 +183,27 @@ class VDP_Products {
         // Debug info - log the vendor ID we're using
         error_log("VDP Debug: get_vendor_listings called with vendor_id=$vendor_id, limit=$limit, offset=$offset");
         
+        // Try to find listings by vendor post_parent OR by matching the post_author with the vendor post_author
+        
+        // First get the vendor's post_author
+        $vendor_author_query = $wpdb->prepare(
+            "SELECT post_author FROM {$wpdb->posts} WHERE ID = %d",
+            $vendor_id
+        );
+        error_log("VDP Debug: Vendor author query: " . $vendor_author_query);
+        
+        $vendor_author = $wpdb->get_var($vendor_author_query);
+        error_log("VDP Debug: Vendor post_author: " . $vendor_author);
+        
+        // Extended query to find listings by post_parent OR post_author
         $query = $wpdb->prepare(
             "SELECT * FROM {$wpdb->posts} 
             WHERE post_type = 'hp_listing' 
-            AND post_parent = %d 
+            AND (post_parent = %d OR (post_author = %d AND post_parent = 0)) 
             AND post_status IN ('publish', 'draft', 'pending')
             ORDER BY post_date DESC
             LIMIT %d OFFSET %d",
-            $vendor_id, $limit, $offset
+            $vendor_id, $vendor_author, $limit, $offset
         );
         
         // Log the query
@@ -231,12 +244,23 @@ class VDP_Products {
     public static function get_vendor_listing_count($vendor_id) {
         global $wpdb;
         
+        // First get the vendor's post_author
+        $vendor_author_query = $wpdb->prepare(
+            "SELECT post_author FROM {$wpdb->posts} WHERE ID = %d",
+            $vendor_id
+        );
+        error_log("VDP Debug: Count - Vendor author query: " . $vendor_author_query);
+        
+        $vendor_author = $wpdb->get_var($vendor_author_query);
+        error_log("VDP Debug: Count - Vendor post_author: " . $vendor_author);
+        
+        // Extended query to count listings by post_parent OR post_author
         $query = $wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->posts} 
             WHERE post_type = 'hp_listing' 
-            AND post_parent = %d 
+            AND (post_parent = %d OR (post_author = %d AND post_parent = 0)) 
             AND post_status IN ('publish', 'draft', 'pending')",
-            $vendor_id
+            $vendor_id, $vendor_author
         );
         
         error_log("VDP Debug: Listing count query: " . $query);
