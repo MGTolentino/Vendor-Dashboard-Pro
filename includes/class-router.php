@@ -45,13 +45,17 @@ class VDP_Router {
         }
         
         // Get current action and item from URL parameters
-        $current_action = isset($_GET['vdp-action']) ? sanitize_key($_GET['vdp-action']) : $atts['default_action'];
+        // Importante: Siempre usar 'dashboard' como acción por defecto
+        $current_action = isset($_GET['vdp-action']) ? sanitize_key($_GET['vdp-action']) : 'dashboard';
         $current_item = isset($_GET['vdp-item']) ? sanitize_key($_GET['vdp-item']) : '';
         
         // Store current action and item in globals for template access
         global $vdp_current_action, $vdp_current_item;
         $vdp_current_action = $current_action;
         $vdp_current_item = $current_item;
+        
+        // Registrar para depuración
+        error_log("VDP Debug: Acción actual establecida en router: " . $vdp_current_action);
         
         // Check if this is an AJAX request
         $is_ajax = isset($_GET['vdp_ajax']) && $_GET['vdp_ajax'] == 1;
@@ -127,8 +131,11 @@ class VDP_Router {
      * @param string $item Current item ID.
      */
     public static function render_content($action, $item) {
-        // Ejecutar acciones específicas basadas en el módulo actual
-        // Esto permite que los módulos manejen directamente su propia lógica de renderizado
+        // Variable para controlar si ya se ha renderizado contenido
+        $content_rendered = false;
+        
+        // Registrar para depuración
+        error_log("VDP Debug: Renderizando contenido para acción: " . $action);
         
         // Crear un nombre de acción basado en el módulo
         $action_hook = 'vdp_' . $action . '_content';
@@ -141,65 +148,69 @@ class VDP_Router {
             // Primero verificar si alguien está escuchando este hook
             if (has_action($detail_hook)) {
                 do_action($detail_hook, $item);
-                return;
+                $content_rendered = true;
+                return; // Salir después de renderizar
             }
         }
         
         // Verificar si hay manejadores para este hook
-        if (has_action($action_hook)) {
+        if (has_action($action_hook) && !$content_rendered) {
             // Ejecutar la acción que renderizará el contenido
             do_action($action_hook, $item);
-            return;
+            $content_rendered = true;
+            return; // Salir después de renderizar
         }
         
-        // Fallback al sistema de include de templates si no hay hooks
-        switch ($action) {
-            case 'products':
-                if ($item === 'add' || $item === 'edit') {
-                    include(VDP_PLUGIN_DIR . 'templates/products-edit-content.php');
-                } else {
-                    // Crear una instancia de Products y llamar directamente al método
-                    if (class_exists('VDP_Products')) {
-                        $products = VDP_Products::instance();
-                        $products->render_products_list();
+        // Fallback al sistema de include de templates si no hay hooks y aún no se ha renderizado contenido
+        if (!$content_rendered) {
+            switch ($action) {
+                case 'products':
+                    if ($item === 'add' || $item === 'edit') {
+                        include(VDP_PLUGIN_DIR . 'templates/products-edit-content.php');
                     } else {
-                        include(VDP_PLUGIN_DIR . 'templates/products-content.php');
+                        // Crear una instancia de Products y llamar directamente al método
+                        if (class_exists('VDP_Products')) {
+                            $products = VDP_Products::instance();
+                            $products->render_products_list();
+                        } else {
+                            include(VDP_PLUGIN_DIR . 'templates/products-content.php');
+                        }
                     }
-                }
-                break;
-                
-            case 'leads':
-                include(VDP_PLUGIN_DIR . 'templates/leads-content.php');
-                break;
-                
-            case 'orders':
-                if ($item) {
-                    include(VDP_PLUGIN_DIR . 'templates/order-view-content.php');
-                } else {
-                    include(VDP_PLUGIN_DIR . 'templates/orders-content.php');
-                }
-                break;
-                
-            case 'messages':
-                if ($item) {
-                    include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
-                } else {
-                    include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
-                }
-                break;
-                
-            case 'analytics':
-                include(VDP_PLUGIN_DIR . 'templates/analytics-content.php');
-                break;
-                
-            case 'settings':
-                include(VDP_PLUGIN_DIR . 'templates/settings-content.php');
-                break;
-                
-            case 'dashboard':
-            default:
-                include(VDP_PLUGIN_DIR . 'templates/dashboard-content.php');
-                break;
+                    break;
+                    
+                case 'leads':
+                    include(VDP_PLUGIN_DIR . 'templates/leads-content.php');
+                    break;
+                    
+                case 'orders':
+                    if ($item) {
+                        include(VDP_PLUGIN_DIR . 'templates/order-view-content.php');
+                    } else {
+                        include(VDP_PLUGIN_DIR . 'templates/orders-content.php');
+                    }
+                    break;
+                    
+                case 'messages':
+                    if ($item) {
+                        include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
+                    } else {
+                        include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
+                    }
+                    break;
+                    
+                case 'analytics':
+                    include(VDP_PLUGIN_DIR . 'templates/analytics-content.php');
+                    break;
+                    
+                case 'settings':
+                    include(VDP_PLUGIN_DIR . 'templates/settings-content.php');
+                    break;
+                    
+                case 'dashboard':
+                default:
+                    include(VDP_PLUGIN_DIR . 'templates/dashboard-content.php');
+                    break;
+            }
         }
     }
     

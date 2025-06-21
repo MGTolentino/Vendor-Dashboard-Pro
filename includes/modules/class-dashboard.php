@@ -78,38 +78,10 @@ class VDP_Dashboard {
         // Obtener listings recientes
         $recent_listings = array();
         if ($vendor_id) {
-            // Si existe la clase de productos, usarla para obtener los listings
-            if (class_exists('VDP_Products')) {
-                $recent_listings = VDP_Products::get_vendor_listings($vendor_id, 3, 0);
-            } else {
-                // Fallback a consulta directa
-                global $wpdb;
-                $listings_posts = $wpdb->get_results($wpdb->prepare(
-                    "SELECT * FROM {$wpdb->posts} 
-                    WHERE post_type = 'hp_listing' 
-                    AND post_parent = %d 
-                    AND post_status IN ('publish', 'draft', 'pending')
-                    ORDER BY post_date DESC
-                    LIMIT 3",
-                    $vendor_id
-                ));
-                
-                foreach ($listings_posts as $listing) {
-                    $price = get_post_meta($listing->ID, 'hp_price', true);
-                    $thumbnail_id = get_post_thumbnail_id($listing->ID);
-                    $thumbnail_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'medium') : '';
-                    
-                    $recent_listings[] = array(
-                        'id' => $listing->ID,
-                        'title' => $listing->post_title,
-                        'status' => $listing->post_status,
-                        'date' => $listing->post_date,
-                        'price' => $price ? $price : 0,
-                        'thumbnail' => $thumbnail_url,
-                        'edit_url' => vdp_get_dashboard_url('products', $listing->ID),
-                    );
-                }
-            }
+            // Asegurar que siempre usemos la misma función para obtener listings
+            $recent_listings = self::get_recent_vendor_listings($vendor_id, 3);
+            // Registrar para depuración
+            error_log("VDP Debug: Cargados " . count($recent_listings) . " listings recientes para el dashboard");
         }
         
         // Get recent messages placeholder
@@ -259,6 +231,56 @@ class VDP_Dashboard {
             'response_rate' => rand(70, 100),
             'response_time' => rand(1, 24),
         );
+    }
+    
+    /**
+     * Obtiene los listings recientes de un vendor.
+     * Esta función centralizada se usa tanto en el dashboard como en la sección de productos.
+     *
+     * @param int $vendor_id ID del vendor.
+     * @param int $limit Número máximo de listings a obtener.
+     * @return array Array de listings formateados.
+     */
+    public static function get_recent_vendor_listings($vendor_id, $limit = 3) {
+        if (!$vendor_id) {
+            return array();
+        }
+        
+        // Primero intentar usar la clase de Products si existe
+        if (class_exists('VDP_Products')) {
+            return VDP_Products::get_vendor_listings($vendor_id, $limit, 0);
+        }
+        
+        // Fallback a consulta directa si la clase Products no está disponible
+        global $wpdb;
+        $listings_posts = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_listing' 
+            AND post_parent = %d 
+            AND post_status IN ('publish', 'draft', 'pending')
+            ORDER BY post_date DESC
+            LIMIT %d",
+            $vendor_id, $limit
+        ));
+        
+        $recent_listings = array();
+        foreach ($listings_posts as $listing) {
+            $price = get_post_meta($listing->ID, 'hp_price', true);
+            $thumbnail_id = get_post_thumbnail_id($listing->ID);
+            $thumbnail_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'medium') : '';
+            
+            $recent_listings[] = array(
+                'id' => $listing->ID,
+                'title' => $listing->post_title,
+                'status' => $listing->post_status,
+                'date' => $listing->post_date,
+                'price' => $price ? $price : 0,
+                'thumbnail' => $thumbnail_url,
+                'edit_url' => vdp_get_dashboard_url('products', $listing->ID),
+            );
+        }
+        
+        return $recent_listings;
     }
 }
 

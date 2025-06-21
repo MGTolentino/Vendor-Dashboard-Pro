@@ -126,43 +126,49 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                 <!-- Navigation -->
                 <nav class="vdp-sidebar-nav">
                     <ul class="vdp-nav-list">
-                        <li class="vdp-nav-item <?php echo $current_action === 'dashboard' ? 'vdp-active' : ''; ?>">
+                        <?php 
+                        // Asegurar que la acción actual esté correctamente identificada
+                        // Usar vdp_get_current_action() que obtendrá el valor de la variable global $vdp_current_action
+                        $active_action = vdp_get_current_action();
+                        error_log("VDP Debug: Acción activa en navegación: " . $active_action);
+                        ?>
+                        <li class="vdp-nav-item <?php echo $active_action === 'dashboard' ? 'vdp-active' : ''; ?>" id="vdp-nav-dashboard">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url()); ?>" class="vdp-nav-link vdp-ajax-link" data-action="dashboard">
                                 <i class="fas fa-home"></i>
                                 <span><?php esc_html_e('Dashboard', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_action === 'products' ? 'vdp-active' : ''; ?>">
+                        <li class="vdp-nav-item <?php echo $active_action === 'products' ? 'vdp-active' : ''; ?>" id="vdp-nav-products">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('products')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="products">
                                 <i class="fas fa-box"></i>
                                 <span><?php esc_html_e('Listings', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_action === 'orders' ? 'vdp-active' : ''; ?>">
+                        <li class="vdp-nav-item <?php echo $active_action === 'orders' ? 'vdp-active' : ''; ?>" id="vdp-nav-orders">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('orders')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="orders">
                                 <i class="fas fa-shopping-cart"></i>
                                 <span><?php esc_html_e('Orders', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_action === 'leads' ? 'vdp-active' : ''; ?>">
+                        <li class="vdp-nav-item <?php echo $active_action === 'leads' ? 'vdp-active' : ''; ?>" id="vdp-nav-leads">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('leads')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="leads">
                                 <i class="fas fa-user-plus"></i>
                                 <span><?php esc_html_e('Leads', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_action === 'messages' ? 'vdp-active' : ''; ?>">
+                        <li class="vdp-nav-item <?php echo $active_action === 'messages' ? 'vdp-active' : ''; ?>" id="vdp-nav-messages">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('messages')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="messages">
                                 <i class="fas fa-envelope"></i>
                                 <span><?php esc_html_e('Messages', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_action === 'analytics' ? 'vdp-active' : ''; ?>">
+                        <li class="vdp-nav-item <?php echo $active_action === 'analytics' ? 'vdp-active' : ''; ?>" id="vdp-nav-analytics">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('analytics')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="analytics">
                                 <i class="fas fa-chart-line"></i>
                                 <span><?php esc_html_e('Analytics', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
-                        <li class="vdp-nav-item <?php echo $current_action === 'settings' ? 'vdp-active' : ''; ?>">
+                        <li class="vdp-nav-item <?php echo $active_action === 'settings' ? 'vdp-active' : ''; ?>" id="vdp-nav-settings">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('settings')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="settings">
                                 <i class="fas fa-cog"></i>
                                 <span><?php esc_html_e('Settings', 'vendor-dashboard-pro'); ?></span>

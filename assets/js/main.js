@@ -108,9 +108,17 @@
             // Show loading indicator
             VDP.showLoading();
             
-            // Update active menu item
+            // Actualizar correctamente el elemento activo del menú
+            // Primero quitamos la clase activa de todos los elementos
+            $('.vdp-nav-item').removeClass('vdp-active');
+            // Luego añadimos la clase activa al elemento correspondiente a la acción actual
+            $('#vdp-nav-' + action).addClass('vdp-active');
+            
+            // También aseguramos que los enlaces tengan el estado correcto
             $('.vdp-sidebar-nav a').removeClass('vdp-active');
             $('.vdp-sidebar-nav a[data-action="' + action + '"]').addClass('vdp-active');
+            
+            console.log("VDP: Actualizando navegación, acción activa: " + action);
             
             // Load content via AJAX
             $.ajax({

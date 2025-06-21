@@ -147,50 +147,15 @@ if (!isset($listings) || !is_array($listings)) {
         </div>
     </div>
     
-    <!-- System information for debugging -->
-    <?php 
-    // Solo mostrar en modo depuración o para administradores
-    if (current_user_can('administrator') || (defined('WP_DEBUG') && WP_DEBUG)) : 
-    ?>
+    <!-- System information for debugging - solo se muestra en modo desarrollo -->
+    <?php if (defined('WP_DEBUG') && WP_DEBUG && current_user_can('administrator')) : ?>
     <div class="vdp-debug-info" style="background: #f5f5f5; padding: 10px; margin-bottom: 20px; border-left: 4px solid #0073aa;">
-        <p><strong>Información de diagnóstico (solo visible para administradores):</strong></p>
+        <p><strong>Debug Info (admin only):</strong></p>
         <ul>
             <li>User ID: <?php echo esc_html($user_id); ?></li>
             <li>Vendor ID: <?php echo isset($vendor_id) ? esc_html($vendor_id) : 'N/A'; ?></li>
-            <li>Listings encontrados: <?php echo isset($listings) && is_array($listings) ? count($listings) : 'N/A'; ?></li>
-            <li>Total listings: <?php echo isset($total_listings) ? esc_html($total_listings) : 'N/A'; ?></li>
-            <li>Auto-loaded: <?php echo $auto_loaded_listings ? 'Yes' : 'No'; ?></li>
+            <li>Listings count: <?php echo isset($listings) && is_array($listings) ? count($listings) : 'N/A'; ?></li>
         </ul>
-        <?php
-        if (isset($vendor_id)) {
-            // Consulta directa para verificar listings
-            $direct_check = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'hp_listing' AND post_parent = %d AND post_status IN ('publish', 'draft', 'pending')",
-                $vendor_id
-            ));
-            echo '<p>Verificación directa de BD: ' . esc_html($direct_check) . ' listings con post_parent = ' . esc_html($vendor_id) . '</p>';
-            
-            // Mostrar ejemplos de listings si hay alguno
-            if ($direct_check > 0) {
-                $example_listings = $wpdb->get_results($wpdb->prepare(
-                    "SELECT ID, post_title, post_status FROM {$wpdb->posts} 
-                    WHERE post_type = 'hp_listing' AND post_parent = %d 
-                    AND post_status IN ('publish', 'draft', 'pending')
-                    LIMIT 5",
-                    $vendor_id
-                ));
-                
-                if (!empty($example_listings)) {
-                    echo '<p><strong>Ejemplos de listings encontrados:</strong></p>';
-                    echo '<ul>';
-                    foreach ($example_listings as $ex) {
-                        echo '<li>ID: ' . $ex->ID . ', Título: ' . $ex->post_title . ', Estado: ' . $ex->post_status . '</li>';
-                    }
-                    echo '</ul>';
-                }
-            }
-        }
-        ?>
     </div>
     <?php endif; ?>
     
