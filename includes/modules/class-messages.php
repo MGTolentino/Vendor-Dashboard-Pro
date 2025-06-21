@@ -204,7 +204,8 @@ class VDP_Messages {
                 $sender_avatar = get_avatar_url($result['sender_id'], array('size' => 96));
                 
                 // Información del usuario
-                $customer_since = get_user_registered($result['sender_id']);
+                $user = get_userdata($result['sender_id']);
+                $customer_since = ($user && isset($user->user_registered)) ? $user->user_registered : '';
                 
                 // Contar pedidos (esto depende de la estructura de WooCommerce)
                 $orders_count = 0;
@@ -298,7 +299,8 @@ class VDP_Messages {
         $sender_avatar = get_avatar_url($message['sender_id'], array('size' => 96));
         
         // Información del usuario
-        $customer_since = get_user_registered($message['sender_id']);
+        $user = get_userdata($message['sender_id']);
+        $customer_since = ($user && isset($user->user_registered)) ? $user->user_registered : '';
         
         // Contar pedidos (esto depende de la estructura de WooCommerce)
         $orders_count = 0;

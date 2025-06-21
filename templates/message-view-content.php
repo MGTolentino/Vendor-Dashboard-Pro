@@ -173,7 +173,11 @@ if (!defined('ABSPATH')) {
                         <h3 class="vdp-customer-name"><?php echo esc_html($message['sender_name']); ?></h3>
                         <div class="vdp-customer-meta">
                             <span class="vdp-customer-since">
-                                <i class="fas fa-user-clock"></i> <?php printf(esc_html__('Customer since %s', 'vendor-dashboard-pro'), esc_html(vdp_format_date($message['customer_since']))); ?>
+                                <i class="fas fa-user-clock"></i> <?php printf(esc_html__('Customer since %s', 'vendor-dashboard-pro'), 
+                                    isset($message['customer_since']) && !empty($message['customer_since']) ? 
+                                    esc_html(vdp_format_date($message['customer_since'])) : 
+                                    esc_html__('N/A', 'vendor-dashboard-pro')); 
+                                ?>
                             </span>
                             <?php if (!empty($message['orders_count'])) : ?>
                                 <span class="vdp-customer-orders">
