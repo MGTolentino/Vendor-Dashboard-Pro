@@ -53,7 +53,16 @@ class VDP_Messages {
             return;
         }
         
-        $vendor_id = $vendor->get_id();
+        // Verificar que el vendedor tiene el método get_id
+        $vendor_id = null;
+        
+        if (is_object($vendor) && method_exists($vendor, 'get_id')) {
+            $vendor_id = $vendor->get_id();
+        } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
+            $vendor_id = ($vendor->get_id)();
+        } else {
+            return; // No podemos continuar sin un vendor_id
+        }
         
         // Get current page
         $paged = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
@@ -89,7 +98,16 @@ class VDP_Messages {
             return;
         }
         
-        $vendor_id = $vendor->get_id();
+        // Verificar que el vendedor tiene el método get_id
+        $vendor_id = null;
+        
+        if (is_object($vendor) && method_exists($vendor, 'get_id')) {
+            $vendor_id = $vendor->get_id();
+        } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
+            $vendor_id = ($vendor->get_id)();
+        } else {
+            return; // No podemos continuar sin un vendor_id
+        }
         
         // Get message ID
         $message_id = isset($_GET['vdp-item']) ? absint($_GET['vdp-item']) : 0;
