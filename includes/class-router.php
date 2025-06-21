@@ -44,10 +44,17 @@ class VDP_Router {
             return self::get_not_vendor_message();
         }
         
+        // Debug request parameters before processing
+        vdp_debug_log("Shortcode callback triggered with URL: " . $_SERVER['REQUEST_URI'], "info");
+        vdp_debug_log("GET parameters: " . json_encode($_GET), "info");
+        
         // Get current action and item from URL parameters
         // Importante: Siempre usar 'dashboard' como acción por defecto
         $current_action = isset($_GET['vdp-action']) ? sanitize_key($_GET['vdp-action']) : 'dashboard';
         $current_item = isset($_GET['vdp-item']) ? sanitize_key($_GET['vdp-item']) : '';
+        
+        // Debug parsed parameters
+        vdp_debug_log("Parsed action: '$current_action', item: '$current_item'", "info");
         
         // Store current action and item in globals for template access
         global $vdp_current_action, $vdp_current_item;
@@ -124,6 +131,10 @@ class VDP_Router {
             wp_send_json_error(array('message' => __('You must be a vendor to access this content.', 'vendor-dashboard-pro')));
         }
         
+        // Debug AJAX request
+        vdp_debug_log("AJAX load_content called with parameters:", "info");
+        vdp_debug_log("POST data: " . json_encode($_POST), "info");
+        
         // Get action and item from request
         $action = isset($_POST['action']) ? sanitize_key($_POST['action']) : 'dashboard';
         if ($action === 'vdp_load_content') {
@@ -132,7 +143,13 @@ class VDP_Router {
         
         $item = isset($_POST['item']) ? sanitize_key($_POST['item']) : '';
         
-        vdp_debug_log("AJAX cargando contenido para acción: " . $action . ", ítem: " . $item);
+        // Additional debug for AJAX content loading
+        vdp_debug_log("AJAX loading content for action: " . $action . ", item: " . $item, "info");
+        
+        // Special handling for message view
+        if ($action === 'messages' && !empty($item)) {
+            vdp_debug_log("AJAX loading message view for message ID: " . $item, "info");
+        }
         
         // Set globals for template access
         global $vdp_current_action, $vdp_current_item;
@@ -173,11 +190,20 @@ class VDP_Router {
      * @param string $item Current item ID.
      */
     public static function render_content($action, $item) {
+        // Apply filter for debugging purposes
+        if (has_filter('vdp_router_render_content')) {
+            return apply_filters('vdp_router_render_content', $action, $item);
+        }
+        
         // Variable para controlar si ya se ha renderizado contenido
         $content_rendered = false;
         
         // Registrar para depuración
-        vdp_debug_log("Renderizando contenido para acción: " . $action);
+        vdp_debug_log("Renderizando contenido para acción: " . $action . ", item: " . $item);
+        
+        // Log detailed request information
+        vdp_debug_log("URL Parameters: " . json_encode($_GET), "info");
+        vdp_debug_log("Request URI: " . $_SERVER['REQUEST_URI'], "info");
         
         // Crear un nombre de acción basado en el módulo
         $action_hook = 'vdp_' . $action . '_content';
@@ -187,20 +213,28 @@ class VDP_Router {
             // Ejecutar hook específico para vista de detalle
             $detail_hook = 'vdp_' . $action . '_view_content';
             
+            vdp_debug_log("Attempting to use detail hook: " . $detail_hook, "info");
+            
             // Primero verificar si alguien está escuchando este hook
             if (has_action($detail_hook)) {
+                vdp_debug_log("Detail hook found, executing: " . $detail_hook, "info");
                 do_action($detail_hook, $item);
                 $content_rendered = true;
                 return; // Salir después de renderizar
+            } else {
+                vdp_debug_log("No listeners found for detail hook: " . $detail_hook, "warning");
             }
         }
         
         // Verificar si hay manejadores para este hook
         if (has_action($action_hook) && !$content_rendered) {
+            vdp_debug_log("Action hook found, executing: " . $action_hook, "info");
             // Ejecutar la acción que renderizará el contenido
             do_action($action_hook, $item);
             $content_rendered = true;
             return; // Salir después de renderizar
+        } else if (!$content_rendered) {
+            vdp_debug_log("No listeners found for action hook: " . $action_hook, "warning");
         }
         
         // Fallback al sistema de include de templates si no hay hooks y aún no se ha renderizado contenido
@@ -234,8 +268,37 @@ class VDP_Router {
                     
                 case 'messages':
                     if ($item) {
+                        vdp_debug_log("Direct inclusion of message-view-content.php for item: $item", "info");
+                        
+                        // Set up the message data before including the template
+                        // This allows us to test if the template inclusion is working but the data is missing
+                        $vendor = vdp_get_current_vendor();
+                        if ($vendor) {
+                            $vendor_id = null;
+                            if (is_object($vendor) && method_exists($vendor, 'get_id')) {
+                                $vendor_id = $vendor->get_id();
+                            } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
+                                $vendor_id = ($vendor->get_id)();
+                            }
+                            
+                            if ($vendor_id) {
+                                // Get message data
+                                if (class_exists('VDP_Messages')) {
+                                    if (VDP_Messages::are_tables_created()) {
+                                        $message = VDP_Messages::get_message($item, $vendor_id);
+                                    } else {
+                                        $message = VDP_Messages::get_demo_message($item);
+                                    }
+                                }
+                                
+                                vdp_debug_log("Message data for template: " . ($message ? "found" : "not found"), "info");
+                            }
+                        }
+                        
+                        // Include the template
                         include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
                     } else {
+                        vdp_debug_log("Including messages-content.php (list view)", "info");
                         include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
                     }
                     break;

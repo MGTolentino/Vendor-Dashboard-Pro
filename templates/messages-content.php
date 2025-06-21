@@ -26,6 +26,30 @@ if (!isset($paged)) {
 
 <div class="vdp-messages-content">
     <div class="vdp-section vdp-messages-header-section">
+        <style>
+            /* Inline styles to ensure horizontal layout on initial page load */
+            .vdp-messages-stats {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                justify-content: space-between !important;
+                gap: 1.5rem !important;
+            }
+            
+            .vdp-stat-box {
+                display: flex !important;
+                align-items: center !important;
+                flex: 1 !important;
+                min-width: 180px !important;
+                max-width: 25% !important;
+            }
+            
+            @media (max-width: 768px) {
+                .vdp-stat-box {
+                    margin-bottom: 10px !important;
+                }
+            }
+        </style>
         <div class="vdp-messages-stats">
             <div class="vdp-stat-box">
                 <div class="vdp-stat-icon">
@@ -168,7 +192,16 @@ if (!isset($paged)) {
                                 </div>
                                 
                                 <div class="vdp-message-actions">
-                                    <a href="<?php echo esc_url(vdp_get_dashboard_url('messages', $message['id'])); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
+                                    <?php 
+                                    $view_url = vdp_get_dashboard_url('messages', $message['id']);
+                                    // Log URL generation for debugging
+                                    vdp_debug_log("Generated view URL for message ID {$message['id']}: $view_url", "info");
+                                    ?>
+                                    <!-- Force direct page load by adding data-force-load attribute -->
+                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm vdp-message-view-btn" 
+                                       data-message-id="<?php echo esc_attr($message['id']); ?>"
+                                       data-force-load="true"
+                                       onclick="window.location.href='<?php echo esc_js($view_url); ?>'; return false;">
                                         <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
                                     </a>
                                 </div>

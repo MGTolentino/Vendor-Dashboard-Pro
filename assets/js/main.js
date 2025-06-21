@@ -639,9 +639,11 @@
          */
         initMessages: function() {
             // Check if we're on messages page
-            if (!$('.vdp-messages-content').length) {
+            if (!$('.vdp-messages-content').length && !$('.vdp-message-view-content').length) {
                 return;
             }
+            
+            console.log('Initializing message features...');
             
             // Message filters
             $('.vdp-filter-select').on('change', function() {
@@ -657,6 +659,87 @@
                 e.preventDefault();
                 VDP.replyMessage($(this));
             });
+            
+            // Handle message view buttons
+            $(document).on('click', '.vdp-message-view-btn', function(e) {
+                e.preventDefault();
+                var messageId = $(this).data('message-id');
+                var url = $(this).attr('href');
+                
+                console.log('Message view button clicked for ID: ' + messageId + ', URL: ' + url);
+                
+                // Use direct page navigation instead of AJAX to avoid potential issues
+                window.location.href = url;
+                
+                /* Alternatively, use AJAX loading with a special flag
+                if (messageId) {
+                    VDP.loadMessageView(messageId);
+                }
+                */
+            });
+        },
+        
+        /**
+         * Load message view via direct navigation
+         * 
+         * @param {int} messageId Message ID
+         */
+        loadMessageView: function(messageId) {
+            if (!messageId) return;
+            
+            console.log('Loading message view for ID: ' + messageId);
+            
+            // Build URL with message ID
+            var url = VDP.buildDashboardUrl('messages', messageId);
+            
+            // Force a page reload to this URL instead of AJAX
+            window.location.href = url;
+            
+            /* Alternative AJAX implementation
+            // Show loading indicator
+            VDP.showLoading();
+            
+            // Usamos POST en vez de GET para evitar problemas de caché
+            $.ajax({
+                url: vdp_vars.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'vdp_load_content',
+                    nonce: vdp_vars.nonce,
+                    section: 'messages',
+                    item: messageId
+                },
+                success: function(response) {
+                    if (!response || !response.success) {
+                        VDP.showNotice("Error loading message", 'error');
+                        return;
+                    }
+                    
+                    // Actualizar solo el área de contenido con el HTML devuelto
+                    $('.vdp-content-area').html(response.data.content);
+                    
+                    // Update browser history
+                    var state = {
+                        url: url,
+                        action: 'messages',
+                        item: messageId
+                    };
+                    
+                    var title = 'Vendor Dashboard - Message';
+                    window.history.pushState(state, title, url);
+                    
+                    // Scroll to top
+                    window.scrollTo(0, 0);
+                },
+                error: function(xhr, status, error) {
+                    console.error("VDP Error:", error);
+                    VDP.showNotice("Failed to load message view. Please try again.", 'error');
+                },
+                complete: function() {
+                    VDP.hideLoading();
+                }
+            });
+            */
         },
 
         /**

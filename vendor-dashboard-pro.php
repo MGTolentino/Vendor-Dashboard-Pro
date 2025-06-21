@@ -91,6 +91,11 @@ class Vendor_Dashboard_Pro {
         require_once VDP_PLUGIN_DIR . 'includes/class-ajax-handler.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-installer.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-client-messages.php';
+        
+        // Debug helper - only load when WP_DEBUG is enabled
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            require_once VDP_PLUGIN_DIR . 'includes/debug-vdp.php';
+        }
 
         // Module files
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-dashboard.php';

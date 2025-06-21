@@ -112,9 +112,15 @@ class VDP_Messages {
         // Get message ID
         $message_id = isset($_GET['vdp-item']) ? absint($_GET['vdp-item']) : 0;
         
+        // Debugging message ID detection
+        vdp_debug_log("Message view render function called with vendor_id: $vendor_id", "info");
+        vdp_debug_log("GET parameters: " . json_encode($_GET), "info");
+        vdp_debug_log("Detected message_id: $message_id", "info");
+        
+        // Show error if no message ID
         if (!$message_id) {
             echo '<div class="vdp-notice vdp-notice-error">';
-            echo '<p>' . esc_html__('Message not found.', 'vendor-dashboard-pro') . '</p>';
+            echo '<p>' . esc_html__('Message not found. No message ID provided.', 'vendor-dashboard-pro') . '</p>';
             echo '</div>';
             return;
         }

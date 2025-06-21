@@ -253,7 +253,12 @@ function vdp_get_dashboard_url($action = '', $item = '') {
     // Add item
     if (!empty($item)) {
         $url = add_query_arg('vdp-item', $item, $url);
+        // Debug URL with item parameter
+        vdp_debug_log("Added item parameter '$item' to URL: $url", "info");
     }
+    
+    // Final debug output of constructed URL
+    vdp_debug_log("Final dashboard URL for action '$action', item '$item': $url", "info");
     
     return $url;
 }
