@@ -55,6 +55,13 @@ class VDP_Assets {
             VDP_VERSION
         );
         
+        wp_register_style(
+            'vdp-orders',
+            VDP_PLUGIN_URL . 'assets/css/orders.css',
+            array('vdp-main'),
+            VDP_VERSION
+        );
+        
         // Register scripts
         wp_register_script(
             'vdp-chart',
@@ -102,6 +109,12 @@ class VDP_Assets {
         if (vdp_is_dashboard_page() || (isset($_GET['vdp_ajax']) && $_GET['vdp_ajax'])) {
             wp_enqueue_style('vdp-main');
             wp_enqueue_style('vdp-dashboard');
+            
+            // Enqueue orders stylesheet if on orders page
+            if (isset($_GET['vdp-action']) && ($_GET['vdp-action'] === 'orders' || strpos($_GET['vdp-action'], 'orders/') === 0)) {
+                wp_enqueue_style('vdp-orders');
+            }
+            
             wp_enqueue_script('vdp-main');
         }
     }

@@ -232,10 +232,48 @@ if (!defined('ABSPATH')) {
             </div>
         <?php endif; ?>
     </div>
+    
+    <!-- Orders Summary Card -->
+    <div class="vdp-section vdp-orders-summary">
+        <div class="vdp-summary-header">
+            <h2 class="vdp-summary-title"><?php esc_html_e('Recent Orders Summary', 'vendor-dashboard-pro'); ?></h2>
+            <div class="vdp-summary-period">
+                <div class="vdp-period-selector active" data-period="7"><?php esc_html_e('7 Days', 'vendor-dashboard-pro'); ?></div>
+                <div class="vdp-period-selector" data-period="30"><?php esc_html_e('30 Days', 'vendor-dashboard-pro'); ?></div>
+                <div class="vdp-period-selector" data-period="90"><?php esc_html_e('90 Days', 'vendor-dashboard-pro'); ?></div>
+            </div>
+        </div>
+        
+        <div class="vdp-summary-stats">
+            <div class="vdp-summary-stat">
+                <div class="vdp-summary-value" id="vdp-period-orders">0</div>
+                <div class="vdp-summary-label"><?php esc_html_e('Total Orders', 'vendor-dashboard-pro'); ?></div>
+            </div>
+            
+            <div class="vdp-summary-stat">
+                <div class="vdp-summary-value" id="vdp-period-revenue">$0.00</div>
+                <div class="vdp-summary-label"><?php esc_html_e('Total Revenue', 'vendor-dashboard-pro'); ?></div>
+            </div>
+            
+            <div class="vdp-summary-stat">
+                <div class="vdp-summary-value" id="vdp-period-avg">$0.00</div>
+                <div class="vdp-summary-label"><?php esc_html_e('Average Order', 'vendor-dashboard-pro'); ?></div>
+            </div>
+        </div>
+        
+        <div class="vdp-summary-chart">
+            <canvas id="ordersChart" width="400" height="200"></canvas>
+        </div>
+    </div>
 </div>
 
 <script>
 jQuery(document).ready(function($) {
+    // Destroy any existing charts
+    if (typeof VDP !== 'undefined' && typeof VDP.destroyExistingCharts === 'function') {
+        VDP.destroyExistingCharts();
+    }
+    
     // Order status filter
     $('#order-status-filter').on('change', function() {
         var status = $(this).val();
@@ -246,23 +284,245 @@ jQuery(document).ready(function($) {
             $('.vdp-order-row').hide();
             $('.vdp-order-row[data-status="' + status + '"]').show();
         }
+        
+        // Add filter tag if not already present
+        if (status !== '') {
+            var statusLabel = $('#order-status-filter option:selected').text();
+            addFilterTag('status', status, statusLabel);
+        } else {
+            // Remove any status filter tags
+            $('.vdp-filter-tag[data-type="status"]').remove();
+            
+            // Hide filter tags section if empty
+            if ($('.vdp-filter-tag').length === 0) {
+                $('.vdp-filter-tags').hide();
+            }
+        }
     });
     
     // Order search
     $('#order-search').on('keyup', function() {
         var search = $(this).val().toLowerCase();
         
-        $('.vdp-order-row').each(function() {
-            var row = $(this);
-            var orderNumber = row.find('.vdp-order-number').text().toLowerCase();
-            var customer = row.find('.vdp-order-customer').text().toLowerCase();
+        // Only proceed if search is at least 2 characters or empty
+        if (search.length >= 2 || search === '') {
+            $('.vdp-order-row').each(function() {
+                var row = $(this);
+                var orderNumber = row.find('.vdp-order-number').text().toLowerCase();
+                var customer = row.find('.vdp-order-customer').text().toLowerCase();
+                
+                if (orderNumber.indexOf(search) > -1 || customer.indexOf(search) > -1) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
             
-            if (orderNumber.indexOf(search) > -1 || customer.indexOf(search) > -1) {
-                row.show();
+            // Add search filter tag if not already present
+            if (search.length >= 2) {
+                addFilterTag('search', search, '"' + search + '"');
             } else {
-                row.hide();
+                // Remove any search filter tags
+                $('.vdp-filter-tag[data-type="search"]').remove();
+                
+                // Hide filter tags section if empty
+                if ($('.vdp-filter-tag').length === 0) {
+                    $('.vdp-filter-tags').hide();
+                }
+            }
+        }
+    });
+    
+    // Function to add filter tag
+    function addFilterTag(type, value, label) {
+        // First check if filter tags container exists, if not create it
+        if ($('.vdp-filter-tags').length === 0) {
+            $('.vdp-section-header').after('<div class="vdp-filter-tags"></div>');
+        }
+        
+        // Show filter tags section
+        $('.vdp-filter-tags').show();
+        
+        // Check if tag already exists
+        var existingTag = $('.vdp-filter-tag[data-type="' + type + '"]');
+        if (existingTag.length > 0) {
+            // Update existing tag
+            existingTag.attr('data-value', value);
+            existingTag.find('.vdp-filter-tag-label').text(label);
+            return;
+        }
+        
+        // Create tag if it doesn't exist
+        var tag = '<div class="vdp-filter-tag" data-type="' + type + '" data-value="' + value + '">';
+        tag += '<span class="vdp-filter-tag-label">' + label + '</span>';
+        tag += '<span class="vdp-filter-tag-remove"><i class="fas fa-times"></i></span>';
+        tag += '</div>';
+        
+        $('.vdp-filter-tags').append(tag);
+    }
+    
+    // Remove filter tag when clicking the remove button
+    $(document).on('click', '.vdp-filter-tag-remove', function() {
+        var tag = $(this).parent();
+        var type = tag.data('type');
+        
+        // Remove the tag
+        tag.remove();
+        
+        // Reset the corresponding filter
+        if (type === 'status') {
+            $('#order-status-filter').val('').trigger('change');
+        } else if (type === 'search') {
+            $('#order-search').val('').trigger('keyup');
+        }
+        
+        // Hide filter tags section if empty
+        if ($('.vdp-filter-tag').length === 0) {
+            $('.vdp-filter-tags').hide();
+        }
+    });
+    
+    // Period selector for orders summary
+    $('.vdp-period-selector').on('click', function() {
+        // Update active class
+        $('.vdp-period-selector').removeClass('active');
+        $(this).addClass('active');
+        
+        // Get selected period
+        var period = $(this).data('period');
+        
+        // Update chart and stats
+        updateOrdersSummary(period);
+    });
+    
+    // Initialize orders chart
+    let ordersChartInstance = null;
+    
+    function initOrdersChart(labels, data) {
+        // Get chart context
+        var ctx = document.getElementById('ordersChart').getContext('2d');
+        
+        // If chart already exists, destroy it
+        if (ordersChartInstance) {
+            ordersChartInstance.destroy();
+        }
+        
+        // Create gradient
+        var gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, 'rgba(44, 114, 215, 0.5)');
+        gradient.addColorStop(1, 'rgba(44, 114, 215, 0.1)');
+        
+        // Initialize chart
+        ordersChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Orders',
+                    data: data,
+                    backgroundColor: gradient,
+                    borderColor: '#2c72d7',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#2c72d7',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 10,
+                        cornerRadius: 4,
+                        caretSize: 6
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#6B7280',
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            precision: 0,
+                            color: '#6B7280',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
             }
         });
-    });
+    }
+    
+    // Function to update orders summary based on selected period
+    function updateOrdersSummary(days) {
+        // In a real implementation, this would fetch data from the server
+        // For now, we'll use sample data
+        
+        // Set loading state
+        $('#vdp-period-orders').text('...');
+        $('#vdp-period-revenue').text('...');
+        $('#vdp-period-avg').text('...');
+        
+        // Simulate AJAX call with setTimeout
+        setTimeout(function() {
+            // Sample data - in real implementation, this would be the AJAX response
+            var sampleData = {
+                totalOrders: Math.floor(Math.random() * 50) + 10,
+                totalRevenue: (Math.random() * 5000 + 1000).toFixed(2),
+                averageOrder: (Math.random() * 200 + 50).toFixed(2),
+                chartLabels: [],
+                chartData: []
+            };
+            
+            // Generate chart data
+            for (var i = 0; i < days; i++) {
+                var date = new Date();
+                date.setDate(date.getDate() - (days - i - 1));
+                
+                // Format date as short string (e.g., "Jun 12")
+                var month = date.toLocaleString('default', { month: 'short' });
+                var day = date.getDate();
+                
+                sampleData.chartLabels.push(month + ' ' + day);
+                sampleData.chartData.push(Math.floor(Math.random() * 10) + 1);
+            }
+            
+            // Update stats
+            $('#vdp-period-orders').text(sampleData.totalOrders);
+            $('#vdp-period-revenue').text('$' + sampleData.totalRevenue);
+            $('#vdp-period-avg').text('$' + sampleData.averageOrder);
+            
+            // Update chart
+            initOrdersChart(sampleData.chartLabels, sampleData.chartData);
+        }, 500);
+    }
+    
+    // Initialize with 7-day period
+    updateOrdersSummary(7);
 });
 </script>

@@ -1,0 +1,553 @@
+/**
+ * Orders styles for Vendor Dashboard Pro
+ *
+ * @package Vendor Dashboard Pro
+ */
+
+/* Orders Content Container */
+.vdp-orders-content {
+    max-width: 100%;
+}
+
+/* Orders Header Section with Stats */
+.vdp-orders-header-section {
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, var(--vdp-primary) 0%, #2c72d7 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(44, 114, 215, 0.2);
+}
+
+.vdp-orders-header-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(150px, -150px);
+}
+
+.vdp-orders-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.vdp-stat-box {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.vdp-stat-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.vdp-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 20px;
+    color: white;
+}
+
+.vdp-status-pending .vdp-stat-icon {
+    background-color: rgba(241, 196, 15, 0.3);
+    color: #f1c40f;
+}
+
+.vdp-status-processing .vdp-stat-icon {
+    background-color: rgba(52, 152, 219, 0.3);
+    color: #3498db;
+}
+
+.vdp-status-completed .vdp-stat-icon {
+    background-color: rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
+}
+
+.vdp-stat-content {
+    flex: 1;
+}
+
+.vdp-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.vdp-stat-label {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* Orders List Section */
+.vdp-orders-list-section {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.vdp-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--vdp-gray-200);
+}
+
+.vdp-section-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.vdp-section-actions {
+    display: flex;
+    align-items: center;
+}
+
+.vdp-filters {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.vdp-filter-select {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--vdp-gray-300);
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+    min-width: 150px;
+}
+
+.vdp-search-filter {
+    position: relative;
+}
+
+.vdp-search-input {
+    padding: 0.5rem 1rem;
+    padding-right: 2.5rem;
+    border: 1px solid var(--vdp-gray-300);
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+    min-width: 220px;
+}
+
+.vdp-search-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--vdp-gray-500);
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* Orders Table */
+.vdp-table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+.vdp-orders-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vdp-orders-table th,
+.vdp-orders-table td {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--vdp-gray-200);
+}
+
+.vdp-orders-table th {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--vdp-gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: var(--vdp-gray-50, #f9fafb);
+}
+
+.vdp-orders-table tr:last-child td {
+    border-bottom: none;
+}
+
+.vdp-orders-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.vdp-orders-table tbody tr:hover {
+    background-color: var(--vdp-gray-50, #f9fafb);
+}
+
+.vdp-order-number a {
+    color: var(--vdp-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.vdp-order-number a:hover {
+    text-decoration: underline;
+}
+
+.vdp-order-date {
+    color: var(--vdp-gray-600);
+    font-size: 14px;
+}
+
+.vdp-order-customer {
+    font-weight: 500;
+}
+
+.vdp-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.vdp-badge-pending {
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #d9a512;
+}
+
+.vdp-badge-processing {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #2980b9;
+}
+
+.vdp-badge-completed {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #27ae60;
+}
+
+.vdp-badge-on-hold {
+    background-color: rgba(155, 89, 182, 0.15);
+    color: #8e44ad;
+}
+
+.vdp-badge-cancelled {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #c0392b;
+}
+
+.vdp-status-badge::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.vdp-badge-pending::before {
+    background-color: #d9a512;
+}
+
+.vdp-badge-processing::before {
+    background-color: #2980b9;
+}
+
+.vdp-badge-completed::before {
+    background-color: #27ae60;
+}
+
+.vdp-badge-on-hold::before {
+    background-color: #8e44ad;
+}
+
+.vdp-badge-cancelled::before {
+    background-color: #c0392b;
+}
+
+.vdp-order-total {
+    font-weight: 600;
+    color: var(--vdp-gray-800);
+}
+
+.vdp-order-items {
+    display: block;
+    font-weight: normal;
+    font-size: 12px;
+    color: var(--vdp-gray-600);
+    margin-top: 0.25rem;
+}
+
+.vdp-order-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.vdp-btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    padding: 0;
+}
+
+/* Empty Table State */
+.vdp-empty-table {
+    padding: 3rem 0 !important;
+    text-align: center;
+}
+
+.vdp-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.vdp-empty-icon {
+    font-size: 3rem;
+    color: var(--vdp-gray-400);
+    margin-bottom: 1rem;
+}
+
+.vdp-empty-state p {
+    font-size: 16px;
+    color: var(--vdp-gray-600);
+    margin-bottom: 1rem;
+}
+
+/* Pagination */
+.vdp-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    border-top: 1px solid var(--vdp-gray-200);
+    gap: 0.5rem;
+}
+
+.vdp-pagination-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.75rem;
+    border-radius: 6px;
+    font-size: 14px;
+    text-decoration: none;
+    color: var(--vdp-gray-700);
+    transition: all 0.2s ease;
+}
+
+.vdp-pagination-item:hover {
+    background-color: var(--vdp-gray-100);
+    color: var(--vdp-primary);
+}
+
+.vdp-pagination-current {
+    background-color: var(--vdp-primary);
+    color: white;
+    font-weight: 500;
+}
+
+.vdp-pagination-current:hover {
+    background-color: var(--vdp-primary);
+    color: white;
+}
+
+.vdp-pagination-dots {
+    color: var(--vdp-gray-500);
+    letter-spacing: 2px;
+    padding: 0 0.5rem;
+}
+
+.vdp-pagination-prev,
+.vdp-pagination-next {
+    font-weight: 500;
+}
+
+.vdp-pagination-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.vdp-pagination-disabled:hover {
+    background: none;
+    color: var(--vdp-gray-700);
+}
+
+/* Filter Tag UI for Orders */
+.vdp-filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0 1.5rem;
+}
+
+.vdp-filter-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    background-color: var(--vdp-gray-100);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--vdp-gray-700);
+}
+
+.vdp-filter-tag-remove {
+    margin-left: 0.5rem;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--vdp-gray-300);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 8px;
+}
+
+.vdp-filter-tag-remove:hover {
+    background-color: var(--vdp-danger);
+}
+
+/* Recent Orders Summary Card */
+.vdp-orders-summary {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.vdp-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.vdp-summary-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.vdp-summary-period {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vdp-period-selector {
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 12px;
+    background-color: var(--vdp-gray-100);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.vdp-period-selector:hover,
+.vdp-period-selector.active {
+    background-color: var(--vdp-primary);
+    color: white;
+}
+
+.vdp-summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.vdp-summary-stat {
+    text-align: center;
+}
+
+.vdp-summary-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--vdp-gray-800);
+}
+
+.vdp-summary-label {
+    font-size: 12px;
+    color: var(--vdp-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.vdp-summary-chart {
+    height: 200px;
+    margin-top: 1.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .vdp-orders-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .vdp-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .vdp-filters {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .vdp-filter-select, 
+    .vdp-search-input {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .vdp-table-responsive {
+        margin: 0 -1.5rem;
+        padding: 0 1.5rem;
+        width: calc(100% + 3rem);
+    }
+    
+    .vdp-orders-stats {
+        grid-template-columns: 1fr;
+    }
+}
