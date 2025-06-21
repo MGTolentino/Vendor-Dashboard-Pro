@@ -46,37 +46,39 @@ class VDP_Products {
      * Render products list.
      */
     public function render_products_list() {
-        // Get vendor
-        $vendor = vdp_get_current_vendor();
+        global $wpdb;
         
-        if (!$vendor) {
-            // Agregar mensaje para depuración
+        // Get current user ID
+        $user_id = get_current_user_id();
+        if (!$user_id) {
             echo '<div class="vdp-notice vdp-notice-error">';
-            echo '<p>' . esc_html__('No vendor profile found for the current user. Please make sure you are registered as a vendor.', 'vendor-dashboard-pro') . '</p>';
+            echo '<p>' . esc_html__('Please login to view your listings.', 'vendor-dashboard-pro') . '</p>';
             echo '</div>';
             return;
         }
         
-        // Get vendor ID - asegurarnos de llamar correctamente a la función
-        $vendor_id = null;
-        if (method_exists($vendor, 'get_id')) {
-            // Si es un método normal
-            $vendor_id = $vendor->get_id();
-        } elseif (isset($vendor->get_id) && is_callable($vendor->get_id)) {
-            // Si es una propiedad callable (función anónima)
-            $vendor_id = ($vendor->get_id)();
-        } else {
-            // Fallback - intentar obtener el ID directamente del objeto
-            $vendor_id = isset($vendor->ID) ? $vendor->ID : null;
-        }
+        // Obtener directamente el post del vendor para el usuario actual
+        $vendor_post = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_vendor' 
+            AND post_author = %d 
+            AND post_status IN ('publish', 'draft', 'pending')
+            LIMIT 1",
+            $user_id
+        ));
         
-        // Verificar que tenemos un ID de vendor válido
-        if (!$vendor_id) {
+        if (!$vendor_post) {
             echo '<div class="vdp-notice vdp-notice-error">';
-            echo '<p>' . esc_html__('Could not determine the vendor ID. Please contact the administrator.', 'vendor-dashboard-pro') . '</p>';
+            echo '<p>' . esc_html__('No vendor profile found for your account. Please register as a vendor.', 'vendor-dashboard-pro') . '</p>';
             echo '</div>';
             return;
         }
+        
+        // Usar directamente el ID del post de vendor
+        $vendor_id = $vendor_post->ID;
+        
+        // Crear el vendor object para mantener compatibilidad con el resto del código
+        $vendor = vdp_create_vendor_from_post($vendor_post);
         
         // Get current page
         $paged = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
@@ -84,11 +86,47 @@ class VDP_Products {
         // Get listings per page
         $per_page = 10;
         
-        // Get vendor listings
-        $listings = self::get_vendor_listings($vendor_id, $per_page, ($paged - 1) * $per_page);
+        // Get vendor listings directamente por post_parent
+        $listings_query = $wpdb->prepare(
+            "SELECT * FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_listing' 
+            AND post_parent = %d 
+            AND post_status IN ('publish', 'draft', 'pending')
+            ORDER BY post_date DESC
+            LIMIT %d OFFSET %d",
+            $vendor_id, $per_page, ($paged - 1) * $per_page
+        );
+        
+        $listings_posts = $wpdb->get_results($listings_query);
+        
+        // Formatear los listings
+        $listings = array();
+        foreach ($listings_posts as $listing) {
+            $price = get_post_meta($listing->ID, 'hp_price', true);
+            $thumbnail_id = get_post_thumbnail_id($listing->ID);
+            $thumbnail_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'medium') : '';
+            
+            $listings[] = array(
+                'id' => $listing->ID,
+                'title' => $listing->post_title,
+                'status' => $listing->post_status,
+                'date' => $listing->post_date,
+                'price' => $price ? $price : 0,
+                'thumbnail' => $thumbnail_url,
+                'edit_url' => vdp_get_dashboard_url('products', $listing->ID),
+            );
+        }
         
         // Get total listings count
-        $total_listings = self::get_vendor_listing_count($vendor_id);
+        $count_query = $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_listing' 
+            AND post_parent = %d 
+            AND post_status IN ('publish', 'draft', 'pending')",
+            $vendor_id
+        );
+        
+        $total_listings = (int) $wpdb->get_var($count_query);
         
         // Calculate total pages
         $total_pages = ceil($total_listings / $per_page);
