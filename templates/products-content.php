@@ -49,6 +49,34 @@ if (!defined('ABSPATH')) {
         </div>
     </div>
     
+    <!-- System information for debugging -->
+    <?php 
+    global $wpdb;
+    $user_id = get_current_user_id(); 
+    $vendor_id = isset($vendor) && is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id) ? ($vendor->get_id)() : 'N/A';
+    
+    // Solo mostrar en modo depuración o para administradores
+    if (current_user_can('administrator') || (defined('WP_DEBUG') && WP_DEBUG)) : 
+    ?>
+    <div class="vdp-debug-info" style="background: #f5f5f5; padding: 10px; margin-bottom: 20px; border-left: 4px solid #0073aa;">
+        <p><strong>Información de diagnóstico (solo visible para administradores):</strong></p>
+        <ul>
+            <li>User ID: <?php echo esc_html($user_id); ?></li>
+            <li>Vendor ID: <?php echo esc_html($vendor_id); ?></li>
+            <li>Listings encontrados: <?php echo is_array($listings) ? count($listings) : 'N/A'; ?></li>
+            <li>Total listings: <?php echo isset($total_listings) ? esc_html($total_listings) : 'N/A'; ?></li>
+        </ul>
+        <?php
+        // Consulta directa para verificar listings
+        $direct_check = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'hp_listing' AND post_parent = %d AND post_status IN ('publish', 'draft', 'pending')",
+            $vendor_id
+        ));
+        ?>
+        <p>Verificación directa de BD: <?php echo esc_html($direct_check); ?> listings con post_parent = <?php echo esc_html($vendor_id); ?></p>
+    </div>
+    <?php endif; ?>
+    
     <!-- Listings Grid -->
     <div class="vdp-listings-grid">
         <?php if (empty($listings)) : ?>

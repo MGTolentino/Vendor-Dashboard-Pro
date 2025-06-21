@@ -50,24 +50,32 @@ class VDP_Products {
         $vendor = vdp_get_current_vendor();
         
         if (!$vendor) {
-            error_log("VDP Debug: No vendor found in render_products_list()");
+            // Agregar mensaje para depuración
+            echo '<div class="vdp-notice vdp-notice-error">';
+            echo '<p>' . esc_html__('No vendor profile found for the current user. Please make sure you are registered as a vendor.', 'vendor-dashboard-pro') . '</p>';
+            echo '</div>';
             return;
         }
         
-        // Debug info - vendor object
-        error_log("VDP Debug: Vendor object type: " . gettype($vendor));
-        error_log("VDP Debug: Vendor has get_id method: " . (method_exists($vendor, 'get_id') ? 'Yes' : 'No'));
-        error_log("VDP Debug: Vendor has get_id property: " . (isset($vendor->get_id) ? 'Yes' : 'No'));
-        error_log("VDP Debug: Vendor get_id is callable: " . (isset($vendor->get_id) && is_callable($vendor->get_id) ? 'Yes' : 'No'));
-        
-        // Get vendor ID
+        // Get vendor ID - asegurarnos de llamar correctamente a la función
         $vendor_id = null;
         if (method_exists($vendor, 'get_id')) {
+            // Si es un método normal
             $vendor_id = $vendor->get_id();
-            error_log("VDP Debug: Vendor ID from method: " . $vendor_id);
         } elseif (isset($vendor->get_id) && is_callable($vendor->get_id)) {
+            // Si es una propiedad callable (función anónima)
             $vendor_id = ($vendor->get_id)();
-            error_log("VDP Debug: Vendor ID from callable property: " . $vendor_id);
+        } else {
+            // Fallback - intentar obtener el ID directamente del objeto
+            $vendor_id = isset($vendor->ID) ? $vendor->ID : null;
+        }
+        
+        // Verificar que tenemos un ID de vendor válido
+        if (!$vendor_id) {
+            echo '<div class="vdp-notice vdp-notice-error">';
+            echo '<p>' . esc_html__('Could not determine the vendor ID. Please contact the administrator.', 'vendor-dashboard-pro') . '</p>';
+            echo '</div>';
+            return;
         }
         
         // Get current page
@@ -180,39 +188,24 @@ class VDP_Products {
     public static function get_vendor_listings($vendor_id, $limit = 10, $offset = 0) {
         global $wpdb;
         
-        // Debug info - log the vendor ID we're using
-        error_log("VDP Debug: get_vendor_listings called with vendor_id=$vendor_id, limit=$limit, offset=$offset");
+        // Si no tenemos vendor_id, no podemos continuar
+        if (!$vendor_id) {
+            return array(); // Devolver array vacío
+        }
         
-        // Try to find listings by vendor post_parent OR by matching the post_author with the vendor post_author
-        
-        // First get the vendor's post_author
-        $vendor_author_query = $wpdb->prepare(
-            "SELECT post_author FROM {$wpdb->posts} WHERE ID = %d",
-            $vendor_id
-        );
-        error_log("VDP Debug: Vendor author query: " . $vendor_author_query);
-        
-        $vendor_author = $wpdb->get_var($vendor_author_query);
-        error_log("VDP Debug: Vendor post_author: " . $vendor_author);
-        
-        // Extended query to find listings by post_parent OR post_author
+        // Buscar listings donde post_parent = vendor_id (relación estricta)
         $query = $wpdb->prepare(
             "SELECT * FROM {$wpdb->posts} 
             WHERE post_type = 'hp_listing' 
-            AND (post_parent = %d OR (post_author = %d AND post_parent = 0)) 
+            AND post_parent = %d 
             AND post_status IN ('publish', 'draft', 'pending')
             ORDER BY post_date DESC
             LIMIT %d OFFSET %d",
-            $vendor_id, $vendor_author, $limit, $offset
+            $vendor_id, $limit, $offset
         );
         
-        // Log the query
-        error_log("VDP Debug: SQL Query: " . $query);
-        
+        // Ejecutar la consulta
         $listings = $wpdb->get_results($query);
-        
-        // Log the result count
-        error_log("VDP Debug: Query returned " . count($listings) . " listings");
         
         $formatted_listings = array();
         
@@ -244,23 +237,18 @@ class VDP_Products {
     public static function get_vendor_listing_count($vendor_id) {
         global $wpdb;
         
-        // First get the vendor's post_author
-        $vendor_author_query = $wpdb->prepare(
-            "SELECT post_author FROM {$wpdb->posts} WHERE ID = %d",
-            $vendor_id
-        );
-        error_log("VDP Debug: Count - Vendor author query: " . $vendor_author_query);
+        // Si no tenemos vendor_id, no podemos continuar
+        if (!$vendor_id) {
+            return 0; // Devolver cero
+        }
         
-        $vendor_author = $wpdb->get_var($vendor_author_query);
-        error_log("VDP Debug: Count - Vendor post_author: " . $vendor_author);
-        
-        // Extended query to count listings by post_parent OR post_author
+        // Contar listings donde post_parent = vendor_id (relación estricta)
         $query = $wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->posts} 
             WHERE post_type = 'hp_listing' 
-            AND (post_parent = %d OR (post_author = %d AND post_parent = 0)) 
+            AND post_parent = %d 
             AND post_status IN ('publish', 'draft', 'pending')",
-            $vendor_id, $vendor_author
+            $vendor_id
         );
         
         error_log("VDP Debug: Listing count query: " . $query);
