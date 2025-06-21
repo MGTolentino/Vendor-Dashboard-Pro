@@ -59,6 +59,8 @@ class VDP_Dashboard {
             return;
         }
         
+        $vendor_id = null;
+        
         // Get vendor stats - either real or demo
         if (method_exists($vendor, 'get_id')) {
             $vendor_id = $vendor->get_id();
@@ -73,8 +75,42 @@ class VDP_Dashboard {
             $statistics = self::get_demo_statistics();
         }
         
-        // Get recent listings placeholder
+        // Obtener listings recientes
         $recent_listings = array();
+        if ($vendor_id) {
+            // Si existe la clase de productos, usarla para obtener los listings
+            if (class_exists('VDP_Products')) {
+                $recent_listings = VDP_Products::get_vendor_listings($vendor_id, 3, 0);
+            } else {
+                // Fallback a consulta directa
+                global $wpdb;
+                $listings_posts = $wpdb->get_results($wpdb->prepare(
+                    "SELECT * FROM {$wpdb->posts} 
+                    WHERE post_type = 'hp_listing' 
+                    AND post_parent = %d 
+                    AND post_status IN ('publish', 'draft', 'pending')
+                    ORDER BY post_date DESC
+                    LIMIT 3",
+                    $vendor_id
+                ));
+                
+                foreach ($listings_posts as $listing) {
+                    $price = get_post_meta($listing->ID, 'hp_price', true);
+                    $thumbnail_id = get_post_thumbnail_id($listing->ID);
+                    $thumbnail_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'medium') : '';
+                    
+                    $recent_listings[] = array(
+                        'id' => $listing->ID,
+                        'title' => $listing->post_title,
+                        'status' => $listing->post_status,
+                        'date' => $listing->post_date,
+                        'price' => $price ? $price : 0,
+                        'thumbnail' => $thumbnail_url,
+                        'edit_url' => vdp_get_dashboard_url('products', $listing->ID),
+                    );
+                }
+            }
+        }
         
         // Get recent messages placeholder
         $recent_messages = array();

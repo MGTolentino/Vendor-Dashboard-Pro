@@ -217,15 +217,63 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
                 </div>
                 
                 <div class="vdp-activity-list">
-                    <div class="vdp-empty-state">
-                        <div class="vdp-empty-icon">
-                            <i class="fas fa-box-open"></i>
+                    <?php if (empty($recent_listings)) : ?>
+                        <div class="vdp-empty-state">
+                            <div class="vdp-empty-icon">
+                                <i class="fas fa-box-open"></i>
+                            </div>
+                            <p><?php esc_html_e('No listings yet. Add your first listing!', 'vendor-dashboard-pro'); ?></p>
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm vdp-add-listing-btn">
+                                <i class="fas fa-plus"></i> <?php esc_html_e('Add Listing', 'vendor-dashboard-pro'); ?>
+                            </a>
                         </div>
-                        <p><?php esc_html_e('No listings yet. Add your first listing!', 'vendor-dashboard-pro'); ?></p>
-                        <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm vdp-add-listing-btn">
-                            <i class="fas fa-plus"></i> <?php esc_html_e('Add Listing', 'vendor-dashboard-pro'); ?>
-                        </a>
-                    </div>
+                    <?php else : ?>
+                        <div class="vdp-recent-listings">
+                            <?php foreach ($recent_listings as $listing) : ?>
+                                <div class="vdp-recent-listing-item">
+                                    <div class="vdp-recent-listing-thumbnail">
+                                        <?php if (!empty($listing['thumbnail'])) : ?>
+                                            <img src="<?php echo esc_url($listing['thumbnail']); ?>" alt="<?php echo esc_attr($listing['title']); ?>">
+                                        <?php else : ?>
+                                            <div class="vdp-listing-placeholder">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                        <span class="vdp-status-badge vdp-status-<?php echo esc_attr($listing['status']); ?>">
+                                            <?php echo esc_html(ucfirst($listing['status'])); ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="vdp-recent-listing-content">
+                                        <h4 class="vdp-recent-listing-title">
+                                            <?php echo esc_html($listing['title']); ?>
+                                        </h4>
+                                        <div class="vdp-recent-listing-meta">
+                                            <?php if ($listing['price'] > 0) : ?>
+                                                <span class="vdp-price"><?php echo esc_html(vdp_format_price($listing['price'])); ?></span>
+                                            <?php else : ?>
+                                                <span class="vdp-price vdp-price-free"><?php esc_html_e('Free', 'vendor-dashboard-pro'); ?></span>
+                                            <?php endif; ?>
+                                            <span class="vdp-listing-date">
+                                                <i class="fas fa-calendar"></i>
+                                                <?php echo esc_html(vdp_format_date($listing['date'])); ?>
+                                            </span>
+                                        </div>
+                                        <div class="vdp-recent-listing-actions">
+                                            <a href="<?php echo esc_url($listing['edit_url']); ?>" class="vdp-btn vdp-btn-secondary vdp-btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                                <?php esc_html_e('Edit', 'vendor-dashboard-pro'); ?>
+                                            </a>
+                                            <a href="<?php echo esc_url(get_permalink($listing['id'])); ?>" class="vdp-btn vdp-btn-outline vdp-btn-sm" target="_blank">
+                                                <i class="fas fa-external-link-alt"></i>
+                                                <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
             
@@ -250,6 +298,93 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
         </div>
     </div>
 </div>
+
+<style>
+/* Estilos para los listings recientes en el dashboard */
+.vdp-recent-listings {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.vdp-recent-listing-item {
+    display: flex;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.vdp-recent-listing-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.vdp-recent-listing-thumbnail {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.vdp-recent-listing-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.vdp-recent-listing-thumbnail .vdp-status-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.vdp-recent-listing-content {
+    padding: 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.vdp-recent-listing-title {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.vdp-recent-listing-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.vdp-recent-listing-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.vdp-listing-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 24px;
+}
+</style>
 
 <script>
 jQuery(document).ready(function($) {
