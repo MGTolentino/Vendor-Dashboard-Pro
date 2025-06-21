@@ -48,6 +48,13 @@ class VDP_Assets {
             VDP_VERSION
         );
         
+        wp_register_style(
+            'vdp-dashboard',
+            VDP_PLUGIN_URL . 'assets/css/dashboard.css',
+            array('vdp-main'),
+            VDP_VERSION
+        );
+        
         // Register scripts
         wp_register_script(
             'vdp-chart',
@@ -94,6 +101,7 @@ class VDP_Assets {
         // If we're on a page with the vendor dashboard shortcode or AJAX request
         if (vdp_is_dashboard_page() || (isset($_GET['vdp_ajax']) && $_GET['vdp_ajax'])) {
             wp_enqueue_style('vdp-main');
+            wp_enqueue_style('vdp-dashboard');
             wp_enqueue_script('vdp-main');
         }
     }
