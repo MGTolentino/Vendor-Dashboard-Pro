@@ -120,16 +120,33 @@
             
             console.log("VDP: Actualizando navegación, acción activa: " + action);
             
-            // Load content via AJAX
+            // Usamos POST en vez de GET para evitar problemas de caché
             $.ajax({
-                url: url,
-                type: 'GET',
+                url: vdp_vars.ajax_url,
+                type: 'POST',
                 data: {
-                    vdp_ajax: 1
+                    action: 'vdp_load_content',
+                    nonce: vdp_vars.nonce,
+                    section: action,
+                    item: item
                 },
                 success: function(response) {
-                    // Update content area
-                    $('.vdp-content-area').html(response);
+                    if (!response || !response.success) {
+                        VDP.showNotice("Error loading content", 'error');
+                        return;
+                    }
+                    
+                    // Actualizar solo el área de contenido con el HTML devuelto
+                    $('.vdp-content-area').html(response.data.content);
+                    
+                    // Actualizar el título de la página si es necesario
+                    if (response.data.title) {
+                        $('.vdp-header-title h1').text(response.data.title);
+                    }
+                    
+                    // Log de depuración
+                    console.log("VDP: Contenido cargado para acción: " + response.data.action);
+                    console.log("VDP Debug:", response.data.debug_info);
                     
                     // Reinitialize components based on loaded content
                     if (action === 'dashboard') {
@@ -142,7 +159,7 @@
                         VDP.initSettings();
                     }
                     
-                    // Update browser history
+                    // Update browser history if needed
                     if (updateHistory) {
                         var state = {
                             url: url,
@@ -157,7 +174,8 @@
                     // Scroll to top
                     window.scrollTo(0, 0);
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error("VDP Error:", error);
                     VDP.showNotice(vdp_vars.texts.error, 'error');
                 },
                 complete: function() {

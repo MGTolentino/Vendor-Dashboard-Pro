@@ -55,7 +55,7 @@ class VDP_Router {
         $vdp_current_item = $current_item;
         
         // Registrar para depuración
-        error_log("VDP Debug: Acción actual establecida en router: " . $vdp_current_action);
+        vdp_debug_log("Acción actual establecida en router: " . $vdp_current_action);
         
         // Check if this is an AJAX request
         $is_ajax = isset($_GET['vdp_ajax']) && $_GET['vdp_ajax'] == 1;
@@ -98,10 +98,12 @@ class VDP_Router {
         // Get action and item from request
         $action = isset($_POST['action']) ? sanitize_key($_POST['action']) : 'dashboard';
         if ($action === 'vdp_load_content') {
-            $action = 'dashboard'; // Default action if only the AJAX action name is provided
+            $action = isset($_POST['section']) ? sanitize_key($_POST['section']) : 'dashboard';
         }
         
         $item = isset($_POST['item']) ? sanitize_key($_POST['item']) : '';
+        
+        vdp_debug_log("AJAX cargando contenido para acción: " . $action . ", ítem: " . $item);
         
         // Set globals for template access
         global $vdp_current_action, $vdp_current_item;
@@ -111,16 +113,27 @@ class VDP_Router {
         // Start output buffering
         ob_start();
         
-        // Render content
+        // Render SOLO el contenido específico, no la estructura completa
         self::render_content($action, $item);
         
         // Get buffered content
         $content = ob_get_clean();
         
-        // Send response
+        // Verificar si el contenido es demasiado grande (posible inclusión de estructura completa)
+        if (strlen($content) > 50000) { // Umbral arbitrario para detectar contenido excesivo
+            vdp_debug_log("Respuesta AJAX muy grande (" . strlen($content) . " bytes) para acción: " . $action, "warning");
+        }
+        
+        // Send response con información adicional para depuración
         wp_send_json_success(array(
             'content' => $content,
             'title' => self::get_page_title($action, $item),
+            'action' => $action,
+            'debug_info' => array(
+                'content_length' => strlen($content),
+                'action_loaded' => $action,
+                'item_loaded' => $item
+            )
         ));
     }
     
@@ -135,7 +148,7 @@ class VDP_Router {
         $content_rendered = false;
         
         // Registrar para depuración
-        error_log("VDP Debug: Renderizando contenido para acción: " . $action);
+        vdp_debug_log("Renderizando contenido para acción: " . $action);
         
         // Crear un nombre de acción basado en el módulo
         $action_hook = 'vdp_' . $action . '_content';

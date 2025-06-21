@@ -44,13 +44,13 @@ function vdp_is_user_vendor() {
  */
 function vdp_get_current_vendor() {
     if (!is_user_logged_in()) {
-        error_log("VDP Debug: User not logged in in vdp_get_current_vendor()");
+        vdp_debug_log("User not logged in in vdp_get_current_vendor()", "warning");
         return null;
     }
 
     // Get current user ID
     $user_id = get_current_user_id();
-    error_log("VDP Debug: Current user ID: " . $user_id);
+    vdp_debug_log("Current user ID: " . $user_id);
     
     // Query for hp_vendor post where current user is the author
     global $wpdb;
@@ -64,17 +64,17 @@ function vdp_get_current_vendor() {
         $user_id
     );
     
-    error_log("VDP Debug: Vendor query: " . $query);
+    vdp_debug_log("Vendor query: " . $query);
     
     $vendor_post = $wpdb->get_row($query);
     
     if ($vendor_post) {
-        error_log("VDP Debug: Vendor post found, ID: " . $vendor_post->ID . ", Title: " . $vendor_post->post_title);
+        vdp_debug_log("Vendor post found, ID: " . $vendor_post->ID . ", Title: " . $vendor_post->post_title);
         // Create a vendor object from post data
         return vdp_create_vendor_from_post($vendor_post);
     }
     
-    error_log("VDP Debug: No vendor post found for user ID: " . $user_id);
+    vdp_debug_log("No vendor post found for user ID: " . $user_id, "warning");
     // No vendor found for this user
     return null;
 }
@@ -213,9 +213,14 @@ function vdp_get_dashboard_url($action = '', $item = '') {
         $url = get_permalink($dashboard_page_id);
     }
     
-    // Add action
-    if (!empty($action) && $action !== 'dashboard') {
+    // Para dashboard, usar URL base sin parámetros
+    if (empty($action) || $action === 'dashboard') {
+        // Para dashboard, no añadir parámetros de acción, usar URL base
+        vdp_debug_log("URL para dashboard sin parámetros: " . $url);
+    } else {
+        // Para otras secciones, añadir el parámetro vdp-action
         $url = add_query_arg('vdp-action', $action, $url);
+        vdp_debug_log("URL para " . $action . ": " . $url);
     }
     
     // Add item
@@ -265,12 +270,26 @@ function vdp_get_dashboard_page_id() {
 function vdp_get_current_action() {
     global $vdp_current_action;
     
-    if (isset($vdp_current_action)) {
+    // Si la variable global está definida, usarla
+    if (isset($vdp_current_action) && !empty($vdp_current_action)) {
+        vdp_debug_log("Usando acción de variable global: " . $vdp_current_action);
         return $vdp_current_action;
     }
     
-    // Fallback to URL parameter
-    return isset($_GET['vdp-action']) ? sanitize_key($_GET['vdp-action']) : 'dashboard';
+    // Si hay un parámetro en la URL, usarlo
+    if (isset($_GET['vdp-action']) && !empty($_GET['vdp-action'])) {
+        $action = sanitize_key($_GET['vdp-action']);
+        vdp_debug_log("Usando acción de parámetro URL: " . $action);
+        
+        // Establecer la variable global para uso futuro
+        $vdp_current_action = $action;
+        return $action;
+    }
+    
+    // Si no hay variable global ni parámetro URL, establecer 'dashboard' como valor predeterminado
+    vdp_debug_log("No se encontró acción, usando default 'dashboard'");
+    $vdp_current_action = 'dashboard';
+    return 'dashboard';
 }
 
 /**
@@ -374,6 +393,75 @@ function vdp_time_ago($date) {
     }
     
     return __('just now', 'vendor-dashboard-pro');
+}
+
+/**
+ * Función de depuración para el dashboard.
+ * Solo registra mensajes cuando WP_DEBUG está activado.
+ *
+ * @param string $message Mensaje a registrar.
+ * @param string $type Tipo de mensaje (info, warning, error).
+ * @return void
+ */
+function vdp_debug_log($message, $type = 'info') {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        $prefix = 'VDP Debug';
+        
+        if ($type === 'warning') {
+            $prefix = 'VDP Warning';
+        } elseif ($type === 'error') {
+            $prefix = 'VDP Error';
+        }
+        
+        error_log("$prefix: $message");
+    }
+}
+
+/**
+ * Función para verificar el estado actual del dashboard.
+ * Útil para depuración y diagnóstico.
+ *
+ * @return array Información sobre el estado actual.
+ */
+function vdp_get_system_status() {
+    global $wpdb, $vdp_current_action, $vdp_current_item;
+    
+    $user_id = get_current_user_id();
+    $vendor_id = null;
+    
+    // Obtener vendor_id
+    $vendor_post = $wpdb->get_row($wpdb->prepare(
+        "SELECT ID FROM {$wpdb->posts} 
+        WHERE post_type = 'hp_vendor' 
+        AND post_author = %d 
+        AND post_status IN ('publish', 'draft', 'pending')
+        LIMIT 1",
+        $user_id
+    ));
+    
+    if ($vendor_post) {
+        $vendor_id = $vendor_post->ID;
+        
+        // Contar listings
+        $listings_count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_listing' 
+            AND post_parent = %d 
+            AND post_status IN ('publish', 'draft', 'pending')",
+            $vendor_id
+        ));
+    }
+    
+    return array(
+        'user_id' => $user_id,
+        'vendor_id' => $vendor_id,
+        'current_action' => isset($vdp_current_action) ? $vdp_current_action : 'not set',
+        'current_item' => isset($vdp_current_item) ? $vdp_current_item : 'not set',
+        'listings_count' => isset($listings_count) ? $listings_count : 0,
+        'request_url' => isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '',
+        'is_ajax' => defined('DOING_AJAX') && DOING_AJAX,
+        'wp_debug' => defined('WP_DEBUG') && WP_DEBUG,
+    );
 }
 
 /**

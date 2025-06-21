@@ -181,7 +181,7 @@ class VDP_API {
         };
         
         // Add debug log
-        error_log('Using dummy vendor object - Name: ' . $vendor->get_name());
+        vdp_debug_log('Using dummy vendor object - Name: ' . $vendor->get_name(), 'info');
         
         return $vendor;
     }

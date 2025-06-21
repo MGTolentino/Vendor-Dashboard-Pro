@@ -297,11 +297,11 @@ class VDP_Products {
             $vendor_id
         );
         
-        error_log("VDP Debug: Listing count query: " . $query);
+        vdp_debug_log("Listing count query: " . $query);
         
         $count = (int) $wpdb->get_var($query);
         
-        error_log("VDP Debug: Listing count result: " . $count);
+        vdp_debug_log("Listing count result: " . $count);
         
         return $count;
     }

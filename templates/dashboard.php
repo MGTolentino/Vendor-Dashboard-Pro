@@ -130,7 +130,7 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                         // Asegurar que la acción actual esté correctamente identificada
                         // Usar vdp_get_current_action() que obtendrá el valor de la variable global $vdp_current_action
                         $active_action = vdp_get_current_action();
-                        error_log("VDP Debug: Acción activa en navegación: " . $active_action);
+                        vdp_debug_log("Acción activa en navegación: " . $active_action);
                         ?>
                         <li class="vdp-nav-item <?php echo $active_action === 'dashboard' ? 'vdp-active' : ''; ?>" id="vdp-nav-dashboard">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url()); ?>" class="vdp-nav-link vdp-ajax-link" data-action="dashboard">
@@ -295,58 +295,14 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                 <!-- Content Area -->
                 <div class="vdp-content-area">
                     <?php
-                    // Check if template exists before including
-                    $template_path = '';
+                    // Para evitar duplicaciones, siempre usamos el router para renderizar el contenido
+                    // El router ya maneja las acciones específicas para cada sección
                     
-                    switch ($current_action) {
-                        case 'products':
-                            if (isset($_GET['add']) || isset($_GET['edit'])) {
-                                $template_path = VDP_PLUGIN_DIR . 'templates/products-edit-content.php';
-                            } else {
-                                // Para productos, usamos do_action en lugar de incluir directamente
-                                do_action('vdp_products_content');
-                                $template_path = ''; // Establecer a vacío para evitar inclusión adicional
-                            }
-                            break;
-                            
-                        case 'orders':
-                            if ($current_item) {
-                                $template_path = VDP_PLUGIN_DIR . 'templates/order-view-content.php';
-                            } else {
-                                $template_path = VDP_PLUGIN_DIR . 'templates/orders-content.php';
-                            }
-                            break;
-                            
-                        case 'messages':
-                            if ($current_item) {
-                                $template_path = VDP_PLUGIN_DIR . 'templates/message-view-content.php';
-                            } else {
-                                $template_path = VDP_PLUGIN_DIR . 'templates/messages-content.php';
-                            }
-                            break;
-                            
-                        case 'analytics':
-                            $template_path = VDP_PLUGIN_DIR . 'templates/analytics-content.php';
-                            break;
-                            
-                        case 'settings':
-                            $template_path = VDP_PLUGIN_DIR . 'templates/settings-content.php';
-                            break;
-                            
-                        case 'dashboard':
-                        default:
-                            $template_path = VDP_PLUGIN_DIR . 'templates/dashboard-content.php';
-                            break;
-                    }
+                    // Renderizar el contenido basado en la acción actual
+                    vdp_debug_log("Dashboard renderizando contenido para acción: " . $current_action);
                     
-                    // Only include if template exists
-                    if (file_exists($template_path)) {
-                        include($template_path);
-                    } else {
-                        echo '<div class="vdp-notice vdp-notice-error">';
-                        echo '<p>' . esc_html__('Template not found.', 'vendor-dashboard-pro') . '</p>';
-                        echo '</div>';
-                    }
+                    // Usamos el método del router que maneja las acciones y hooks adecuados
+                    VDP_Router::render_content($current_action, $current_item);
                     ?>
                 </div>
             </div>
