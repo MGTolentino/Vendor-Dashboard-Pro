@@ -53,7 +53,16 @@ if (!defined('ABSPATH')) {
     <?php 
     global $wpdb;
     $user_id = get_current_user_id(); 
-    // Usar el vendor_id que ahora está garantizado que existe en el scope
+    // Asegurarse de que vendor_id exista, aunque debería venir de render_products_list()
+    if (!isset($vendor_id) && isset($vendor) && is_object($vendor)) {
+        if (method_exists($vendor, 'get_id')) {
+            $vendor_id = $vendor->get_id();
+        } elseif (isset($vendor->get_id) && is_callable($vendor->get_id)) {
+            $vendor_id = ($vendor->get_id)();
+        } elseif (isset($vendor->ID)) {
+            $vendor_id = $vendor->ID;
+        }
+    }
     
     // Solo mostrar en modo depuración o para administradores
     if (current_user_can('administrator') || (defined('WP_DEBUG') && WP_DEBUG)) : 

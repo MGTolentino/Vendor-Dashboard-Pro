@@ -134,6 +134,10 @@ class VDP_Products {
         // Get listing categories
         $categories = self::get_listing_categories();
         
+        // Ejecutar el hook antes de incluir el template
+        // Esto permite que otros plugins o temas puedan modificar los datos
+        do_action('vdp_before_products_content', $vendor_id, $listings, $total_listings);
+        
         // *** ASEGURARNOS QUE LAS VARIABLES ESTÁN DISPONIBLES EN EL TEMPLATE ***
         // Incluir explícitamente el template con las variables en el scope
         include VDP_PLUGIN_DIR . 'templates/products-content.php';

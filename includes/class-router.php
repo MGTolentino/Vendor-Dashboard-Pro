@@ -127,12 +127,44 @@ class VDP_Router {
      * @param string $item Current item ID.
      */
     public static function render_content($action, $item) {
+        // Ejecutar acciones específicas basadas en el módulo actual
+        // Esto permite que los módulos manejen directamente su propia lógica de renderizado
+        
+        // Crear un nombre de acción basado en el módulo
+        $action_hook = 'vdp_' . $action . '_content';
+        
+        // Si es una vista de detalle, agregar sufijo
+        if ($item && $action != 'dashboard') {
+            // Ejecutar hook específico para vista de detalle
+            $detail_hook = 'vdp_' . $action . '_view_content';
+            
+            // Primero verificar si alguien está escuchando este hook
+            if (has_action($detail_hook)) {
+                do_action($detail_hook, $item);
+                return;
+            }
+        }
+        
+        // Verificar si hay manejadores para este hook
+        if (has_action($action_hook)) {
+            // Ejecutar la acción que renderizará el contenido
+            do_action($action_hook, $item);
+            return;
+        }
+        
+        // Fallback al sistema de include de templates si no hay hooks
         switch ($action) {
             case 'products':
                 if ($item === 'add' || $item === 'edit') {
                     include(VDP_PLUGIN_DIR . 'templates/products-edit-content.php');
                 } else {
-                    include(VDP_PLUGIN_DIR . 'templates/products-content.php');
+                    // Crear una instancia de Products y llamar directamente al método
+                    if (class_exists('VDP_Products')) {
+                        $products = VDP_Products::instance();
+                        $products->render_products_list();
+                    } else {
+                        include(VDP_PLUGIN_DIR . 'templates/products-content.php');
+                    }
                 }
                 break;
                 
