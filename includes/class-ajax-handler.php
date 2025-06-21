@@ -605,4 +605,3 @@ class VDP_Ajax_Handler {
         ));
     }
 }
-}
