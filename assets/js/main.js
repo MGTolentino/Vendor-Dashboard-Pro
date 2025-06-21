@@ -81,9 +81,14 @@
             var url = vdp_vars.dashboard_url;
             var separator = url.indexOf('?') !== -1 ? '&' : '?';
             
-            if (action) {
+            // Si la acción es 'dashboard', usamos la URL base sin parámetros
+            if (action && action !== 'dashboard') {
                 url += separator + 'vdp-action=' + action;
                 separator = '&';
+            } else {
+                // Eliminar cualquier parámetro vdp-action existente si estamos construyendo la URL para dashboard
+                url = url.split('?')[0]; // Mantener solo la parte base de la URL
+                separator = '?'; // Reiniciar el separador
             }
             
             if (item) {
@@ -105,8 +110,12 @@
             // Default updateHistory to true if not specified
             updateHistory = (updateHistory !== false);
             
-            // Show loading indicator
-            VDP.showLoading();
+            // Comprobar si ya tenemos el contenido en caché
+            var cacheKey = 'vdp_cache_' + action + (item ? '_' + item : '');
+            var cachedContent = sessionStorage.getItem(cacheKey);
+            var cachedTimestamp = parseInt(sessionStorage.getItem(cacheKey + '_timestamp') || '0', 10);
+            var now = new Date().getTime();
+            var cacheExpiry = 60000; // 1 minuto de caché
             
             // Actualizar correctamente el elemento activo del menú
             // Primero quitamos la clase activa de todos los elementos
@@ -119,6 +128,51 @@
             $('.vdp-sidebar-nav a[data-action="' + action + '"]').addClass('vdp-active');
             
             console.log("VDP: Actualizando navegación, acción activa: " + action);
+            
+            // Si tenemos contenido en caché y no ha expirado, usarlo
+            if (cachedContent && (now - cachedTimestamp < cacheExpiry)) {
+                console.log('Using cached content for: ' + action);
+                
+                // Primero destruimos cualquier gráfico existente para evitar errores de Canvas
+                if (action === 'dashboard') {
+                    VDP.destroyExistingCharts();
+                }
+                
+                // Actualizar contenido desde caché
+                $('.vdp-content-area').html(cachedContent);
+                
+                // Reinicializar componentes
+                if (action === 'dashboard') {
+                    VDP.initCharts();
+                } else if (action === 'products') {
+                    VDP.initProducts();
+                } else if (action === 'messages') {
+                    VDP.initMessages();
+                } else if (action === 'settings') {
+                    VDP.initSettings();
+                }
+                
+                // Update browser history if needed
+                if (updateHistory) {
+                    var state = {
+                        url: url,
+                        action: action,
+                        item: item
+                    };
+                    
+                    var title = 'Vendor Dashboard - ' + action.charAt(0).toUpperCase() + action.slice(1);
+                    window.history.pushState(state, title, url);
+                }
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+                
+                return;
+            }
+            
+            // Si no hay caché o ha expirado, cargar contenido mediante AJAX
+            // Show loading indicator
+            VDP.showLoading();
             
             // Usamos POST en vez de GET para evitar problemas de caché
             $.ajax({
@@ -136,6 +190,11 @@
                         return;
                     }
                     
+                    // Primero destruimos cualquier gráfico existente para evitar errores de Canvas
+                    if (action === 'dashboard') {
+                        VDP.destroyExistingCharts();
+                    }
+                    
                     // Actualizar solo el área de contenido con el HTML devuelto
                     $('.vdp-content-area').html(response.data.content);
                     
@@ -147,6 +206,16 @@
                     // Log de depuración
                     console.log("VDP: Contenido cargado para acción: " + response.data.action);
                     console.log("VDP Debug:", response.data.debug_info);
+                    
+                    // Guardar en caché el contenido para futuras cargas
+                    var cacheKey = 'vdp_cache_' + action + (item ? '_' + item : '');
+                    try {
+                        sessionStorage.setItem(cacheKey, response.data.content);
+                        sessionStorage.setItem(cacheKey + '_timestamp', new Date().getTime().toString());
+                        console.log('Content cached for: ' + action);
+                    } catch (e) {
+                        console.warn('Failed to cache content: ' + e.message);
+                    }
                     
                     // Reinitialize components based on loaded content
                     if (action === 'dashboard') {
@@ -276,6 +345,7 @@
                 if (canvas) {
                     var existingChart = Chart.getChart(canvas);
                     if (existingChart) {
+                        console.log('Destroying chart: ' + chartId);
                         existingChart.destroy();
                     }
                 }
@@ -306,10 +376,16 @@
          * @param {string} color Chart color
          */
         renderChart: function(chartId, label, data, color) {
-            var ctx = document.getElementById(chartId);
-            if (!ctx) return;
+            var canvas = document.getElementById(chartId);
+            if (!canvas) return;
+            
+            // Destruir gráfico existente si existe
+            var existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
+            }
 
-            ctx = ctx.getContext('2d');
+            var ctx = canvas.getContext('2d');
             
             // Extract dates and values
             var dates = [];
@@ -748,6 +824,11 @@
                 $('body').append('<div class="vdp-loading"><div class="vdp-loading-spinner"></div></div>');
             }
             
+            // Add progress bar for smoother visual feedback during navigation
+            if (!$('.vdp-progress').length) {
+                $('body').append('<div class="vdp-progress"></div>');
+            }
+            
             // Add notice container if not exists
             if (!$('.vdp-notices').length) {
                 $('body').append('<div class="vdp-notices"></div>');
@@ -758,14 +839,33 @@
          * Show loading spinner
          */
         showLoading: function() {
-            $('.vdp-loading').addClass('vdp-active');
+            // Mostrar la barra de progreso animada
+            $('.vdp-progress').addClass('vdp-active');
+            
+            // Si tarda más de 500ms, mostrar el spinner también
+            this.loadingTimeout = setTimeout(function() {
+                $('.vdp-loading').addClass('vdp-active');
+            }, 500);
         },
 
         /**
          * Hide loading spinner
          */
         hideLoading: function() {
+            // Ocultar tanto la barra de progreso como el spinner
             $('.vdp-loading').removeClass('vdp-active');
+            $('.vdp-progress').removeClass('vdp-active');
+            
+            // Reiniciar el ancho de la barra de progreso
+            setTimeout(function() {
+                $('.vdp-progress').css('width', '0%');
+            }, 300);
+            
+            // Limpiar el timeout si existe
+            if (this.loadingTimeout) {
+                clearTimeout(this.loadingTimeout);
+                this.loadingTimeout = null;
+            }
         },
 
         /**

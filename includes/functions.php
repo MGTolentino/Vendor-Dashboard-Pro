@@ -43,8 +43,18 @@ function vdp_is_user_vendor() {
  * @return \HivePress\Models\Vendor|object|null
  */
 function vdp_get_current_vendor() {
+    // Utilizar una variable estática para cachear el resultado entre llamadas
+    static $cached_vendor = null;
+    static $cache_checked = false;
+    
+    // Si ya verificamos esta sesión, devolver el resultado cacheado
+    if ($cache_checked) {
+        return $cached_vendor;
+    }
+    
     if (!is_user_logged_in()) {
         vdp_debug_log("User not logged in in vdp_get_current_vendor()", "warning");
+        $cache_checked = true;
         return null;
     }
 
@@ -71,12 +81,15 @@ function vdp_get_current_vendor() {
     if ($vendor_post) {
         vdp_debug_log("Vendor post found, ID: " . $vendor_post->ID . ", Title: " . $vendor_post->post_title);
         // Create a vendor object from post data
-        return vdp_create_vendor_from_post($vendor_post);
+        $cached_vendor = vdp_create_vendor_from_post($vendor_post);
+    } else {
+        vdp_debug_log("No vendor post found for user ID: " . $user_id, "warning");
+        // No vendor found for this user
+        $cached_vendor = null;
     }
     
-    vdp_debug_log("No vendor post found for user ID: " . $user_id, "warning");
-    // No vendor found for this user
-    return null;
+    $cache_checked = true;
+    return $cached_vendor;
 }
 
 /**

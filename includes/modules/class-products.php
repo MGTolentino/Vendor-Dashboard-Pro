@@ -232,6 +232,16 @@ class VDP_Products {
      * @return array Array of listing objects.
      */
     public static function get_vendor_listings($vendor_id, $limit = 10, $offset = 0) {
+        // Implementar un sistema de caché para evitar consultas repetidas
+        static $listings_cache = array();
+        $cache_key = $vendor_id . '_' . $limit . '_' . $offset;
+        
+        // Si ya tenemos estos listings en caché, devolverlos directamente
+        if (isset($listings_cache[$cache_key])) {
+            vdp_debug_log("Usando listings en caché para vendor_id: {$vendor_id}, limit: {$limit}, offset: {$offset}");
+            return $listings_cache[$cache_key];
+        }
+        
         global $wpdb;
         
         // Si no tenemos vendor_id, no podemos continuar
@@ -239,16 +249,25 @@ class VDP_Products {
             return array(); // Devolver array vacío
         }
         
-        // Buscar listings donde post_parent = vendor_id (relación estricta)
+        // Mejorar la eficiencia de la consulta SQL - obtener los datos que necesitamos en una sola consulta
+        // Joins para obtener meta_datos y thumbnails en la misma consulta
         $query = $wpdb->prepare(
-            "SELECT * FROM {$wpdb->posts} 
-            WHERE post_type = 'hp_listing' 
-            AND post_parent = %d 
-            AND post_status IN ('publish', 'draft', 'pending')
-            ORDER BY post_date DESC
-            LIMIT %d OFFSET %d",
+            "SELECT p.*, 
+                    pm_price.meta_value as price,
+                    pm_thumbnail.meta_value as thumbnail_id  
+             FROM {$wpdb->posts} p
+             LEFT JOIN {$wpdb->postmeta} pm_price ON (p.ID = pm_price.post_id AND pm_price.meta_key = 'hp_price')
+             LEFT JOIN {$wpdb->postmeta} pm_thumbnail ON (p.ID = pm_thumbnail.post_id AND pm_thumbnail.meta_key = '_thumbnail_id')
+             WHERE p.post_type = 'hp_listing' 
+             AND p.post_parent = %d 
+             AND p.post_status IN ('publish', 'draft', 'pending')
+             GROUP BY p.ID
+             ORDER BY p.post_date DESC
+             LIMIT %d OFFSET %d",
             $vendor_id, $limit, $offset
         );
+        
+        vdp_debug_log("Consulta optimizada de listings: " . $query);
         
         // Ejecutar la consulta
         $listings = $wpdb->get_results($query);
@@ -256,8 +275,8 @@ class VDP_Products {
         $formatted_listings = array();
         
         foreach ($listings as $listing) {
-            $price = get_post_meta($listing->ID, 'hp_price', true);
-            $thumbnail_id = get_post_thumbnail_id($listing->ID);
+            $price = !empty($listing->price) ? $listing->price : 0;
+            $thumbnail_id = !empty($listing->thumbnail_id) ? $listing->thumbnail_id : 0;
             $thumbnail_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'medium') : '';
             
             $formatted_listings[] = array(
@@ -271,6 +290,9 @@ class VDP_Products {
             );
         }
         
+        // Guardar en caché para futuras peticiones
+        $listings_cache[$cache_key] = $formatted_listings;
+        
         return $formatted_listings;
     }
     
@@ -281,6 +303,15 @@ class VDP_Products {
      * @return int Total count.
      */
     public static function get_vendor_listing_count($vendor_id) {
+        // Implementar caché para evitar consultas repetidas
+        static $count_cache = array();
+        
+        // Si ya tenemos este conteo en caché, devolverlo directamente
+        if (isset($count_cache[$vendor_id])) {
+            vdp_debug_log("Usando conteo de listings en caché para vendor_id: {$vendor_id}");
+            return $count_cache[$vendor_id];
+        }
+        
         global $wpdb;
         
         // Si no tenemos vendor_id, no podemos continuar
@@ -302,6 +333,9 @@ class VDP_Products {
         $count = (int) $wpdb->get_var($query);
         
         vdp_debug_log("Listing count result: " . $count);
+        
+        // Guardar en caché para futuras peticiones
+        $count_cache[$vendor_id] = $count;
         
         return $count;
     }

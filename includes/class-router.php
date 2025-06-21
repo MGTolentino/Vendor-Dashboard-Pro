@@ -54,6 +54,35 @@ class VDP_Router {
         $vdp_current_action = $current_action;
         $vdp_current_item = $current_item;
         
+        // Si la URL actual es la URL base (sin vdp-action=dashboard), actualizar para evitar duplicidad
+        if ($current_action === 'dashboard') {
+            $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+            $base_url = strtok($current_url, '?'); // Obtener URL sin parámetros
+            
+            // Si hay parámetros en la URL actual que incluyen vdp-action=dashboard
+            if (strpos($current_url, 'vdp-action=dashboard') !== false) {
+                vdp_debug_log("Redirigiendo de URL con parámetros a URL base");
+                
+                // Eliminar solo el parámetro vdp-action=dashboard, manteniendo otros parámetros si existen
+                $url_parts = parse_url($current_url);
+                if (isset($url_parts['query'])) {
+                    parse_str($url_parts['query'], $query_params);
+                    unset($query_params['vdp-action']); // Eliminar parámetro vdp-action
+                    
+                    // Reconstruir URL solo con los parámetros restantes
+                    if (count($query_params) > 0) {
+                        $base_url .= '?' . http_build_query($query_params);
+                    }
+                }
+                
+                // Si no estamos en una solicitud AJAX, redirigir a la URL base
+                if (!wp_doing_ajax()) {
+                    wp_redirect($base_url);
+                    exit;
+                }
+            }
+        }
+        
         // Registrar para depuración
         vdp_debug_log("Acción actual establecida en router: " . $vdp_current_action);
         
