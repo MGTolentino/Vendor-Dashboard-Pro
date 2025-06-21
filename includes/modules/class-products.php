@@ -134,8 +134,12 @@ class VDP_Products {
         // Get listing categories
         $categories = self::get_listing_categories();
         
-        // Include products list template
+        // *** ASEGURARNOS QUE LAS VARIABLES ESTÁN DISPONIBLES EN EL TEMPLATE ***
+        // Incluir explícitamente el template con las variables en el scope
         include VDP_PLUGIN_DIR . 'templates/products-content.php';
+        
+        // Importante: Retornar aquí para evitar que se incluya el template dos veces
+        return;
     }
 
     /**
