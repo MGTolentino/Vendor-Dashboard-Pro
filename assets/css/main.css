@@ -1562,3 +1562,42 @@
         width: 100%;
     }
 }
+
+/* Progress bar for page transitions */
+.vdp-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(to right, var(--vdp-primary), var(--vdp-accent));
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.vdp-progress.vdp-active {
+    opacity: 1;
+    animation: vdpProgress 2s ease;
+}
+
+@keyframes vdpProgress {
+    0% {
+        width: 0%;
+    }
+    10% {
+        width: 10%;
+    }
+    25% {
+        width: 25%;
+    }
+    50% {
+        width: 50%;
+    }
+    75% {
+        width: 75%;
+    }
+    100% {
+        width: 100%;
+    }
+}
