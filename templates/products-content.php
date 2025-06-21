@@ -9,6 +9,104 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+// Si este template se carga directamente sin pasar por render_products_list,
+// cargar los listings automáticamente
+global $wpdb;
+$user_id = get_current_user_id();
+$auto_loaded_listings = false;
+
+if (!isset($listings) || !is_array($listings)) {
+    $auto_loaded_listings = true;
+    
+    // Obtener vendor_id
+    if (!isset($vendor_id) && isset($vendor) && is_object($vendor)) {
+        if (method_exists($vendor, 'get_id')) {
+            $vendor_id = $vendor->get_id();
+        } elseif (isset($vendor->get_id) && is_callable($vendor->get_id)) {
+            $vendor_id = ($vendor->get_id)();
+        } elseif (isset($vendor->ID)) {
+            $vendor_id = $vendor->ID;
+        }
+    }
+    
+    // Si aún no tenemos vendor_id, obtener directamente de la base de datos
+    if (!isset($vendor_id)) {
+        $vendor_post = $wpdb->get_row($wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_vendor' 
+            AND post_author = %d 
+            AND post_status IN ('publish', 'draft', 'pending')
+            LIMIT 1",
+            $user_id
+        ));
+        
+        if ($vendor_post) {
+            $vendor_id = $vendor_post->ID;
+        }
+    }
+    
+    // Obtener listings si tenemos vendor_id
+    if (isset($vendor_id)) {
+        // Get vendor listings directamente por post_parent
+        $per_page = 10;
+        $paged = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
+        
+        $listings_posts = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_listing' 
+            AND post_parent = %d 
+            AND post_status IN ('publish', 'draft', 'pending')
+            ORDER BY post_date DESC
+            LIMIT %d OFFSET %d",
+            $vendor_id, $per_page, ($paged - 1) * $per_page
+        ));
+        
+        // Formatear los listings
+        $listings = array();
+        foreach ($listings_posts as $listing) {
+            $price = get_post_meta($listing->ID, 'hp_price', true);
+            $thumbnail_id = get_post_thumbnail_id($listing->ID);
+            $thumbnail_url = $thumbnail_id ? wp_get_attachment_image_url($thumbnail_id, 'medium') : '';
+            
+            $listings[] = array(
+                'id' => $listing->ID,
+                'title' => $listing->post_title,
+                'status' => $listing->post_status,
+                'date' => $listing->post_date,
+                'price' => $price ? $price : 0,
+                'thumbnail' => $thumbnail_url,
+                'edit_url' => vdp_get_dashboard_url('products', $listing->ID),
+            );
+        }
+        
+        // Get total listings count
+        $total_listings = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts} 
+            WHERE post_type = 'hp_listing' 
+            AND post_parent = %d 
+            AND post_status IN ('publish', 'draft', 'pending')",
+            $vendor_id
+        ));
+        
+        // Get listing categories
+        if (function_exists('get_terms')) {
+            $categories_terms = get_terms(array(
+                'taxonomy' => 'hp_listing_category',
+                'hide_empty' => false,
+            ));
+            
+            $categories = array();
+            if (!is_wp_error($categories_terms)) {
+                foreach ($categories_terms as $term) {
+                    $categories[$term->term_id] = $term->name;
+                }
+            }
+        } else {
+            $categories = array();
+        }
+    }
+}
 ?>
 
 <div class="vdp-products-content">
@@ -51,19 +149,6 @@ if (!defined('ABSPATH')) {
     
     <!-- System information for debugging -->
     <?php 
-    global $wpdb;
-    $user_id = get_current_user_id(); 
-    // Asegurarse de que vendor_id exista, aunque debería venir de render_products_list()
-    if (!isset($vendor_id) && isset($vendor) && is_object($vendor)) {
-        if (method_exists($vendor, 'get_id')) {
-            $vendor_id = $vendor->get_id();
-        } elseif (isset($vendor->get_id) && is_callable($vendor->get_id)) {
-            $vendor_id = ($vendor->get_id)();
-        } elseif (isset($vendor->ID)) {
-            $vendor_id = $vendor->ID;
-        }
-    }
-    
     // Solo mostrar en modo depuración o para administradores
     if (current_user_can('administrator') || (defined('WP_DEBUG') && WP_DEBUG)) : 
     ?>
@@ -74,6 +159,7 @@ if (!defined('ABSPATH')) {
             <li>Vendor ID: <?php echo isset($vendor_id) ? esc_html($vendor_id) : 'N/A'; ?></li>
             <li>Listings encontrados: <?php echo isset($listings) && is_array($listings) ? count($listings) : 'N/A'; ?></li>
             <li>Total listings: <?php echo isset($total_listings) ? esc_html($total_listings) : 'N/A'; ?></li>
+            <li>Auto-loaded: <?php echo $auto_loaded_listings ? 'Yes' : 'No'; ?></li>
         </ul>
         <?php
         if (isset($vendor_id)) {
@@ -110,7 +196,7 @@ if (!defined('ABSPATH')) {
     
     <!-- Listings Grid -->
     <div class="vdp-listings-grid">
-        <?php if (empty($listings)) : ?>
+        <?php if (!isset($listings) || !is_array($listings) || empty($listings)) : ?>
             <div class="vdp-empty-state">
                 <div class="vdp-empty-icon">
                     <i class="fas fa-box-open"></i>

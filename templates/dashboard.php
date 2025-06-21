@@ -297,7 +297,9 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                             if (isset($_GET['add']) || isset($_GET['edit'])) {
                                 $template_path = VDP_PLUGIN_DIR . 'templates/products-edit-content.php';
                             } else {
-                                $template_path = VDP_PLUGIN_DIR . 'templates/products-content.php';
+                                // Para productos, usamos do_action en lugar de incluir directamente
+                                do_action('vdp_products_content');
+                                $template_path = ''; // Establecer a vacío para evitar inclusión adicional
                             }
                             break;
                             
