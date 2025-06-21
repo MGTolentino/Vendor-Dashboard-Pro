@@ -48,11 +48,20 @@
 }
 
 .vdp-messages-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 1.5rem;
     position: relative;
     z-index: 2;
+}
+
+.vdp-stat-box {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 180px;
+    max-width: 25%;
 }
 
 /* Messages List Section */

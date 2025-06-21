@@ -18,11 +18,14 @@
     // Initialize
     function init() {
         bindEvents();
+        
+        // También enlazar eventos a botones añadidos dinámicamente
+        $(document).on('click', '.vdp-contact-button', openModal);
     }
     
     // Bind events
     function bindEvents() {
-        // Open modal when contact button is clicked
+        // Open modal when contact button is clicked (para botones que ya existen)
         $contactBtns.on('click', openModal);
         
         // Close modal when close button is clicked

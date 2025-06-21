@@ -132,6 +132,7 @@ class VDP_Listing_Integration {
                     'send_message' => __('Send Message', 'vendor-dashboard-pro'),
                     'message_sent' => __('Your message has been sent!', 'vendor-dashboard-pro'),
                     'error' => __('An error occurred. Please try again.', 'vendor-dashboard-pro'),
+                    'regarding' => __('Regarding', 'vendor-dashboard-pro'),
                 ),
             )
         );
