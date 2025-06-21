@@ -77,6 +77,7 @@ class Vendor_Dashboard_Pro {
         require_once VDP_PLUGIN_DIR . 'includes/class-router.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-assets.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-ajax-handler.php';
+        require_once VDP_PLUGIN_DIR . 'includes/class-installer.php';
 
         // Module files
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-dashboard.php';
@@ -85,6 +86,9 @@ class Vendor_Dashboard_Pro {
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-messages.php';
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-analytics.php';
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-settings.php';
+        
+        // Integration files
+        require_once VDP_PLUGIN_DIR . 'includes/integrations/class-listing-integration.php';
 
         // Admin files
         if (is_admin()) {
@@ -123,7 +127,10 @@ class Vendor_Dashboard_Pro {
      * Activate plugin.
      */
     public static function activate() {
-        // No need to set up rewrite rules for shortcode approach
+        // Create database tables
+        VDP_Installer::install();
+        
+        // Flush rewrite rules
         flush_rewrite_rules();
     }
 

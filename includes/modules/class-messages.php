@@ -53,18 +53,25 @@ class VDP_Messages {
             return;
         }
         
+        $vendor_id = $vendor->get_id();
+        
         // Get current page
         $paged = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
         
         // Get messages per page
         $per_page = 10;
         
-        // For demo purposes, we'll create sample messages
-        // In a real implementation, you would get actual messages from HivePress
-        $messages = self::get_demo_messages();
+        // Check if we should use real or demo data
+        if (self::are_tables_created()) {
+            $messages = self::get_vendor_messages($vendor_id, $paged, $per_page);
+            $total_messages = self::get_total_messages_count($vendor_id);
+        } else {
+            // For demo purposes if tables aren't created yet
+            $messages = self::get_demo_messages();
+            $total_messages = count($messages);
+        }
         
-        // Calculate total pages (for demo)
-        $total_messages = count($messages);
+        // Calculate total pages
         $total_pages = ceil($total_messages / $per_page);
         
         // Include messages list template
@@ -82,8 +89,10 @@ class VDP_Messages {
             return;
         }
         
+        $vendor_id = $vendor->get_id();
+        
         // Get message ID
-        $message_id = get_query_var('vdp_item', 0);
+        $message_id = isset($_GET['vdp-item']) ? absint($_GET['vdp-item']) : 0;
         
         if (!$message_id) {
             echo '<div class="vdp-notice vdp-notice-error">';
@@ -92,19 +101,300 @@ class VDP_Messages {
             return;
         }
         
-        // For demo purposes, we'll get a sample message
-        // In a real implementation, you would get the actual message from HivePress
-        $message = self::get_demo_message($message_id);
+        // Check if we should use real or demo data
+        if (self::are_tables_created()) {
+            $message = self::get_message($message_id, $vendor_id);
+            
+            // Mark message as read
+            if ($message && !$message['is_read']) {
+                self::mark_message_as_read($message_id);
+            }
+        } else {
+            // For demo purposes if tables aren't created yet
+            $message = self::get_demo_message($message_id);
+        }
         
         if (!$message) {
             echo '<div class="vdp-notice vdp-notice-error">';
-            echo '<p>' . esc_html__('Message not found.', 'vendor-dashboard-pro') . '</p>';
+            echo '<p>' . esc_html__('Message not found or you do not have permission to view it.', 'vendor-dashboard-pro') . '</p>';
             echo '</div>';
             return;
         }
         
         // Include message view template
         include VDP_PLUGIN_DIR . 'templates/message-view-content.php';
+    }
+    
+    /**
+     * Check if the database tables have been created.
+     *
+     * @return bool
+     */
+    private static function are_tables_created() {
+        global $wpdb;
+        
+        $table_messages = $wpdb->prefix . 'vdp_messages';
+        $table_replies = $wpdb->prefix . 'vdp_message_replies';
+        
+        $messages_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_messages}'") === $table_messages;
+        $replies_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_replies}'") === $table_replies;
+        
+        return $messages_exists && $replies_exists;
+    }
+    
+    /**
+     * Get vendor messages from the database.
+     *
+     * @param int $vendor_id Vendor ID.
+     * @param int $paged Current page.
+     * @param int $per_page Items per page.
+     * @return array
+     */
+    public static function get_vendor_messages($vendor_id, $paged = 1, $per_page = 10) {
+        global $wpdb;
+        
+        $offset = ($paged - 1) * $per_page;
+        $table_messages = $wpdb->prefix . 'vdp_messages';
+        $table_replies = $wpdb->prefix . 'vdp_message_replies';
+        
+        // Obtener mensajes de la base de datos
+        $query = $wpdb->prepare(
+            "SELECT m.*, 
+                   COUNT(r.id) > 0 AS has_response,
+                   u.display_name AS sender_name,
+                   p.post_title AS listing_title
+            FROM {$table_messages} m
+            LEFT JOIN {$table_replies} r ON m.id = r.message_id
+            LEFT JOIN {$wpdb->users} u ON m.sender_id = u.ID
+            LEFT JOIN {$wpdb->posts} p ON m.listing_id = p.ID
+            WHERE m.vendor_id = %d
+            AND m.is_archived = 0
+            GROUP BY m.id
+            ORDER BY m.date_created DESC
+            LIMIT %d OFFSET %d",
+            $vendor_id, $per_page, $offset
+        );
+        
+        $results = $wpdb->get_results($query, ARRAY_A);
+        
+        // Formatear los resultados
+        $messages = array();
+        
+        if (!empty($results)) {
+            foreach ($results as $result) {
+                // Obtener avatar del remitente
+                $sender_avatar = get_avatar_url($result['sender_id'], array('size' => 96));
+                
+                // Información del usuario
+                $customer_since = get_user_registered($result['sender_id']);
+                
+                // Contar pedidos (esto depende de la estructura de WooCommerce)
+                $orders_count = 0;
+                if (function_exists('wc_get_orders')) {
+                    $args = array(
+                        'customer_id' => $result['sender_id'],
+                        'return' => 'ids',
+                        'limit' => -1,
+                    );
+                    $orders = wc_get_orders($args);
+                    $orders_count = count($orders);
+                }
+                
+                // Información del producto/listing
+                $product_url = get_permalink($result['listing_id']);
+                
+                // Formatear mensaje
+                $messages[] = array(
+                    'id' => $result['id'],
+                    'sender_id' => $result['sender_id'],
+                    'sender_name' => $result['sender_name'],
+                    'sender_avatar' => $sender_avatar,
+                    'subject' => $result['subject'],
+                    'content' => $result['content'],
+                    'date' => $result['date_created'],
+                    'is_read' => (bool) $result['is_read'],
+                    'listing_id' => $result['listing_id'],
+                    'listing_title' => $result['listing_title'],
+                    'has_response' => (bool) $result['has_response'],
+                    'customer_since' => $customer_since,
+                    'orders_count' => $orders_count,
+                    'product_url' => $product_url,
+                    'product_title' => $result['listing_title'],
+                );
+            }
+        }
+        
+        return $messages;
+    }
+    
+    /**
+     * Get total messages count.
+     *
+     * @param int $vendor_id Vendor ID.
+     * @return int
+     */
+    public static function get_total_messages_count($vendor_id) {
+        global $wpdb;
+        
+        $table_messages = $wpdb->prefix . 'vdp_messages';
+        
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table_messages} WHERE vendor_id = %d AND is_archived = 0",
+            $vendor_id
+        ));
+        
+        return (int) $count;
+    }
+    
+    /**
+     * Get a specific message with its details.
+     *
+     * @param int $message_id Message ID.
+     * @param int $vendor_id Vendor ID.
+     * @return array|null
+     */
+    public static function get_message($message_id, $vendor_id) {
+        global $wpdb;
+        
+        $table_messages = $wpdb->prefix . 'vdp_messages';
+        
+        // Obtener el mensaje principal
+        $query = $wpdb->prepare(
+            "SELECT m.*, 
+                   u.display_name AS sender_name,
+                   p.post_title AS listing_title
+            FROM {$table_messages} m
+            LEFT JOIN {$wpdb->users} u ON m.sender_id = u.ID
+            LEFT JOIN {$wpdb->posts} p ON m.listing_id = p.ID
+            WHERE m.id = %d AND m.vendor_id = %d",
+            $message_id, $vendor_id
+        );
+        
+        $message = $wpdb->get_row($query, ARRAY_A);
+        
+        if (!$message) {
+            return null;
+        }
+        
+        // Obtener avatar del remitente
+        $sender_avatar = get_avatar_url($message['sender_id'], array('size' => 96));
+        
+        // Información del usuario
+        $customer_since = get_user_registered($message['sender_id']);
+        
+        // Contar pedidos (esto depende de la estructura de WooCommerce)
+        $orders_count = 0;
+        if (function_exists('wc_get_orders')) {
+            $args = array(
+                'customer_id' => $message['sender_id'],
+                'return' => 'ids',
+                'limit' => -1,
+            );
+            $orders = wc_get_orders($args);
+            $orders_count = count($orders);
+        }
+        
+        // Información del producto/listing
+        $product_url = get_permalink($message['listing_id']);
+        
+        // Obtener respuestas
+        $table_replies = $wpdb->prefix . 'vdp_message_replies';
+        
+        $replies_query = $wpdb->prepare(
+            "SELECT r.*, u.display_name AS name
+            FROM {$table_replies} r
+            LEFT JOIN {$wpdb->users} u ON r.sender_id = u.ID
+            WHERE r.message_id = %d
+            ORDER BY r.date_created ASC",
+            $message_id
+        );
+        
+        $replies_results = $wpdb->get_results($replies_query, ARRAY_A);
+        
+        // Formatear respuestas
+        $replies = array();
+        
+        if (!empty($replies_results)) {
+            foreach ($replies_results as $reply) {
+                // Obtener avatar
+                $avatar = get_avatar_url($reply['sender_id'], array('size' => 96));
+                
+                $replies[] = array(
+                    'id' => $reply['id'],
+                    'content' => $reply['content'],
+                    'date' => $reply['date_created'],
+                    'is_vendor' => (bool) $reply['is_vendor'],
+                    'name' => $reply['name'],
+                    'avatar' => $avatar,
+                );
+            }
+        }
+        
+        // Formatear información de interacciones recientes
+        $interactions = array();
+        
+        // Ejemplo: últimos pedidos
+        if (function_exists('wc_get_orders') && $orders_count > 0) {
+            $recent_orders = wc_get_orders(array(
+                'customer_id' => $message['sender_id'],
+                'limit' => 3,
+                'orderby' => 'date',
+                'order' => 'DESC',
+            ));
+            
+            foreach ($recent_orders as $order) {
+                $interactions[] = array(
+                    'title' => sprintf(__('Ordered %s for %s', 'vendor-dashboard-pro'), $order->get_item_count() . ' ' . _n('item', 'items', $order->get_item_count(), 'vendor-dashboard-pro'), wc_price($order->get_total())),
+                    'icon' => 'fas fa-shopping-cart',
+                    'date' => $order->get_date_created()->date('Y-m-d H:i:s'),
+                );
+            }
+        }
+        
+        // Formatear mensaje completo
+        $formatted_message = array(
+            'id' => $message['id'],
+            'sender_id' => $message['sender_id'],
+            'sender_name' => $message['sender_name'],
+            'sender_avatar' => $sender_avatar,
+            'subject' => $message['subject'],
+            'content' => $message['content'],
+            'date' => $message['date_created'],
+            'is_read' => (bool) $message['is_read'],
+            'listing_id' => $message['listing_id'],
+            'listing_title' => $message['listing_title'],
+            'has_response' => !empty($replies),
+            'customer_since' => $customer_since,
+            'orders_count' => $orders_count,
+            'product_url' => $product_url,
+            'product_title' => $message['listing_title'],
+            'replies' => $replies,
+            'interactions' => $interactions,
+        );
+        
+        return $formatted_message;
+    }
+    
+    /**
+     * Mark a message as read.
+     *
+     * @param int $message_id Message ID.
+     * @return bool
+     */
+    public static function mark_message_as_read($message_id) {
+        global $wpdb;
+        
+        $table_messages = $wpdb->prefix . 'vdp_messages';
+        
+        $result = $wpdb->update(
+            $table_messages,
+            array('is_read' => 1),
+            array('id' => $message_id),
+            array('%d'),
+            array('%d')
+        );
+        
+        return $result !== false;
     }
 
     /**
@@ -148,7 +438,24 @@ class VDP_Messages {
         foreach ($messages as $message) {
             if ($message['id'] == $message_id) {
                 // Add more details for the single message view
-                $message['conversation'] = self::get_demo_conversation($message_id);
+                $message['product_url'] = '#';
+                $message['product_title'] = $message['listing_title'];
+                $message['customer_since'] = date('Y-m-d H:i:s', strtotime('-1 year'));
+                $message['orders_count'] = rand(1, 10);
+                $message['sender_avatar'] = '';
+                $message['interactions'] = array(
+                    array(
+                        'title' => 'Ordered 2 items for $150',
+                        'icon' => 'fas fa-shopping-cart',
+                        'date' => date('Y-m-d H:i:s', strtotime('-10 days')),
+                    ),
+                    array(
+                        'title' => 'Sent a message',
+                        'icon' => 'fas fa-envelope',
+                        'date' => date('Y-m-d H:i:s', strtotime('-20 days')),
+                    ),
+                );
+                $message['replies'] = self::get_demo_replies($message_id);
                 
                 return $message;
             }
@@ -156,31 +463,32 @@ class VDP_Messages {
         
         return null;
     }
-
+    
     /**
-     * Get demo conversation for a message.
+     * Get demo replies for a message.
      *
      * @param int $message_id Message ID.
      * @return array
      */
-    public static function get_demo_conversation($message_id) {
-        $conversation = array();
-        $num_messages = rand(2, 5);
+    public static function get_demo_replies($message_id) {
+        $replies = array();
+        $num_replies = rand(0, 3);
         
-        for ($i = 1; $i <= $num_messages; $i++) {
-            $is_customer = ($i % 2 == 1);
-            $date = date('Y-m-d H:i:s', strtotime('-' . ($num_messages - $i) . ' days'));
+        for ($i = 1; $i <= $num_replies; $i++) {
+            $is_vendor = ($i % 2 == 0);
+            $date = date('Y-m-d H:i:s', strtotime('-' . (5 - $i) . ' days'));
             
-            $conversation[] = array(
+            $replies[] = array(
                 'id' => $i,
-                'is_customer' => $is_customer,
-                'sender' => $is_customer ? 'Customer' : 'You',
-                'content' => 'Message ' . $i . ' in the conversation. ' . ($is_customer ? 'Question from customer.' : 'Response from you.'),
+                'content' => 'This is a reply message ' . $i . '. ' . ($is_vendor ? 'Thank you for your interest in our products.' : 'Thanks for your quick response.'),
                 'date' => $date,
+                'is_vendor' => $is_vendor,
+                'name' => $is_vendor ? 'Vendor' : 'Customer',
+                'avatar' => '',
             );
         }
         
-        return $conversation;
+        return $replies;
     }
 
     /**

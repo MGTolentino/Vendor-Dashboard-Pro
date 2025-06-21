@@ -25,6 +25,12 @@ class VDP_Ajax_Handler {
         add_action('wp_ajax_vdp_save_vendor_settings', array(__CLASS__, 'save_vendor_settings'));
         add_action('wp_ajax_vdp_get_chart_data', array(__CLASS__, 'get_chart_data'));
         add_action('wp_ajax_vdp_trigger_listing_form', array(__CLASS__, 'trigger_listing_form'));
+        
+        // Messages actions
+        add_action('wp_ajax_vdp_send_message', array(__CLASS__, 'send_message'));
+        add_action('wp_ajax_vdp_mark_message_read', array(__CLASS__, 'mark_message_read'));
+        add_action('wp_ajax_vdp_archive_message', array(__CLASS__, 'archive_message'));
+        add_action('wp_ajax_vdp_send_reply', array(__CLASS__, 'send_reply'));
     }
 
     /**
@@ -327,4 +333,276 @@ class VDP_Ajax_Handler {
             ));
         }
     }
+    
+    /**
+     * Send message Ajax handler.
+     */
+    public static function send_message() {
+        // Check if user is logged in
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => __('You must be logged in to send messages.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Verify nonce
+        if (!check_ajax_referer('vdp-contact-nonce', 'nonce', false)) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Get form data
+        $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
+        $message = isset($_POST['message']) ? wp_kses_post($_POST['message']) : '';
+        $listing_id = isset($_POST['listing_id']) ? absint($_POST['listing_id']) : 0;
+        $vendor_id = isset($_POST['vendor_id']) ? absint($_POST['vendor_id']) : 0;
+        
+        // Validate required fields
+        if (empty($subject) || empty($message) || empty($listing_id) || empty($vendor_id)) {
+            wp_send_json_error(array('message' => __('All fields are required.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Validate listing and vendor
+        $listing = get_post($listing_id);
+        if (!$listing || $listing->post_type !== 'hp_listing') {
+            wp_send_json_error(array('message' => __('Invalid listing.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        $vendor = get_post($vendor_id);
+        if (!$vendor || $vendor->post_type !== 'hp_vendor') {
+            wp_send_json_error(array('message' => __('Invalid vendor.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Get current user ID
+        $sender_id = get_current_user_id();
+        
+        // Insert message into database
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'vdp_messages';
+        
+        $result = $wpdb->insert(
+            $table_name,
+            array(
+                'vendor_id' => $vendor_id,
+                'sender_id' => $sender_id,
+                'listing_id' => $listing_id,
+                'subject' => $subject,
+                'content' => $message,
+                'date_created' => current_time('mysql'),
+                'is_read' => 0,
+                'is_archived' => 0,
+            ),
+            array('%d', '%d', '%d', '%s', '%s', '%s', '%d', '%d')
+        );
+        
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Failed to send message. Please try again.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Get the message ID
+        $message_id = $wpdb->insert_id;
+        
+        // Get vendor user ID for notification (if needed)
+        $vendor_user_id = get_post_field('post_author', $vendor_id);
+        
+        // Todo: Send notification email to vendor
+        
+        wp_send_json_success(array(
+            'message_id' => $message_id,
+            'message' => __('Your message has been sent!', 'vendor-dashboard-pro'),
+        ));
+    }
+    
+    /**
+     * Mark message as read Ajax handler.
+     */
+    public static function mark_message_read() {
+        // Verify request
+        if (!self::verify_ajax_request('vdp-messages-nonce')) {
+            return;
+        }
+        
+        // Get message ID
+        $message_id = isset($_POST['message_id']) ? absint($_POST['message_id']) : 0;
+        
+        if (empty($message_id)) {
+            wp_send_json_error(array('message' => __('Invalid message ID.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        
+        if (!$vendor || !method_exists($vendor, 'get_id')) {
+            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        $vendor_id = $vendor->get_id();
+        
+        // Update message status
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'vdp_messages';
+        
+        $result = $wpdb->update(
+            $table_name,
+            array('is_read' => 1),
+            array('id' => $message_id, 'vendor_id' => $vendor_id),
+            array('%d'),
+            array('%d', '%d')
+        );
+        
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Failed to mark message as read.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        wp_send_json_success(array(
+            'message' => __('Message marked as read.', 'vendor-dashboard-pro'),
+        ));
+    }
+    
+    /**
+     * Archive message Ajax handler.
+     */
+    public static function archive_message() {
+        // Verify request
+        if (!self::verify_ajax_request('vdp-messages-nonce')) {
+            return;
+        }
+        
+        // Get message ID
+        $message_id = isset($_POST['message_id']) ? absint($_POST['message_id']) : 0;
+        
+        if (empty($message_id)) {
+            wp_send_json_error(array('message' => __('Invalid message ID.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        
+        if (!$vendor || !method_exists($vendor, 'get_id')) {
+            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        $vendor_id = $vendor->get_id();
+        
+        // Update message status
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'vdp_messages';
+        
+        $result = $wpdb->update(
+            $table_name,
+            array('is_archived' => 1),
+            array('id' => $message_id, 'vendor_id' => $vendor_id),
+            array('%d'),
+            array('%d', '%d')
+        );
+        
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Failed to archive message.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        wp_send_json_success(array(
+            'message' => __('Message archived.', 'vendor-dashboard-pro'),
+        ));
+    }
+    
+    /**
+     * Send reply Ajax handler.
+     */
+    public static function send_reply() {
+        // Verify request
+        if (!self::verify_ajax_request('vdp-messages-nonce')) {
+            return;
+        }
+        
+        // Get form data
+        $message_id = isset($_POST['message_id']) ? absint($_POST['message_id']) : 0;
+        $content = isset($_POST['content']) ? wp_kses_post($_POST['content']) : '';
+        
+        // Validate required fields
+        if (empty($message_id) || empty($content)) {
+            wp_send_json_error(array('message' => __('All fields are required.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        
+        if (!$vendor || !method_exists($vendor, 'get_id')) {
+            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        $vendor_id = $vendor->get_id();
+        $user_id = get_current_user_id();
+        
+        // Verify that the message belongs to the vendor
+        global $wpdb;
+        
+        $table_messages = $wpdb->prefix . 'vdp_messages';
+        
+        $message = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$table_messages} WHERE id = %d AND vendor_id = %d",
+            $message_id,
+            $vendor_id
+        ));
+        
+        if (!$message) {
+            wp_send_json_error(array('message' => __('Message not found or you do not have permission to reply.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Insert reply into database
+        $table_replies = $wpdb->prefix . 'vdp_message_replies';
+        
+        $result = $wpdb->insert(
+            $table_replies,
+            array(
+                'message_id' => $message_id,
+                'sender_id' => $user_id,
+                'is_vendor' => 1, // 1 = vendor, 0 = customer
+                'content' => $content,
+                'date_created' => current_time('mysql'),
+                'is_read' => 0,
+            ),
+            array('%d', '%d', '%d', '%s', '%s', '%d')
+        );
+        
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Failed to send reply. Please try again.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Get the reply ID
+        $reply_id = $wpdb->insert_id;
+        
+        // Update message to mark as having a response
+        $wpdb->update(
+            $table_messages,
+            array('is_read' => 1), // También marcamos el mensaje como leído
+            array('id' => $message_id),
+            array('%d'),
+            array('%d')
+        );
+        
+        // Todo: Send notification email to customer
+        
+        wp_send_json_success(array(
+            'reply_id' => $reply_id,
+            'message' => __('Your reply has been sent!', 'vendor-dashboard-pro'),
+            'date' => current_time('mysql'),
+        ));
+    }
+}
 }

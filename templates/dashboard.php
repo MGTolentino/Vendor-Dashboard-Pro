@@ -160,6 +160,24 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('messages')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="messages">
                                 <i class="fas fa-envelope"></i>
                                 <span><?php esc_html_e('Messages', 'vendor-dashboard-pro'); ?></span>
+                                <?php 
+                                // Obtener el contador de mensajes no leídos
+                                $vendor_id = null;
+                                
+                                if (is_object($vendor) && method_exists($vendor, 'get_id')) {
+                                    $vendor_id = $vendor->get_id();
+                                } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
+                                    $vendor_id = ($vendor->get_id)();
+                                }
+                                
+                                $unread_count = 0;
+                                if ($vendor_id) {
+                                    $unread_count = vdp_get_unread_messages_count($vendor_id);
+                                    if ($unread_count > 0) {
+                                        echo '<span class="vdp-badge vdp-badge-unread">' . esc_html($unread_count) . '</span>';
+                                    }
+                                }
+                                ?>
                             </a>
                         </li>
                         <li class="vdp-nav-item <?php echo $active_action === 'analytics' ? 'vdp-active' : ''; ?>" id="vdp-nav-analytics">

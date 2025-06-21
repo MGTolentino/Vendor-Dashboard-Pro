@@ -478,6 +478,48 @@ function vdp_get_system_status() {
 }
 
 /**
+ * Verifica si el plugin Vendor Dashboard Pro está activo.
+ * 
+ * @return bool Verdadero si el plugin está activo.
+ */
+function vdp_is_active() {
+    return defined('VDP_VERSION') && class_exists('Vendor_Dashboard_Pro');
+}
+
+/**
+ * Obtiene el total de mensajes no leídos para un vendedor.
+ * 
+ * @param int $vendor_id ID del vendedor.
+ * @return int Número de mensajes no leídos.
+ */
+function vdp_get_unread_messages_count($vendor_id) {
+    global $wpdb;
+    
+    if (!$vendor_id) {
+        return 0;
+    }
+    
+    $table_name = $wpdb->prefix . 'vdp_messages';
+    
+    // Verificar si la tabla existe
+    $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") === $table_name;
+    
+    if (!$table_exists) {
+        return 0; // La tabla no existe, posiblemente el plugin se acaba de instalar
+    }
+    
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$table_name} 
+        WHERE vendor_id = %d 
+        AND is_read = 0 
+        AND is_archived = 0",
+        $vendor_id
+    ));
+    
+    return (int) $count;
+}
+
+/**
  * Get random statistics for demo purposes.
  * In a production environment, this would be replaced with real data.
  *

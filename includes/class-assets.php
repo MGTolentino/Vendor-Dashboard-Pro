@@ -62,6 +62,13 @@ class VDP_Assets {
             VDP_VERSION
         );
         
+        wp_register_style(
+            'vdp-messages',
+            VDP_PLUGIN_URL . 'assets/css/messages.css',
+            array('vdp-main'),
+            VDP_VERSION
+        );
+        
         // Register scripts
         wp_register_script(
             'vdp-chart',
@@ -115,7 +122,17 @@ class VDP_Assets {
                 wp_enqueue_style('vdp-orders');
             }
             
+            // Enqueue messages stylesheet if on messages page
+            if (isset($_GET['vdp-action']) && ($_GET['vdp-action'] === 'messages' || strpos($_GET['vdp-action'], 'messages/') === 0)) {
+                wp_enqueue_style('vdp-messages');
+            }
+            
             wp_enqueue_script('vdp-main');
+        }
+        
+        // También cargamos el CSS de mensajes en las páginas de listing individual para el modal de contacto
+        if (is_singular('hp_listing') && vdp_is_active()) {
+            wp_enqueue_style('vdp-messages');
         }
     }
 
