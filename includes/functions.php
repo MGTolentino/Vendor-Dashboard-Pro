@@ -44,29 +44,37 @@ function vdp_is_user_vendor() {
  */
 function vdp_get_current_vendor() {
     if (!is_user_logged_in()) {
+        error_log("VDP Debug: User not logged in in vdp_get_current_vendor()");
         return null;
     }
 
     // Get current user ID
     $user_id = get_current_user_id();
+    error_log("VDP Debug: Current user ID: " . $user_id);
     
     // Query for hp_vendor post where current user is the author
     global $wpdb;
     
-    $vendor_post = $wpdb->get_row($wpdb->prepare(
+    $query = $wpdb->prepare(
         "SELECT * FROM {$wpdb->posts} 
         WHERE post_type = 'hp_vendor' 
         AND post_author = %d 
         AND post_status IN ('publish', 'draft', 'pending') 
         LIMIT 1",
         $user_id
-    ));
+    );
+    
+    error_log("VDP Debug: Vendor query: " . $query);
+    
+    $vendor_post = $wpdb->get_row($query);
     
     if ($vendor_post) {
+        error_log("VDP Debug: Vendor post found, ID: " . $vendor_post->ID . ", Title: " . $vendor_post->post_title);
         // Create a vendor object from post data
         return vdp_create_vendor_from_post($vendor_post);
     }
     
+    error_log("VDP Debug: No vendor post found for user ID: " . $user_id);
     // No vendor found for this user
     return null;
 }

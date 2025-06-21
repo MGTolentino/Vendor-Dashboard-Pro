@@ -50,7 +50,24 @@ class VDP_Products {
         $vendor = vdp_get_current_vendor();
         
         if (!$vendor) {
+            error_log("VDP Debug: No vendor found in render_products_list()");
             return;
+        }
+        
+        // Debug info - vendor object
+        error_log("VDP Debug: Vendor object type: " . gettype($vendor));
+        error_log("VDP Debug: Vendor has get_id method: " . (method_exists($vendor, 'get_id') ? 'Yes' : 'No'));
+        error_log("VDP Debug: Vendor has get_id property: " . (isset($vendor->get_id) ? 'Yes' : 'No'));
+        error_log("VDP Debug: Vendor get_id is callable: " . (isset($vendor->get_id) && is_callable($vendor->get_id) ? 'Yes' : 'No'));
+        
+        // Get vendor ID
+        $vendor_id = null;
+        if (method_exists($vendor, 'get_id')) {
+            $vendor_id = $vendor->get_id();
+            error_log("VDP Debug: Vendor ID from method: " . $vendor_id);
+        } elseif (isset($vendor->get_id) && is_callable($vendor->get_id)) {
+            $vendor_id = ($vendor->get_id)();
+            error_log("VDP Debug: Vendor ID from callable property: " . $vendor_id);
         }
         
         // Get current page
@@ -60,10 +77,10 @@ class VDP_Products {
         $per_page = 10;
         
         // Get vendor listings
-        $listings = self::get_vendor_listings($vendor->get_id(), $per_page, ($paged - 1) * $per_page);
+        $listings = self::get_vendor_listings($vendor_id, $per_page, ($paged - 1) * $per_page);
         
         // Get total listings count
-        $total_listings = self::get_vendor_listing_count($vendor->get_id());
+        $total_listings = self::get_vendor_listing_count($vendor_id);
         
         // Calculate total pages
         $total_pages = ceil($total_listings / $per_page);
@@ -163,7 +180,10 @@ class VDP_Products {
     public static function get_vendor_listings($vendor_id, $limit = 10, $offset = 0) {
         global $wpdb;
         
-        $listings = $wpdb->get_results($wpdb->prepare(
+        // Debug info - log the vendor ID we're using
+        error_log("VDP Debug: get_vendor_listings called with vendor_id=$vendor_id, limit=$limit, offset=$offset");
+        
+        $query = $wpdb->prepare(
             "SELECT * FROM {$wpdb->posts} 
             WHERE post_type = 'hp_listing' 
             AND post_parent = %d 
@@ -171,7 +191,15 @@ class VDP_Products {
             ORDER BY post_date DESC
             LIMIT %d OFFSET %d",
             $vendor_id, $limit, $offset
-        ));
+        );
+        
+        // Log the query
+        error_log("VDP Debug: SQL Query: " . $query);
+        
+        $listings = $wpdb->get_results($query);
+        
+        // Log the result count
+        error_log("VDP Debug: Query returned " . count($listings) . " listings");
         
         $formatted_listings = array();
         
@@ -203,13 +231,21 @@ class VDP_Products {
     public static function get_vendor_listing_count($vendor_id) {
         global $wpdb;
         
-        return (int) $wpdb->get_var($wpdb->prepare(
+        $query = $wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->posts} 
             WHERE post_type = 'hp_listing' 
             AND post_parent = %d 
             AND post_status IN ('publish', 'draft', 'pending')",
             $vendor_id
-        ));
+        );
+        
+        error_log("VDP Debug: Listing count query: " . $query);
+        
+        $count = (int) $wpdb->get_var($query);
+        
+        error_log("VDP Debug: Listing count result: " . $count);
+        
+        return $count;
     }
     
     /**
