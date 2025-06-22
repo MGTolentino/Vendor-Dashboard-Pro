@@ -197,6 +197,17 @@ if (!isset($paged)) {
                                     // Log URL generation for debugging
                                     vdp_debug_log("Generated view URL for message ID {$message['id']}: $view_url", "info");
                                     ?>
+                                    <?php 
+                                    // Asegurarnos que la URL tiene el formato correcto
+                                    $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+                                    $base_url = strtok($current_url, '?'); // URL sin parámetros
+                                    $view_url = add_query_arg(array(
+                                        'vdp-action' => 'messages',
+                                        'vdp-item' => $message['id']
+                                    ), $base_url);
+                                    
+                                    vdp_debug_log("Generando URL directa para mensaje ID {$message['id']}: $view_url", "info");
+                                    ?>
                                     <!-- Usar un enlace normal sin javascript para asegurar la carga directa -->
                                     <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm direct-link" 
                                        data-message-id="<?php echo esc_attr($message['id']); ?>">
