@@ -193,24 +193,42 @@ if (!isset($paged)) {
                                 
                                 <div class="vdp-message-actions">
                                     <?php 
+                                    // Obtener la URL base para el dashboard
                                     $view_url = vdp_get_dashboard_url('messages', $message['id']);
-                                    // Log URL generation for debugging
-                                    vdp_debug_log("Generated view URL for message ID {$message['id']}: $view_url", "info");
-                                    ?>
-                                    <?php 
-                                    // Asegurarnos que la URL tiene el formato correcto
-                                    $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-                                    $base_url = strtok($current_url, '?'); // URL sin parámetros
-                                    $view_url = add_query_arg(array(
-                                        'vdp-action' => 'messages',
-                                        'vdp-item' => $message['id']
-                                    ), $base_url);
                                     
-                                    vdp_debug_log("Generando URL directa para mensaje ID {$message['id']}: $view_url", "info");
+                                    // Verificar si estamos en una solicitud AJAX para asegurar URLs correctas
+                                    if (defined('DOING_AJAX') && DOING_AJAX) {
+                                        // En AJAX, el REQUEST_URI será admin-ajax.php, por lo que necesitamos forzar la URL correcta
+                                        $dashboard_page_id = vdp_get_dashboard_page_id();
+                                        if ($dashboard_page_id) {
+                                            $dashboard_url = get_permalink($dashboard_page_id);
+                                            $view_url = add_query_arg(array(
+                                                'vdp-action' => 'messages',
+                                                'vdp-item' => $message['id']
+                                            ), $dashboard_url);
+                                        }
+                                    }
+                                    
+                                    // Verificar si estamos en WordPress admin (wp-admin) - otra posible causa de URLs incorrectas
+                                    if (is_admin() && !wp_doing_ajax()) {
+                                        $dashboard_page_id = vdp_get_dashboard_page_id();
+                                        if ($dashboard_page_id) {
+                                            $dashboard_url = get_permalink($dashboard_page_id);
+                                            $view_url = add_query_arg(array(
+                                                'vdp-action' => 'messages',
+                                                'vdp-item' => $message['id']
+                                            ), $dashboard_url);
+                                        }
+                                    }
+                                    
+                                    // Log para depuración
+                                    vdp_debug_log("URL generada para mensaje ID {$message['id']}: $view_url", "info");
                                     ?>
                                     <!-- Usar un enlace normal sin javascript para asegurar la carga directa -->
-                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm direct-link" 
-                                       data-message-id="<?php echo esc_attr($message['id']); ?>">
+                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm vdp-message-view-btn direct-link" 
+                                       data-message-id="<?php echo esc_attr($message['id']); ?>"
+                                       data-action="messages" 
+                                       data-item="<?php echo esc_attr($message['id']); ?>">
                                         <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
                                     </a>
                                 </div>

@@ -47,9 +47,12 @@
             
             // Handle AJAX navigation
             $(document).on('click', '.vdp-content-area a.vdp-ajax-link', function(e) {
-                // Skip if this is a direct-link class
-                if ($(this).hasClass('direct-link')) {
-                    console.log('Direct link clicked, allowing normal navigation');
+                // Skip if this is a direct-link class or has message-related classes
+                if ($(this).hasClass('direct-link') || 
+                    $(this).hasClass('vdp-message-view-btn') || 
+                    $(this).parent().hasClass('vdp-message-actions')) {
+                    
+                    console.log('Direct link or message view button clicked, allowing normal navigation to: ' + $(this).attr('href'));
                     return true; // Permitir comportamiento normal del enlace
                 }
                 
@@ -666,13 +669,18 @@
                 VDP.replyMessage($(this));
             });
             
-            // Handle message view buttons - only for backward compatibility
-            // This should no longer intercept clicks as we're using direct links
-            $(document).on('click', '.vdp-message-view-btn:not(.direct-link)', function(e) {
-                console.log('Legacy message view button clicked - redirecting directly');
+            // Garantizar que todos los botones de vista de mensaje funcionen correctamente
+            // Cuando se haga clic en un botón de vista de mensaje o en un enlace directo
+            $(document).on('click', '.vdp-message-view-btn, .direct-link', function(e) {
+                console.log('Message view button clicked - allowing default navigation to: ' + $(this).attr('href'));
                 
-                // Don't prevent default - let the link work normally
-                // This is important to make sure the view template gets loaded properly
+                // Registro adicional para depuración
+                var href = $(this).attr('href');
+                var hasDirectLink = $(this).hasClass('direct-link');
+                console.log('Link URL: ' + href + ', Is direct link: ' + hasDirectLink);
+                
+                // No prevenir el comportamiento predeterminado - permitir que el enlace funcione normalmente
+                // Esto es crucial para asegurar que la plantilla de vista se cargue correctamente
                 return true;
             });
         },
