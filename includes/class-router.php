@@ -269,6 +269,7 @@ class VDP_Router {
                 case 'messages':
                     if ($item) {
                         vdp_debug_log("Direct inclusion of message-view-content.php for item: $item", "info");
+                        vdp_debug_log("URL de mensaje view: " . $_SERVER['REQUEST_URI'], "info");
                         
                         // Set up the message data before including the template
                         // This allows us to test if the template inclusion is working but the data is missing
@@ -284,19 +285,76 @@ class VDP_Router {
                             if ($vendor_id) {
                                 // Get message data
                                 if (class_exists('VDP_Messages')) {
-                                    if (VDP_Messages::are_tables_created()) {
+                                    if (method_exists('VDP_Messages', 'are_tables_created') && VDP_Messages::are_tables_created()) {
+                                        vdp_debug_log("Obteniendo mensaje real de la base de datos para item: $item, vendor: $vendor_id", "info");
                                         $message = VDP_Messages::get_message($item, $vendor_id);
                                     } else {
+                                        vdp_debug_log("Obteniendo mensaje de demo para item: $item", "info");
                                         $message = VDP_Messages::get_demo_message($item);
                                     }
+                                    
+                                    vdp_debug_log("Message data: " . json_encode($message ? ["subject" => $message['subject']] : ["error" => "No message found"]), "info");
+                                } else {
+                                    vdp_debug_log("VDP_Messages class not found!", "error");
                                 }
                                 
-                                vdp_debug_log("Message data for template: " . ($message ? "found" : "not found"), "info");
+                                // Si tenemos datos del mensaje, incluimos la plantilla de vista de mensaje
+                                if (!empty($message)) {
+                                    vdp_debug_log("Message data found, including message view template", "info");
+                                    
+                                    // Agregar un estilo inline para garantizar que el CSS se aplique correctamente
+                                    echo '<style>
+                                        /* Ensure message view styles apply properly */
+                                        .vdp-message-view-content {
+                                            max-width: 100%;
+                                        }
+                                        
+                                        .vdp-message-header-section {
+                                            background-color: white;
+                                            border-radius: 12px;
+                                            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+                                            padding: 1.5rem;
+                                            margin-bottom: 1.5rem;
+                                            display: flex;
+                                            justify-content: space-between;
+                                            align-items: flex-start;
+                                            flex-wrap: wrap;
+                                            gap: 1rem;
+                                        }
+                                    </style>';
+                                    
+                                    // Include the template
+                                    include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
+                                } else {
+                                    vdp_debug_log("Message data not found, showing error", "warning");
+                                    
+                                    // Mostrar un mensaje de error si no encontramos los datos del mensaje
+                                    echo '<div class="vdp-message-view-content">';
+                                    echo '<div class="vdp-notice vdp-notice-error">';
+                                    echo '<p>' . esc_html__('Message not found or you do not have permission to view it.', 'vendor-dashboard-pro') . '</p>';
+                                    echo '</div>';
+                                    echo '</div>';
+                                }
+                            } else {
+                                vdp_debug_log("Vendor ID not found", "error");
+                                
+                                // Mostrar un error si no se puede obtener el ID del vendedor
+                                echo '<div class="vdp-message-view-content">';
+                                echo '<div class="vdp-notice vdp-notice-error">';
+                                echo '<p>' . esc_html__('Vendor information not found. Unable to load message.', 'vendor-dashboard-pro') . '</p>';
+                                echo '</div>';
+                                echo '</div>';
                             }
+                        } else {
+                            vdp_debug_log("Vendor object not found", "error");
+                            
+                            // Mostrar un error si no hay objeto de vendedor
+                            echo '<div class="vdp-message-view-content">';
+                            echo '<div class="vdp-notice vdp-notice-error">';
+                            echo '<p>' . esc_html__('Vendor information not found. Unable to load message.', 'vendor-dashboard-pro') . '</p>';
+                            echo '</div>';
+                            echo '</div>';
                         }
-                        
-                        // Include the template
-                        include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
                     } else {
                         vdp_debug_log("Including messages-content.php (list view)", "info");
                         include(VDP_PLUGIN_DIR . 'templates/messages-content.php');

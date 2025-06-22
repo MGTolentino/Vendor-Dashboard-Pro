@@ -47,6 +47,12 @@
             
             // Handle AJAX navigation
             $(document).on('click', '.vdp-content-area a.vdp-ajax-link', function(e) {
+                // Skip if this is a direct-link class
+                if ($(this).hasClass('direct-link')) {
+                    console.log('Direct link clicked, allowing normal navigation');
+                    return true; // Permitir comportamiento normal del enlace
+                }
+                
                 e.preventDefault();
                 var url = $(this).attr('href');
                 var action = $(this).data('action');
@@ -660,22 +666,14 @@
                 VDP.replyMessage($(this));
             });
             
-            // Handle message view buttons
-            $(document).on('click', '.vdp-message-view-btn', function(e) {
-                e.preventDefault();
-                var messageId = $(this).data('message-id');
-                var url = $(this).attr('href');
+            // Handle message view buttons - only for backward compatibility
+            // This should no longer intercept clicks as we're using direct links
+            $(document).on('click', '.vdp-message-view-btn:not(.direct-link)', function(e) {
+                console.log('Legacy message view button clicked - redirecting directly');
                 
-                console.log('Message view button clicked for ID: ' + messageId + ', URL: ' + url);
-                
-                // Use direct page navigation instead of AJAX to avoid potential issues
-                window.location.href = url;
-                
-                /* Alternatively, use AJAX loading with a special flag
-                if (messageId) {
-                    VDP.loadMessageView(messageId);
-                }
-                */
+                // Don't prevent default - let the link work normally
+                // This is important to make sure the view template gets loaded properly
+                return true;
             });
         },
         

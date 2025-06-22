@@ -62,10 +62,19 @@ class VDP_Assets {
             VDP_VERSION
         );
         
+        // Register common messages styles that will always be loaded
+        wp_register_style(
+            'vdp-messages-common',
+            VDP_PLUGIN_URL . 'assets/css/messages-common.css',
+            array('vdp-main'),
+            VDP_VERSION
+        );
+        
+        // Register full messages styles that depend on the common styles
         wp_register_style(
             'vdp-messages',
             VDP_PLUGIN_URL . 'assets/css/messages.css',
-            array('vdp-main'),
+            array('vdp-main', 'vdp-messages-common'),
             VDP_VERSION
         );
         
@@ -117,14 +126,32 @@ class VDP_Assets {
             wp_enqueue_style('vdp-main');
             wp_enqueue_style('vdp-dashboard');
             
+            // Always load common messages styles
+            wp_enqueue_style('vdp-messages-common');
+            
             // Enqueue orders stylesheet if on orders page
             if (isset($_GET['vdp-action']) && ($_GET['vdp-action'] === 'orders' || strpos($_GET['vdp-action'], 'orders/') === 0)) {
                 wp_enqueue_style('vdp-orders');
             }
             
-            // Enqueue messages stylesheet if on messages page
-            if (isset($_GET['vdp-action']) && ($_GET['vdp-action'] === 'messages' || strpos($_GET['vdp-action'], 'messages/') === 0)) {
+            // Enqueue messages stylesheet if on messages page or viewing a message
+            if (isset($_GET['vdp-action']) && $_GET['vdp-action'] === 'messages') {
                 wp_enqueue_style('vdp-messages');
+                
+                // Debug log for CSS loading
+                if (function_exists('vdp_debug_log')) {
+                    vdp_debug_log("Loading message list CSS", "info");
+                }
+            }
+            
+            // Also load messages CSS if we're viewing a message (has vdp-item parameter)
+            if (isset($_GET['vdp-action']) && $_GET['vdp-action'] === 'messages' && isset($_GET['vdp-item']) && !empty($_GET['vdp-item'])) {
+                wp_enqueue_style('vdp-messages');
+                
+                // Debug log for CSS loading
+                if (function_exists('vdp_debug_log')) {
+                    vdp_debug_log("Loading message view CSS for item: " . $_GET['vdp-item'], "info");
+                }
             }
             
             wp_enqueue_script('vdp-main');

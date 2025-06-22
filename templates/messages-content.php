@@ -197,11 +197,9 @@ if (!isset($paged)) {
                                     // Log URL generation for debugging
                                     vdp_debug_log("Generated view URL for message ID {$message['id']}: $view_url", "info");
                                     ?>
-                                    <!-- Force direct page load by adding data-force-load attribute -->
-                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm vdp-message-view-btn" 
-                                       data-message-id="<?php echo esc_attr($message['id']); ?>"
-                                       data-force-load="true"
-                                       onclick="window.location.href='<?php echo esc_js($view_url); ?>'; return false;">
+                                    <!-- Usar un enlace normal sin javascript para asegurar la carga directa -->
+                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm direct-link" 
+                                       data-message-id="<?php echo esc_attr($message['id']); ?>">
                                         <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
                                     </a>
                                 </div>
