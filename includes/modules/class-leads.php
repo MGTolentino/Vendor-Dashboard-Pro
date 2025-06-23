@@ -216,7 +216,7 @@ class VDP_Leads {
             'fecha_fin' => '',
             'fecha_evento_inicio' => '',
             'fecha_evento_fin' => '',
-            'orderby' => 'fecha_solicitud',
+            'orderby' => 'lead_created_date',
             'order' => 'DESC',
             'per_page' => 20,
             'paged' => 1,
@@ -280,12 +280,12 @@ class VDP_Leads {
 
         // Add filters
         if (!empty($args['fecha_inicio'])) {
-            $where[] = "l.cct_created >= %s";
+            $where[] = "FROM_UNIXTIME(l.cct_created) >= %s";
             $values[] = $args['fecha_inicio'];
         }
         
         if (!empty($args['fecha_fin'])) {
-            $where[] = "l.cct_created <= %s";
+            $where[] = "FROM_UNIXTIME(l.cct_created) <= %s";
             $values[] = $args['fecha_fin'];
         }
 
@@ -375,12 +375,12 @@ class VDP_Leads {
 
         // Add same filters as get_vendor_leads
         if (!empty($args['fecha_inicio'])) {
-            $where[] = "l.cct_created >= %s";
+            $where[] = "FROM_UNIXTIME(l.cct_created) >= %s";
             $values[] = $args['fecha_inicio'];
         }
         
         if (!empty($args['fecha_fin'])) {
-            $where[] = "l.cct_created <= %s";
+            $where[] = "FROM_UNIXTIME(l.cct_created) <= %s";
             $values[] = $args['fecha_fin'];
         }
 
