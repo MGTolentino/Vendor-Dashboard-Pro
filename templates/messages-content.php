@@ -224,11 +224,8 @@ if (!isset($paged)) {
                                     // Log para depuración
                                     vdp_debug_log("URL generada para mensaje ID {$message['id']}: $view_url", "info");
                                     ?>
-                                    <!-- Usar un enlace normal sin javascript para asegurar la carga directa -->
-                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm vdp-message-view-btn direct-link" 
-                                       data-message-id="<?php echo esc_attr($message['id']); ?>"
-                                       data-action="messages" 
-                                       data-item="<?php echo esc_attr($message['id']); ?>">
+                                    <!-- Enlace directo simplificado sin atributos data -->
+                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm direct-link">
                                         <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
                                     </a>
                                 </div>

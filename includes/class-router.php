@@ -53,6 +53,12 @@ class VDP_Router {
         $current_action = isset($_GET['vdp-action']) ? sanitize_key($_GET['vdp-action']) : 'dashboard';
         $current_item = isset($_GET['vdp-item']) ? sanitize_key($_GET['vdp-item']) : '';
         
+        // Corregir acción si viene como 'message' (singular) en lugar de 'messages' (plural)
+        if ($current_action === 'message') {
+            vdp_debug_log("Corrigiendo acción 'message' a 'messages' en shortcode", "info");
+            $current_action = 'messages';
+        }
+        
         // Debugging importante - verificar que los parámetros de la URL se capturan correctamente
         vdp_debug_log("Shortcode callback capturando parámetros: action=$current_action, item=$current_item", "info");
         vdp_debug_log("URL Parameters: " . json_encode($_GET), "info");
@@ -153,6 +159,12 @@ class VDP_Router {
         // Special handling for message view
         if ($action === 'messages' && !empty($item)) {
             vdp_debug_log("AJAX loading message view for message ID: " . $item, "info");
+        }
+        
+        // Corregir acción si viene como 'message' (singular) en lugar de 'messages' (plural)
+        if ($action === 'message') {
+            vdp_debug_log("Corrigiendo acción 'message' a 'messages'", "info");
+            $action = 'messages';
         }
         
         // Set globals for template access

@@ -129,28 +129,25 @@ class VDP_Assets {
             // Always load common messages styles
             wp_enqueue_style('vdp-messages-common');
             
+            // Siempre cargar los estilos completos de mensajes para evitar problemas de CSS
+            wp_enqueue_style('vdp-messages');
+            
             // Enqueue orders stylesheet if on orders page
             if (isset($_GET['vdp-action']) && ($_GET['vdp-action'] === 'orders' || strpos($_GET['vdp-action'], 'orders/') === 0)) {
                 wp_enqueue_style('vdp-orders');
             }
             
-            // Enqueue messages stylesheet if on messages page or viewing a message
-            if (isset($_GET['vdp-action']) && $_GET['vdp-action'] === 'messages') {
-                wp_enqueue_style('vdp-messages');
+            // Log para depuración CSS
+            if (function_exists('vdp_debug_log')) {
+                vdp_debug_log("Cargando estilos CSS de mensajes en todas las páginas", "info");
                 
-                // Debug log for CSS loading
-                if (function_exists('vdp_debug_log')) {
-                    vdp_debug_log("Loading message list CSS", "info");
-                }
-            }
-            
-            // Also load messages CSS if we're viewing a message (has vdp-item parameter)
-            if (isset($_GET['vdp-action']) && $_GET['vdp-action'] === 'messages' && isset($_GET['vdp-item']) && !empty($_GET['vdp-item'])) {
-                wp_enqueue_style('vdp-messages');
-                
-                // Debug log for CSS loading
-                if (function_exists('vdp_debug_log')) {
-                    vdp_debug_log("Loading message view CSS for item: " . $_GET['vdp-item'], "info");
+                // Log adicional para mensajes específicos
+                if (isset($_GET['vdp-action'])) {
+                    vdp_debug_log("Acción actual: " . $_GET['vdp-action'], "info");
+                    
+                    if (isset($_GET['vdp-item'])) {
+                        vdp_debug_log("Viendo mensaje con ID: " . $_GET['vdp-item'], "info");
+                    }
                 }
             }
             

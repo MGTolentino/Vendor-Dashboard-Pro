@@ -12,6 +12,42 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div class="vdp-message-view-content">
+    <!-- Estilos críticos inline para asegurar carga correcta -->
+    <style>
+        /* Estilos críticos para la vista de mensajes */
+        .vdp-message-view-content {
+            max-width: 100%;
+        }
+        
+        .vdp-message-header-section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .vdp-conversation-section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .vdp-customer-info-section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+    </style>
+    
     <?php if (!$message) : ?>
         <div class="vdp-notice vdp-notice-error">
             <p><?php esc_html_e('Message not found or you do not have permission to view it.', 'vendor-dashboard-pro'); ?></p>
