@@ -253,7 +253,7 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                         </tr>
                     <?php else : ?>
                         <?php foreach ($leads as $lead) : ?>
-                            <tr class="vdp-lead-row" data-status="<?php echo esc_attr($lead->lead_status); ?>" data-source="<?php echo esc_attr($lead->lead_source ?? 'website'); ?>">
+                            <tr class="vdp-lead-row" data-status="<?php echo esc_attr($lead->lead_status ?: 'nuevo'); ?>" data-source="<?php echo esc_attr($lead->lead_source ?? 'website'); ?>">
                                 <td class="vdp-lead-name">
                                     <a href="<?php echo esc_url(add_query_arg('lead_id', $lead->_ID, vdp_get_dashboard_url('lead-view'))); ?>" class="vdp-lead-view" data-lead-id="<?php echo esc_attr($lead->_ID); ?>">
                                         <?php echo esc_html($lead->lead_name); ?>
@@ -270,19 +270,25 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                                     <?php endif; ?>
                                 </td>
                                 <td class="vdp-lead-source">
-                                    <?php echo esc_html($lead->event_name); ?>
+                                    <?php echo esc_html($lead->event_name ?: __('General Inquiry', 'vendor-dashboard-pro')); ?>
                                 </td>
                                 <td class="vdp-lead-date">
-                                    <div class="vdp-lead-date-display">
-                                        <?php echo esc_html(date_i18n('M j, Y', strtotime($lead->lead_created_date))); ?>
-                                    </div>
-                                    <div class="vdp-lead-time-ago">
-                                        <?php echo esc_html(human_time_diff(strtotime($lead->lead_created_date), current_time('timestamp')) . ' ago'); ?>
-                                    </div>
+                                    <?php if (!empty($lead->lead_created_date) && $lead->lead_created_date !== '0000-00-00 00:00:00'): ?>
+                                        <div class="vdp-lead-date-display">
+                                            <?php echo esc_html(date_i18n('M j, Y', strtotime($lead->lead_created_date))); ?>
+                                        </div>
+                                        <div class="vdp-lead-time-ago">
+                                            <?php echo esc_html(human_time_diff(strtotime($lead->lead_created_date), current_time('timestamp')) . ' ago'); ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="vdp-lead-date-display">
+                                            <?php echo esc_html__('No date', 'vendor-dashboard-pro'); ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="vdp-lead-status">
-                                    <span class="vdp-status-badge <?php echo esc_attr(vdp_get_lead_status_class($lead->lead_status)); ?>">
-                                        <?php echo esc_html(vdp_get_lead_status_label($lead->lead_status)); ?>
+                                    <span class="vdp-status-badge <?php echo esc_attr(vdp_get_lead_status_class($lead->lead_status ?: 'nuevo')); ?>">
+                                        <?php echo esc_html(vdp_get_lead_status_label($lead->lead_status ?: 'nuevo')); ?>
                                     </span>
                                 </td>
                                 <td class="vdp-lead-actions">

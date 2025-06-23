@@ -630,3 +630,39 @@ function vdp_redirect_vendor_dashboard() {
     }
 }
 add_action('template_redirect', 'vdp_redirect_vendor_dashboard');
+
+/**
+ * Get lead status CSS class.
+ *
+ * @param string $status Lead status.
+ * @return string CSS class.
+ */
+function vdp_get_lead_status_class($status) {
+    $classes = array(
+        'nuevo' => 'vdp-status-nuevo',
+        'con-presupuesto' => 'vdp-status-presupuesto',
+        'por-cerrar' => 'vdp-status-por-cerrar',
+        'con-contrato' => 'vdp-status-contrato',
+        'perdido' => 'vdp-status-perdido',
+    );
+    
+    return isset($classes[$status]) ? $classes[$status] : 'vdp-status-default';
+}
+
+/**
+ * Get lead status label.
+ *
+ * @param string $status Lead status.
+ * @return string Status label.
+ */
+function vdp_get_lead_status_label($status) {
+    $labels = array(
+        'nuevo' => __('Nuevo', 'vendor-dashboard-pro'),
+        'con-presupuesto' => __('Con Presupuesto', 'vendor-dashboard-pro'),
+        'por-cerrar' => __('Por cerrar', 'vendor-dashboard-pro'),
+        'con-contrato' => __('Con contrato', 'vendor-dashboard-pro'),
+        'perdido' => __('Perdido', 'vendor-dashboard-pro'),
+    );
+    
+    return isset($labels[$status]) ? $labels[$status] : ucfirst($status);
+}

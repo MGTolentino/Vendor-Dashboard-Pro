@@ -248,21 +248,24 @@ class VDP_Leads {
         // Base query - filter by vendor's listings using URL matching
         $query = "
             SELECT DISTINCT
+                l._ID,
                 l._ID as lead_id,
-                l.cct_created as fecha_solicitud,
+                FROM_UNIXTIME(l.cct_created) as lead_created_date,
                 l.lead_razon_social,
-                l.lead_nombre,
+                l.lead_nombre as lead_name,
                 l.lead_apellido,
-                l.lead_celular,
-                l.lead_e_mail,
+                CONCAT(l.lead_nombre, ' ', COALESCE(l.lead_apellido, '')) as lead_full_name,
+                l.lead_celular as lead_phone,
+                l.lead_e_mail as lead_email,
                 e._ID as evento_id,
-                e.evento_status,
+                e.evento_status as lead_status,
                 e.fecha_de_evento,
-                e.tipo_de_evento,
+                e.tipo_de_evento as event_name,
                 e.evento_servicio_de_interes,
+                'website' as lead_source,
                 (SELECT COUNT(*) FROM {$this->eventos_table} WHERE lead_id = l._ID) as total_eventos
             FROM {$this->leads_table} l
-            LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
+            LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID"
             INNER JOIN {$wpdb->posts} listings ON (
                 CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
                 OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
