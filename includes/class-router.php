@@ -312,151 +312,94 @@ class VDP_Router {
                     
                 case 'messages':
                     // Verificación crítica: Priorizar el parámetro vdp-item sobre cualquier otra lógica
-                    if (isset($_GET['vdp-item']) && !empty($_GET['vdp-item'])) {
-                        vdp_debug_log("IMPORTANT: URL contiene vdp-item=" . $_GET['vdp-item'] . ", forzando vista de mensaje", "info");
+                    // o el parámetro $item pasado directamente a la función
+                    if ((isset($_GET['vdp-item']) && !empty($_GET['vdp-item'])) || !empty($item)) {
+                        // Obtener el ID del mensaje, priorizando el de la URL si existe
+                        $message_id = isset($_GET['vdp-item']) && !empty($_GET['vdp-item']) ? 
+                                      absint($_GET['vdp-item']) : 
+                                      absint($item);
                         
-                        // Forzar item desde URL
-                        $item = absint($_GET['vdp-item']);
+                        vdp_debug_log("IMPORTANT: Procesando vista individual de mensaje ID: " . $message_id, "info");
                         
-                        // También podemos intentar cargar directamente la clase VDP_Messages
-                        if (class_exists('VDP_Messages')) {
-                            $messages_instance = VDP_Messages::instance();
-                            if (method_exists($messages_instance, 'render_message_view')) {
-                                vdp_debug_log("Llamando directamente a render_message_view()", "info");
-                                $messages_instance->render_message_view();
-                                $content_rendered = true;
-                                return;
-                            }
-                        }
+                        // Debug para verificar que la URL y los parámetros coinciden
+                        vdp_debug_log("URL actual: " . $_SERVER['REQUEST_URI'], "info");
+                        vdp_debug_log("GET params: " . json_encode($_GET), "info");
+                        vdp_debug_log("Item parameter: " . $item, "info");
                         
-                        // Si aún no se ha renderizado, cargar la plantilla directamente
-                        if (!$content_rendered) {
-                            vdp_debug_log("Direct inclusion of message-view-content.php for item: $item", "info");
-                            vdp_debug_log("URL de mensaje view: " . $_SERVER['REQUEST_URI'], "info");
-                            
-                            // Set up the message data before including the template
-                            $vendor = vdp_get_current_vendor();
-                            if ($vendor) {
-                                $vendor_id = null;
-                                if (is_object($vendor) && method_exists($vendor, 'get_id')) {
-                                    $vendor_id = $vendor->get_id();
-                                } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
-                                    $vendor_id = ($vendor->get_id)();
-                                }
-                                
-                                if ($vendor_id) {
-                                    // Get message data
-                                    if (class_exists('VDP_Messages')) {
-                                        if (method_exists('VDP_Messages', 'are_tables_created') && VDP_Messages::are_tables_created()) {
-                                            vdp_debug_log("Obteniendo mensaje real de la base de datos para item: $item, vendor: $vendor_id", "info");
-                                            $message = VDP_Messages::get_message($item, $vendor_id);
-                                        } else {
-                                            vdp_debug_log("Obteniendo mensaje de demo para item: $item", "info");
-                                            $message = VDP_Messages::get_demo_message($item);
-                                        }
-                                        
-                                        vdp_debug_log("Message data: " . json_encode($message ? ["subject" => $message['subject']] : ["error" => "No message found"]), "info");
-                                    } else {
-                                        vdp_debug_log("VDP_Messages class not found!", "error");
-                                    }
-                                    
-                                    // Si tenemos datos del mensaje, incluimos la plantilla de vista de mensaje
-                                    if (!empty($message)) {
-                                        vdp_debug_log("Message data found, including message view template", "info");
-                                        
-                                        // Agregar un estilo inline para garantizar que el CSS se aplique correctamente
-                                        echo '<style>
-                                            /* Ensure message view styles apply properly */
-                                            .vdp-message-view-content {
-                                                max-width: 100%;
-                                            }
-                                            
-                                            .vdp-message-header-section {
-                                                background-color: white;
-                                                border-radius: 12px;
-                                                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-                                                padding: 1.5rem;
-                                                margin-bottom: 1.5rem;
-                                                display: flex;
-                                                justify-content: space-between;
-                                                align-items: flex-start;
-                                                flex-wrap: wrap;
-                                                gap: 1rem;
-                                            }
-                                        </style>';
-                                        
-                                        // Include the template
-                                        include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
-                                    } else {
-                                        vdp_debug_log("Message data not found, showing error", "warning");
-                                        
-                                        // Mostrar un mensaje de error si no encontramos los datos del mensaje
-                                        echo '<div class="vdp-message-view-content">';
-                                        echo '<div class="vdp-notice vdp-notice-error">';
-                                        echo '<p>' . esc_html__('Message not found or you do not have permission to view it.', 'vendor-dashboard-pro') . '</p>';
-                                        echo '</div>';
-                                        echo '</div>';
-                                    }
-                                } else {
-                                    vdp_debug_log("Vendor ID not found", "error");
-                                    
-                                    // Mostrar un error si no se puede obtener el ID del vendedor
-                                    echo '<div class="vdp-message-view-content">';
-                                    echo '<div class="vdp-notice vdp-notice-error">';
-                                    echo '<p>' . esc_html__('Vendor information not found. Unable to load message.', 'vendor-dashboard-pro') . '</p>';
-                                    echo '</div>';
-                                    echo '</div>';
-                                }
-                            } else {
-                                vdp_debug_log("Vendor object not found", "error");
-                                
-                                // Mostrar un error si no hay objeto de vendedor
-                                echo '<div class="vdp-message-view-content">';
-                                echo '<div class="vdp-notice vdp-notice-error">';
-                                echo '<p>' . esc_html__('Vendor information not found. Unable to load message.', 'vendor-dashboard-pro') . '</p>';
-                                echo '</div>';
-                                echo '</div>';
-                            }
-                        }
-                    } else if ($item) {
-                        // Si llegamos aquí, el item está definido pero no desde la URL
-                        vdp_debug_log("Item pasado a render_content: $item, pero no está en la URL", "info");
-                        
-                        // Incluir la vista de mensajes individual
-                        vdp_debug_log("Direct inclusion of message-view-content.php for item: $item", "info");
-                        
-                        // Get message data
+                        // Obtener datos del vendor
                         $vendor = vdp_get_current_vendor();
+                        $vendor_id = null;
+                        
                         if ($vendor) {
-                            $vendor_id = null;
                             if (is_object($vendor) && method_exists($vendor, 'get_id')) {
                                 $vendor_id = $vendor->get_id();
                             } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
                                 $vendor_id = ($vendor->get_id)();
                             }
                             
-                            if ($vendor_id && class_exists('VDP_Messages')) {
-                                if (method_exists('VDP_Messages', 'are_tables_created') && VDP_Messages::are_tables_created()) {
-                                    $message = VDP_Messages::get_message($item, $vendor_id);
+                            if ($vendor_id) {
+                                // Obtener datos del mensaje
+                                $message = null;
+                                
+                                if (class_exists('VDP_Messages')) {
+                                    if (method_exists('VDP_Messages', 'are_tables_created') && VDP_Messages::are_tables_created()) {
+                                        vdp_debug_log("Obteniendo mensaje real de la base de datos para item: $message_id, vendor: $vendor_id", "info");
+                                        $message = VDP_Messages::get_message($message_id, $vendor_id);
+                                    } else {
+                                        vdp_debug_log("Obteniendo mensaje de demo para item: $message_id", "info");
+                                        $message = VDP_Messages::get_demo_message($message_id);
+                                    }
+                                    
+                                    // Debug para verificar si encontramos datos del mensaje
+                                    vdp_debug_log("Message data: " . json_encode($message ? ["subject" => $message['subject']] : ["error" => "No message found"]), "info");
                                 } else {
-                                    $message = VDP_Messages::get_demo_message($item);
+                                    vdp_debug_log("VDP_Messages class not found!", "error");
                                 }
                                 
-                                // Include the template
-                                include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
+                                // Si tenemos datos del mensaje, incluimos la plantilla de vista de mensaje
+                                if (!empty($message)) {
+                                    vdp_debug_log("Message data found, including message view template", "info");
+                                    
+                                    // Include the template
+                                    include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
+                                    $content_rendered = true;
+                                } else {
+                                    vdp_debug_log("Message data not found, showing error", "warning");
+                                    
+                                    // Mostrar un mensaje de error si no encontramos los datos del mensaje
+                                    echo '<div class="vdp-message-view-content">';
+                                    echo '<div class="vdp-notice vdp-notice-error">';
+                                    echo '<p>' . esc_html__('Message not found or you do not have permission to view it.', 'vendor-dashboard-pro') . '</p>';
+                                    echo '</div>';
+                                    echo '</div>';
+                                    $content_rendered = true;
+                                }
                             } else {
-                                // Mostrar un error genérico
+                                vdp_debug_log("Vendor ID not found", "error");
+                                
+                                // Mostrar un error si no se puede obtener el ID del vendedor
+                                echo '<div class="vdp-message-view-content">';
                                 echo '<div class="vdp-notice vdp-notice-error">';
-                                echo '<p>' . esc_html__('Message not found or you do not have permission to view it.', 'vendor-dashboard-pro') . '</p>';
+                                echo '<p>' . esc_html__('Vendor information not found. Unable to load message.', 'vendor-dashboard-pro') . '</p>';
                                 echo '</div>';
+                                echo '</div>';
+                                $content_rendered = true;
                             }
                         } else {
-                            // Mostrar un error genérico
+                            vdp_debug_log("Vendor object not found", "error");
+                            
+                            // Mostrar un error si no hay objeto de vendedor
+                            echo '<div class="vdp-message-view-content">';
                             echo '<div class="vdp-notice vdp-notice-error">';
                             echo '<p>' . esc_html__('Vendor information not found. Unable to load message.', 'vendor-dashboard-pro') . '</p>';
                             echo '</div>';
+                            echo '</div>';
+                            $content_rendered = true;
                         }
-                    } else {
+                    }
+                    
+                    // Si no se ha renderizado contenido (no hay item o hubo algún error), mostrar la lista de mensajes
+                    if (!$content_rendered) {
                         vdp_debug_log("Including messages-content.php (list view)", "info");
                         include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
                     }
