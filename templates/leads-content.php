@@ -44,14 +44,26 @@ if (!empty($search_filter)) {
     $filters['search'] = $search_filter;
 }
 
-// Get vendor leads
-$leads_data = $leads_handler->get_vendor_leads($vendor->ID, $per_page, $offset, $filters);
-$leads = $leads_data['leads'];
-$total_leads = $leads_data['total'];
+// Get vendor ID properly
+$vendor_id = method_exists($vendor, 'get_id') ? $vendor->get_id() : $vendor->ID;
+
+// Get vendor leads using the new method structure
+$leads = $leads_handler->get_vendor_leads(array(
+    'per_page' => $per_page,
+    'paged' => $paged,
+    'status' => $status_filter,
+    'search' => $search_filter
+));
+
+$total_leads = $leads_handler->get_vendor_leads_count(array(
+    'status' => $status_filter,
+    'search' => $search_filter
+));
+
 $total_pages = ceil($total_leads / $per_page);
 
 // Get lead statistics
-$stats = $leads_handler->get_vendor_lead_stats($vendor->ID);
+$stats = $leads_handler->get_vendor_lead_stats();
 
 // Initialize total pages and current page for pagination
 if (!isset($total_pages)) {

@@ -117,7 +117,7 @@ class VDP_Leads {
             return;
         }
 
-        $vendor_id = $vendor->ID;
+        $vendor_id = method_exists($vendor, 'get_id') ? $vendor->get_id() : $vendor->ID;
         
         // Check if leads tables exist
         if (!$this->check_leads_tables()) {
@@ -262,13 +262,7 @@ class VDP_Leads {
                 e.evento_servicio_de_interes,
                 (SELECT COUNT(*) FROM {$this->eventos_table} WHERE lead_id = l._ID) as total_eventos
             FROM {$this->leads_table} l
-            LEFT JOIN (
-                SELECT e1.*
-                FROM {$this->eventos_table} e1
-                LEFT JOIN {$this->eventos_table} e2
-                ON e1.lead_id = e2.lead_id AND e1.fecha_de_evento < e2.fecha_de_evento
-                WHERE e2.lead_id IS NULL
-            ) e ON e.lead_id = l._ID
+            LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
             INNER JOIN {$wpdb->posts} listings ON (
                 CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
                 OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
@@ -487,7 +481,18 @@ class VDP_Leads {
      */
     private function get_current_vendor_id() {
         $vendor = vdp_get_current_vendor();
-        $vendor_id = $vendor ? $vendor->ID : null;
+        $vendor_id = null;
+        
+        if ($vendor) {
+            // HivePress vendor objects use get_id() method
+            if (method_exists($vendor, 'get_id')) {
+                $vendor_id = $vendor->get_id();
+            } elseif (isset($vendor->ID)) {
+                $vendor_id = method_exists($vendor, 'get_id') ? $vendor->get_id() : $vendor->ID;
+            } elseif (isset($vendor->id)) {
+                $vendor_id = $vendor->id;
+            }
+        }
         
         // Debug logging
         if (function_exists('vdp_debug_log')) {
@@ -586,9 +591,18 @@ class VDP_Leads {
      * @param int $vendor_id Vendor ID.
      * @return array Lead statistics by status.
      */
-    public function get_vendor_lead_stats($vendor_id) {
-        $leads_data = $this->get_vendor_leads($vendor_id);
-        $leads = $leads_data['leads'] ?? array();
+    public function get_vendor_lead_stats($vendor_id = null) {
+        if (!$vendor_id) {
+            $vendor_id = $this->get_current_vendor_id();
+        }
+        
+        $leads = $this->get_vendor_leads();
+        
+        // Debug logging
+        if (function_exists('vdp_debug_log')) {
+            vdp_debug_log("VDP Leads - get_vendor_lead_stats called with vendor_id: " . $vendor_id, "info");
+            vdp_debug_log("VDP Leads - Stats leads count: " . count($leads), "info");
+        }
         
         // Initialize stats
         $stats = array('total' => count($leads));
