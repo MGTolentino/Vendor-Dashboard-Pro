@@ -273,32 +273,20 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                                     <?php echo esc_html($lead->event_name ?: __('General Inquiry', 'vendor-dashboard-pro')); ?>
                                 </td>
                                 <td class="vdp-lead-date">
-                                    <?php 
-                                    // Debug the date value
-                                    if (function_exists('vdp_debug_log')) {
-                                        vdp_debug_log("Lead date raw value: " . var_export($lead->lead_created_date, true), "info");
-                                    }
-                                    
-                                    if (!empty($lead->lead_created_date) && $lead->lead_created_date !== '0000-00-00 00:00:00' && $lead->lead_created_date !== null): 
-                                        $date_timestamp = strtotime($lead->lead_created_date);
-                                        if ($date_timestamp && $date_timestamp > 0):
-                                    ?>
-                                        <div class="vdp-lead-date-display">
-                                            <?php echo esc_html(date_i18n('M j, Y', $date_timestamp)); ?>
-                                        </div>
-                                        <div class="vdp-lead-time-ago">
-                                            <?php echo esc_html(human_time_diff($date_timestamp, current_time('timestamp')) . ' ago'); ?>
-                                        </div>
-                                    <?php 
-                                        else:
-                                            if (function_exists('vdp_debug_log')) {
-                                                vdp_debug_log("Date conversion failed for: " . $lead->lead_created_date, "warning");
-                                            }
-                                    ?>
-                                        <div class="vdp-lead-date-display">
-                                            <?php echo esc_html($lead->lead_created_date); ?>
-                                        </div>
-                                    <?php endif; ?>
+                                    <?php if (!empty($lead->lead_created_date) && $lead->lead_created_date !== '0000-00-00 00:00:00'): ?>
+                                        <?php $date_timestamp = strtotime($lead->lead_created_date); ?>
+                                        <?php if ($date_timestamp && $date_timestamp > 0): ?>
+                                            <div class="vdp-lead-date-display">
+                                                <?php echo esc_html(date_i18n('M j, Y', $date_timestamp)); ?>
+                                            </div>
+                                            <div class="vdp-lead-time-ago">
+                                                <?php echo esc_html(human_time_diff($date_timestamp, current_time('timestamp')) . ' ago'); ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="vdp-lead-date-display">
+                                                <?php echo esc_html__('Invalid date', 'vendor-dashboard-pro'); ?>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <div class="vdp-lead-date-display">
                                             <?php echo esc_html__('No date', 'vendor-dashboard-pro'); ?>

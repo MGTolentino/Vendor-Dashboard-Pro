@@ -253,7 +253,7 @@ class VDP_Leads {
             SELECT DISTINCT
                 l._ID,
                 l._ID as lead_id,
-                FROM_UNIXTIME(l.cct_created) as lead_created_date,
+                COALESCE(FROM_UNIXTIME(e.fecha_de_evento), FROM_UNIXTIME(l.cct_created)) as lead_created_date,
                 l.lead_razon_social,
                 l.lead_nombre as lead_name,
                 l.lead_apellido,
@@ -261,9 +261,9 @@ class VDP_Leads {
                 l.lead_celular as lead_phone,
                 l.lead_e_mail as lead_email,
                 e._ID as evento_id,
-                e.evento_status as lead_status,
+                COALESCE(e.evento_status, 'nuevo') as lead_status,
                 e.fecha_de_evento,
-                e.tipo_de_evento as event_name,
+                COALESCE(e.tipo_de_evento, 'General Inquiry') as event_name,
                 e.evento_servicio_de_interes,
                 'website' as lead_source,
                 (SELECT COUNT(*) FROM {$this->eventos_table} WHERE lead_id = l._ID) as total_eventos
@@ -283,12 +283,12 @@ class VDP_Leads {
 
         // Add filters
         if (!empty($args['fecha_inicio'])) {
-            $where[] = "FROM_UNIXTIME(l.cct_created) >= %s";
+            $where[] = "COALESCE(FROM_UNIXTIME(e.fecha_de_evento), FROM_UNIXTIME(l.cct_created)) >= %s";
             $values[] = $args['fecha_inicio'];
         }
         
         if (!empty($args['fecha_fin'])) {
-            $where[] = "FROM_UNIXTIME(l.cct_created) <= %s";
+            $where[] = "COALESCE(FROM_UNIXTIME(e.fecha_de_evento), FROM_UNIXTIME(l.cct_created)) <= %s";
             $values[] = $args['fecha_fin'];
         }
 
@@ -378,12 +378,12 @@ class VDP_Leads {
 
         // Add same filters as get_vendor_leads
         if (!empty($args['fecha_inicio'])) {
-            $where[] = "FROM_UNIXTIME(l.cct_created) >= %s";
+            $where[] = "COALESCE(FROM_UNIXTIME(e.fecha_de_evento), FROM_UNIXTIME(l.cct_created)) >= %s";
             $values[] = $args['fecha_inicio'];
         }
         
         if (!empty($args['fecha_fin'])) {
-            $where[] = "FROM_UNIXTIME(l.cct_created) <= %s";
+            $where[] = "COALESCE(FROM_UNIXTIME(e.fecha_de_evento), FROM_UNIXTIME(l.cct_created)) <= %s";
             $values[] = $args['fecha_fin'];
         }
 
