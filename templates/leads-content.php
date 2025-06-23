@@ -44,8 +44,8 @@ if (!empty($search_filter)) {
     $filters['search'] = $search_filter;
 }
 
-// Get vendor ID properly
-$vendor_id = method_exists($vendor, 'get_id') ? $vendor->get_id() : $vendor->ID;
+// Get vendor ID properly - now that we have real methods
+$vendor_id = $vendor->get_id();
 
 // Get vendor leads using the new method structure
 $leads = $leads_handler->get_vendor_leads(array(

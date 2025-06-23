@@ -93,87 +93,82 @@ function vdp_get_current_vendor() {
 }
 
 /**
- * Create a vendor object from post data.
- *
- * @param object $post WP_Post object for vendor.
- * @return object Vendor object with callable methods.
+ * Vendor object class with proper methods.
  */
-function vdp_create_vendor_from_post($post) {
-    // Create an object with callable methods
-    $vendor = new stdClass();
+class VDP_Vendor_Object {
+    private $post;
+    private $name;
+    private $verified;
+    private $user_id;
     
-    // Get vendor metadata
-    // Use post_title first, then try post_name, then fallback to user display name
-    $name = $post->post_title;
-    $verified = get_post_meta($post->ID, 'hp_verified', true) ?: false;
-    $user_id = get_post_meta($post->ID, 'hp_user_id', true);
-    
-    // Get user data for additional info
-    $user_info = get_userdata($user_id);
-    if (empty($name) && $post->post_name) {
-        $name = $post->post_name;
-    } elseif ($user_info && empty($name)) {
-        $name = $user_info->display_name;
+    public function __construct($post) {
+        $this->post = $post;
+        $this->name = $post->post_title;
+        $this->verified = get_post_meta($post->ID, 'hp_verified', true) ?: false;
+        $this->user_id = get_post_meta($post->ID, 'hp_user_id', true);
+        
+        // Get user data for additional info
+        $user_info = get_userdata($this->user_id);
+        if (empty($this->name) && $post->post_name) {
+            $this->name = $post->post_name;
+        } elseif ($user_info && empty($this->name)) {
+            $this->name = $user_info->display_name;
+        }
     }
     
+    public function get_id() {
+        return $this->post->ID;
+    }
     
-    // Add methods to the vendor object
-    $vendor->get_id = function() use ($post) {
-        return $post->ID;
-    };
+    public function get_name() {
+        return !empty($this->name) ? $this->name : $this->post->post_title;
+    }
     
-    $vendor->get_name = function() use ($name, $post) {
-        return !empty($name) ? $name : $post->post_title;
-    };
-    
-    $vendor->get_image__url = function($size = 'thumbnail') use ($post) {
-        $attachment_id = get_post_thumbnail_id($post->ID);
+    public function get_image__url($size = 'thumbnail') {
+        $attachment_id = get_post_thumbnail_id($this->post->ID);
         if ($attachment_id) {
             $image = wp_get_attachment_image_src($attachment_id, $size);
             return $image ? $image[0] : false;
         }
         return false;
-    };
+    }
     
-    $vendor->is_verified = function() use ($verified) {
-        return (bool) $verified;
-    };
+    public function is_verified() {
+        return (bool) $this->verified;
+    }
     
-    $vendor->get_slug = function() use ($post) {
-        return $post->post_name;
-    };
+    public function get_slug() {
+        return $this->post->post_name;
+    }
     
-    $vendor->get_registered_date = function() use ($post) {
-        return $post->post_date;
-    };
+    public function get_registered_date() {
+        return $this->post->post_date;
+    }
     
-    $vendor->get_description = function() use ($post) {
-        return $post->post_content;
-    };
+    public function get_description() {
+        return $this->post->post_content;
+    }
     
-    $vendor->get_user_id = function() use ($user_id) {
-        return $user_id;
-    };
+    public function get_user_id() {
+        return $this->user_id;
+    }
     
-    $vendor->is_active_seller = function() use ($post) {
+    public function is_active_seller() {
         // Check if vendor is active based on several criteria:
         // 1. Account is verified (if verification is enabled)
         // 2. Has at least one published listing
         // 3. Profile is complete (has description)
         // 4. Has been active in the last 30 days (last login or activity)
         
-        $is_active = true;
-        
         // Check if has published listings
         $listings_count = wp_count_posts('hp_listing');
         $has_listings = isset($listings_count->publish) && $listings_count->publish > 0;
         
         // Check if profile is complete
-        $has_description = !empty($post->post_content);
+        $has_description = !empty($this->post->post_content);
         
         // Check recent activity (last login)
-        $user_id = get_post_meta($post->ID, 'hp_user_id', true);
-        $last_login = get_user_meta($user_id, 'vdp_last_login', true);
+        $last_login = get_user_meta($this->user_id, 'vdp_last_login', true);
         $thirty_days_ago = strtotime('-30 days');
         $recently_active = empty($last_login) || strtotime($last_login) > $thirty_days_ago;
         
@@ -182,9 +177,25 @@ function vdp_create_vendor_from_post($post) {
         $criteria_met = count(array_filter($active_criteria));
         
         return $criteria_met >= 2; // Must meet at least 2 out of 3 criteria
-    };
+    }
     
-    return $vendor;
+    // Legacy property access for backward compatibility
+    public function __get($property) {
+        if ($property === 'ID') {
+            return $this->get_id();
+        }
+        return null;
+    }
+}
+
+/**
+ * Create a vendor object from post data.
+ *
+ * @param object $post WP_Post object for vendor.
+ * @return VDP_Vendor_Object Vendor object with callable methods.
+ */
+function vdp_create_vendor_from_post($post) {
+    return new VDP_Vendor_Object($post);
 }
 
 /**

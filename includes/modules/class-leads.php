@@ -117,7 +117,7 @@ class VDP_Leads {
             return;
         }
 
-        $vendor_id = method_exists($vendor, 'get_id') ? $vendor->get_id() : $vendor->ID;
+        $vendor_id = $vendor->get_id();
         
         // Check if leads tables exist
         if (!$this->check_leads_tables()) {
@@ -483,20 +483,13 @@ class VDP_Leads {
         $vendor = vdp_get_current_vendor();
         $vendor_id = null;
         
-        if ($vendor) {
-            // HivePress vendor objects use get_id() method
-            if (method_exists($vendor, 'get_id')) {
-                $vendor_id = $vendor->get_id();
-            } elseif (isset($vendor->ID)) {
-                $vendor_id = method_exists($vendor, 'get_id') ? $vendor->get_id() : $vendor->ID;
-            } elseif (isset($vendor->id)) {
-                $vendor_id = $vendor->id;
-            }
+        if ($vendor && method_exists($vendor, 'get_id')) {
+            $vendor_id = $vendor->get_id();
         }
         
         // Debug logging
         if (function_exists('vdp_debug_log')) {
-            vdp_debug_log("VDP Leads - Current vendor object: " . json_encode($vendor), "info");
+            vdp_debug_log("VDP Leads - Current vendor object type: " . get_class($vendor), "info");
             vdp_debug_log("VDP Leads - Current vendor ID: " . $vendor_id, "info");
         }
         
