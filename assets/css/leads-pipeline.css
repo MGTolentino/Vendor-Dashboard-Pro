@@ -1,0 +1,145 @@
+/* Leads Pipeline Styles */
+
+.vdp-pipeline-view {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 20px 0;
+}
+
+.vdp-pipeline-column {
+    min-width: 280px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.vdp-pipeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.vdp-pipeline-title {
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.vdp-pipeline-count {
+    background: #666;
+    color: #fff;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.vdp-pipeline-leads {
+    min-height: 200px;
+}
+
+.vdp-pipeline-lead {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.vdp-pipeline-lead:hover {
+    border-color: #007cba;
+    box-shadow: 0 2px 4px rgba(0,124,186,0.1);
+}
+
+.vdp-pipeline-lead-name {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.vdp-pipeline-lead-info {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.vdp-pipeline-lead-date {
+    font-size: 11px;
+    color: #888;
+}
+
+/* Status-specific column colors */
+.vdp-pipeline-column[data-status="nuevo"] .vdp-pipeline-header {
+    border-bottom-color: #1976d2;
+}
+
+.vdp-pipeline-column[data-status="nuevo"] .vdp-pipeline-count {
+    background: #1976d2;
+}
+
+.vdp-pipeline-column[data-status="con-presupuesto"] .vdp-pipeline-header {
+    border-bottom-color: #f57c00;
+}
+
+.vdp-pipeline-column[data-status="con-presupuesto"] .vdp-pipeline-count {
+    background: #f57c00;
+}
+
+.vdp-pipeline-column[data-status="por-cerrar"] .vdp-pipeline-header {
+    border-bottom-color: #7b1fa2;
+}
+
+.vdp-pipeline-column[data-status="por-cerrar"] .vdp-pipeline-count {
+    background: #7b1fa2;
+}
+
+.vdp-pipeline-column[data-status="con-contrato"] .vdp-pipeline-header {
+    border-bottom-color: #388e3c;
+}
+
+.vdp-pipeline-column[data-status="con-contrato"] .vdp-pipeline-count {
+    background: #388e3c;
+}
+
+.vdp-pipeline-column[data-status="perdido"] .vdp-pipeline-header {
+    border-bottom-color: #d32f2f;
+}
+
+.vdp-pipeline-column[data-status="perdido"] .vdp-pipeline-count {
+    background: #d32f2f;
+}
+
+/* Empty state */
+.vdp-pipeline-empty {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+    padding: 40px 20px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .vdp-pipeline-view {
+        gap: 15px;
+    }
+    
+    .vdp-pipeline-column {
+        min-width: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .vdp-pipeline-column {
+        min-width: 200px;
+    }
+    
+    .vdp-pipeline-lead {
+        padding: 10px;
+    }
+}

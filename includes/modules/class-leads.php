@@ -51,6 +51,9 @@ class VDP_Leads {
         add_action('vdp_leads_content', array($this, 'render_leads_dashboard'), 10);
         add_action('vdp_lead_view_content', array($this, 'render_lead_view'), 10);
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
+        
+        // AJAX hooks
+        add_action('wp_ajax_vdp_update_lead_status', array($this, 'ajax_update_lead_status'));
     }
 
     /**
@@ -579,6 +582,66 @@ class VDP_Leads {
         }
         
         return $grouped;
+    }
+
+    /**
+     * AJAX handler to update lead status.
+     */
+    public function ajax_update_lead_status() {
+        // Verify nonce
+        if (!check_ajax_referer('vdp_leads_nonce', 'nonce', false)) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Check if user is vendor
+        if (!vdp_is_user_vendor()) {
+            wp_send_json_error(array('message' => __('Access denied.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        $lead_id = isset($_POST['lead_id']) ? absint($_POST['lead_id']) : 0;
+        $new_status = isset($_POST['status']) ? sanitize_key($_POST['status']) : '';
+
+        if (!$lead_id || !$new_status) {
+            wp_send_json_error(array('message' => __('Invalid parameters.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Verify vendor can access this lead
+        if (!$this->can_access_lead($lead_id)) {
+            wp_send_json_error(array('message' => __('You do not have permission to update this lead.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Validate status
+        $valid_statuses = array_keys($this->get_status_options());
+        if (!in_array($new_status, $valid_statuses)) {
+            wp_send_json_error(array('message' => __('Invalid status.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Update the lead status in the events table
+        global $wpdb;
+
+        $result = $wpdb->update(
+            $this->eventos_table,
+            array('evento_status' => $new_status),
+            array('lead_id' => $lead_id),
+            array('%s'),
+            array('%d')
+        );
+
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Failed to update lead status.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        wp_send_json_success(array(
+            'message' => __('Lead status updated successfully.', 'vendor-dashboard-pro'),
+            'new_status' => $new_status,
+            'status_label' => vdp_get_lead_status_label($new_status)
+        ));
     }
 
     /**

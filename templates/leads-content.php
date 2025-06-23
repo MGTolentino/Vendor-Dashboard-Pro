@@ -273,12 +273,15 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                                     <?php echo esc_html($lead->event_name ?: __('General Inquiry', 'vendor-dashboard-pro')); ?>
                                 </td>
                                 <td class="vdp-lead-date">
-                                    <?php if (!empty($lead->lead_created_date) && $lead->lead_created_date !== '0000-00-00 00:00:00'): ?>
+                                    <?php 
+                                    $date_timestamp = strtotime($lead->lead_created_date);
+                                    if ($lead->lead_created_date && $date_timestamp && $date_timestamp > 0): 
+                                    ?>
                                         <div class="vdp-lead-date-display">
-                                            <?php echo esc_html(date_i18n('M j, Y', strtotime($lead->lead_created_date))); ?>
+                                            <?php echo esc_html(date_i18n('M j, Y', $date_timestamp)); ?>
                                         </div>
                                         <div class="vdp-lead-time-ago">
-                                            <?php echo esc_html(human_time_diff(strtotime($lead->lead_created_date), current_time('timestamp')) . ' ago'); ?>
+                                            <?php echo esc_html(human_time_diff($date_timestamp, current_time('timestamp')) . ' ago'); ?>
                                         </div>
                                     <?php else: ?>
                                         <div class="vdp-lead-date-display">
@@ -292,13 +295,25 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                                     </span>
                                 </td>
                                 <td class="vdp-lead-actions">
-                                    <div class="vdp-table-actions">
-                                        <a href="<?php echo esc_url(add_query_arg('lead_id', $lead->_ID, vdp_get_dashboard_url('lead-view'))); ?>" class="vdp-btn vdp-btn-sm vdp-btn-icon vdp-lead-view" data-lead-id="<?php echo esc_attr($lead->_ID); ?>" title="<?php esc_attr_e('View', 'vendor-dashboard-pro'); ?>">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <button type="button" class="vdp-btn vdp-btn-sm vdp-btn-icon vdp-update-lead-status" data-lead-id="<?php echo esc_attr($lead->_ID); ?>" title="<?php esc_attr_e('Update Status', 'vendor-dashboard-pro'); ?>">
-                                            <i class="fas fa-edit"></i>
+                                    <div class="vdp-actions-dropdown">
+                                        <button type="button" class="vdp-btn vdp-btn-sm vdp-btn-outline vdp-actions-toggle" data-lead-id="<?php echo esc_attr($lead->_ID); ?>">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                            <?php esc_html_e('Actions', 'vendor-dashboard-pro'); ?>
                                         </button>
+                                        <div class="vdp-actions-menu">
+                                            <a href="<?php echo esc_url(add_query_arg('lead_id', $lead->_ID, vdp_get_dashboard_url('lead-view'))); ?>" class="vdp-action-item vdp-lead-view" data-lead-id="<?php echo esc_attr($lead->_ID); ?>">
+                                                <i class="fas fa-eye"></i>
+                                                <?php esc_html_e('View Details', 'vendor-dashboard-pro'); ?>
+                                            </a>
+                                            <button type="button" class="vdp-action-item vdp-update-lead-status" data-lead-id="<?php echo esc_attr($lead->_ID); ?>" data-current-status="<?php echo esc_attr($lead->lead_status ?: 'nuevo'); ?>">
+                                                <i class="fas fa-edit"></i>
+                                                <?php esc_html_e('Update Status', 'vendor-dashboard-pro'); ?>
+                                            </button>
+                                            <button type="button" class="vdp-action-item vdp-contact-lead" data-lead-id="<?php echo esc_attr($lead->_ID); ?>">
+                                                <i class="fas fa-envelope"></i>
+                                                <?php esc_html_e('Send Message', 'vendor-dashboard-pro'); ?>
+                                            </button>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -459,7 +474,7 @@ jQuery(document).ready(function($) {
                         status: $row.data('status'),
                         source: $row.data('source'),
                         date: $row.find('.vdp-lead-date-display').text().trim(),
-                        message: 'This is a sample lead message. In a real implementation, this would contain the actual message from the lead.'
+                        message: 'Lead inquiry details would appear here. Contact the lead for more information.'
                     };
                     return false;
                 }
