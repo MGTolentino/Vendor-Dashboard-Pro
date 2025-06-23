@@ -154,7 +154,7 @@ class VDP_Messages {
      *
      * @return bool
      */
-    private static function are_tables_created() {
+    public static function are_tables_created() {
         global $wpdb;
         
         $table_messages = $wpdb->prefix . 'vdp_messages';
