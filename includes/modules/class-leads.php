@@ -201,7 +201,7 @@ class VDP_Leads {
         $where = array('1=1');
         $values = array();
 
-        // Base query - filter by vendor's listings
+        // Base query - filter by vendor's listings using URL matching
         $query = "
             SELECT DISTINCT
                 l._ID as lead_id,
@@ -225,7 +225,12 @@ class VDP_Leads {
                 ON e1.lead_id = e2.lead_id AND e1.fecha_de_evento < e2.fecha_de_evento
                 WHERE e2.lead_id IS NULL
             ) e ON e.lead_id = l._ID
-            INNER JOIN {$wpdb->posts} listings ON listings.post_title = e.evento_servicio_de_interes
+            INNER JOIN {$wpdb->posts} listings ON (
+                CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR listings.guid = e.evento_servicio_de_interes
+                OR e.evento_servicio_de_interes LIKE CONCAT('%/', listings.post_name, '/%')
+            )
             WHERE listings.post_type = 'hp_listing' 
             AND listings.post_parent = %d
         ";
@@ -295,7 +300,12 @@ class VDP_Leads {
             SELECT COUNT(DISTINCT l._ID)
             FROM {$this->leads_table} l
             LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
-            INNER JOIN {$wpdb->posts} listings ON listings.post_title = e.evento_servicio_de_interes
+            INNER JOIN {$wpdb->posts} listings ON (
+                CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR listings.guid = e.evento_servicio_de_interes
+                OR e.evento_servicio_de_interes LIKE CONCAT('%/', listings.post_name, '/%')
+            )
             WHERE listings.post_type = 'hp_listing' 
             AND listings.post_parent = %d
         ";
@@ -388,7 +398,12 @@ class VDP_Leads {
             "SELECT COUNT(*)
             FROM {$this->leads_table} l
             INNER JOIN {$this->eventos_table} e ON e.lead_id = l._ID
-            INNER JOIN {$wpdb->posts} listings ON listings.post_title = e.evento_servicio_de_interes
+            INNER JOIN {$wpdb->posts} listings ON (
+                CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR listings.guid = e.evento_servicio_de_interes
+                OR e.evento_servicio_de_interes LIKE CONCAT('%/', listings.post_name, '/%')
+            )
             WHERE l._ID = %d 
             AND listings.post_type = 'hp_listing' 
             AND listings.post_parent = %d",
@@ -425,19 +440,23 @@ class VDP_Leads {
 
     /**
      * Get status options for leads.
+     * Matches the Leads Management plugin status system.
      *
      * @return array Status options.
      */
     public function get_status_options() {
-        // Based on the original leads plugin structure
+        // Check if Leads Management plugin status utility is available
+        if (class_exists('LTB_Leads_Status_Utils')) {
+            return LTB_Leads_Status_Utils::get_status_options();
+        }
+        
+        // Fallback to match the Leads Management plugin default statuses
         return array(
-            'inicial' => __('Inicial', 'vendor-dashboard-pro'),
-            'contactado' => __('Contactado', 'vendor-dashboard-pro'),
-            'cita-agendada' => __('Cita Agendada', 'vendor-dashboard-pro'),
-            'propuesta-enviada' => __('Propuesta Enviada', 'vendor-dashboard-pro'),
-            'negociacion' => __('Negociación', 'vendor-dashboard-pro'),
-            'cerrado-ganado' => __('Cerrado Ganado', 'vendor-dashboard-pro'),
-            'cerrado-perdido' => __('Cerrado Perdido', 'vendor-dashboard-pro')
+            'nuevo' => __('Nuevo', 'vendor-dashboard-pro'),
+            'con-presupuesto' => __('Con Presupuesto', 'vendor-dashboard-pro'),
+            'por-cerrar' => __('Por cerrar', 'vendor-dashboard-pro'),
+            'con-contrato' => __('Con contrato', 'vendor-dashboard-pro'),
+            'perdido' => __('Perdido', 'vendor-dashboard-pro')
         );
     }
 
@@ -447,11 +466,16 @@ class VDP_Leads {
      * @return array Active status options.
      */
     public function get_active_status_options() {
+        // Check if Leads Management plugin status utility is available
+        if (class_exists('LTB_Leads_Status_Utils')) {
+            return LTB_Leads_Status_Utils::get_active_status_options();
+        }
+        
         $all_statuses = $this->get_status_options();
         
-        // Remove closed states for pipeline view
-        unset($all_statuses['cerrado-ganado']);
-        unset($all_statuses['cerrado-perdido']);
+        // Remove closed states for pipeline view (based on LM plugin structure)
+        unset($all_statuses['con-contrato']);
+        unset($all_statuses['perdido']);
         
         return $all_statuses;
     }
@@ -473,7 +497,7 @@ class VDP_Leads {
         
         // Group leads by status
         foreach ($leads as $lead) {
-            $status = $lead->evento_status ?: 'inicial';
+            $status = $lead->evento_status ?: 'nuevo'; // Changed default from 'inicial' to 'nuevo'
             if (isset($grouped[$status])) {
                 $grouped[$status][] = $lead;
             }
@@ -502,7 +526,7 @@ class VDP_Leads {
         
         // Count leads by status
         foreach ($leads as $lead) {
-            $status = $lead->lead_status ?: 'inicial';
+            $status = $lead->evento_status ?: 'nuevo'; // Changed to match event status field and default
             if (isset($stats[$status])) {
                 $stats[$status]++;
             }
