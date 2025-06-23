@@ -206,9 +206,60 @@ class VDP_Router {
      * @param string $item Current item ID.
      */
     public static function render_content($action, $item) {
-        // Apply filter for debugging purposes
-        if (has_filter('vdp_router_render_content')) {
-            return apply_filters('vdp_router_render_content', $action, $item);
+        // VERIFICACIÓN CRÍTICA: Si estamos en una vista de mensaje con item, saltarnos toda la lógica
+        // compleja y cargar directamente la plantilla de vista de mensaje
+        if ($action === 'messages' && !empty($item)) {
+            vdp_debug_log("SOLUCIÓN DIRECTA: Detectado acción 'messages' con item ID: " . $item, "info");
+            
+            // Obtener datos del vendedor y mensaje
+            $vendor = vdp_get_current_vendor();
+            $vendor_id = null;
+            
+            if ($vendor) {
+                if (is_object($vendor) && method_exists($vendor, 'get_id')) {
+                    $vendor_id = $vendor->get_id();
+                } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
+                    $vendor_id = ($vendor->get_id)();
+                }
+            }
+            
+            // Obtener el mensaje - primero intentar real, luego demo
+            if (class_exists('VDP_Messages')) {
+                vdp_debug_log("Obteniendo datos del mensaje ID: " . $item, "info");
+                
+                if (method_exists('VDP_Messages', 'are_tables_created') && VDP_Messages::are_tables_created()) {
+                    $message = VDP_Messages::get_message($item, $vendor_id);
+                    
+                    if (!$message) {
+                        vdp_debug_log("Mensaje real no encontrado, usando mensaje demo", "info");
+                        $message = VDP_Messages::get_demo_message($item);
+                    }
+                } else {
+                    $message = VDP_Messages::get_demo_message($item);
+                }
+            } else {
+                // Mensaje ficticio
+                vdp_debug_log("Clase VDP_Messages no encontrada, creando mensaje ficticio", "warning");
+                $message = array(
+                    'id' => $item,
+                    'subject' => 'Mensaje de ejemplo',
+                    'content' => 'Este es un mensaje de ejemplo porque no se pudo encontrar el mensaje real.',
+                    'date' => date('Y-m-d H:i:s'),
+                    'is_read' => false,
+                    'sender_name' => 'Usuario de prueba',
+                    'sender_id' => 1,
+                    'sender_avatar' => '',
+                    'product_title' => 'Producto de prueba',
+                    'product_url' => '#',
+                    'replies' => array(),
+                    'interactions' => array(),
+                );
+            }
+            
+            // FORZAR INCLUIR LA PLANTILLA DE VISTA DE MENSAJE
+            vdp_debug_log("Forzando carga de plantilla message-view-content.php", "info");
+            include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
+            return;
         }
         
         // Variable para controlar si ya se ha renderizado contenido
@@ -225,23 +276,11 @@ class VDP_Router {
         $action_hook = 'vdp_' . $action . '_content';
         
         // Si es una vista de detalle, agregar sufijo
-        if ($item && $action != 'dashboard') {
+        if ($item && $action != 'dashboard' && $action != 'messages') { // Excluir messages de esta lógica
             // Ejecutar hook específico para vista de detalle
             $detail_hook = 'vdp_' . $action . '_view_content';
             
             vdp_debug_log("Attempting to use detail hook: " . $detail_hook, "info");
-            
-            // Depuración de hooks
-            global $wp_filter;
-            vdp_debug_log("Lista de hooks registrados relevantes:", "info");
-            if (isset($wp_filter[$detail_hook])) {
-                vdp_debug_log("Hook $detail_hook existe con estas callbacks:", "info");
-                foreach ($wp_filter[$detail_hook]->callbacks as $priority => $callbacks) {
-                    vdp_debug_log("  Prioridad $priority: " . count($callbacks) . " callbacks", "info");
-                }
-            } else {
-                vdp_debug_log("Hook $detail_hook NO existe en wp_filter!", "warning");
-            }
             
             // Primero verificar si alguien está escuchando este hook
             if (has_action($detail_hook)) {
@@ -251,22 +290,6 @@ class VDP_Router {
                 return; // Salir después de renderizar
             } else {
                 vdp_debug_log("No listeners found for detail hook: " . $detail_hook, "warning");
-                
-                // Intento forzar la inicialización de los módulos si aún no se han inicializado
-                if ($action === 'messages' && class_exists('VDP_Messages')) {
-                    vdp_debug_log("Intentando inicializar VDP_Messages manualmente", "info");
-                    $messages = VDP_Messages::instance();
-                    
-                    // Verificar nuevamente si el hook existe después de la inicialización
-                    if (has_action($detail_hook)) {
-                        vdp_debug_log("¡Hook encontrado después de inicialización manual!", "info");
-                        do_action($detail_hook, $item);
-                        $content_rendered = true;
-                        return;
-                    } else {
-                        vdp_debug_log("Hook sigue sin encontrarse después de inicialización manual", "warning");
-                    }
-                }
             }
         }
         
@@ -311,67 +334,10 @@ class VDP_Router {
                     break;
                     
                 case 'messages':
-                    // SOLUCIÓN FORZADA PARA VISTA DE MENSAJES
-                    // Si hay un vdp-item en la URL, siempre cargamos la vista de mensaje individual
-                    if (isset($_GET['vdp-item']) && !empty($_GET['vdp-item'])) {
-                        $message_id = absint($_GET['vdp-item']);
-                        vdp_debug_log("SOLUCIÓN FORZADA: Cargando vista de mensaje individual para ID: " . $message_id, "info");
-                        
-                        // Obtener información del vendedor actual
-                        $vendor = vdp_get_current_vendor();
-                        $vendor_id = null;
-                        
-                        if ($vendor) {
-                            if (is_object($vendor) && method_exists($vendor, 'get_id')) {
-                                $vendor_id = $vendor->get_id();
-                            } elseif (is_object($vendor) && isset($vendor->get_id) && is_callable($vendor->get_id)) {
-                                $vendor_id = ($vendor->get_id)();
-                            }
-                        }
-                        
-                        // Obtener datos del mensaje - usar mensaje de demo si no hay tablas o mensaje real
-                        if (class_exists('VDP_Messages')) {
-                            if (method_exists('VDP_Messages', 'are_tables_created') && VDP_Messages::are_tables_created()) {
-                                $message = VDP_Messages::get_message($message_id, $vendor_id);
-                                
-                                // Si no encontramos el mensaje, intentamos cargar un mensaje de demo
-                                if (!$message) {
-                                    vdp_debug_log("No se encontró mensaje real, usando mensaje de demo", "info");
-                                    $message = VDP_Messages::get_demo_message($message_id);
-                                }
-                            } else {
-                                $message = VDP_Messages::get_demo_message($message_id);
-                            }
-                        } else {
-                            // Si no existe la clase de mensajes, crear un mensaje ficticio
-                            vdp_debug_log("Clase VDP_Messages no encontrada, creando mensaje ficticio", "warning");
-                            $message = array(
-                                'id' => $message_id,
-                                'subject' => 'Mensaje de ejemplo',
-                                'content' => 'Este es un mensaje de ejemplo generado porque no se pudo encontrar el mensaje real.',
-                                'date' => date('Y-m-d H:i:s'),
-                                'is_read' => false,
-                                'sender_name' => 'Usuario',
-                                'sender_id' => 1,
-                                'sender_avatar' => '',
-                                'product_title' => 'Producto',
-                                'product_url' => '#',
-                                'replies' => array(),
-                                'interactions' => array(),
-                            );
-                        }
-                        
-                        // SIEMPRE incluir la plantilla de vista de mensaje, incluso si no hay mensaje
-                        // Si no hay mensaje, se mostrará un error dentro de la plantilla
-                        vdp_debug_log("Cargando plantilla de vista de mensaje", "info");
-                        include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
-                        $content_rendered = true;
-                    } else {
-                        // Si no hay vdp-item, mostrar la lista de mensajes
-                        vdp_debug_log("Including messages-content.php (list view)", "info");
-                        include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
-                        $content_rendered = true;
-                    }
+                    // Este caso ahora es sólo para la lista de mensajes,
+                    // la vista individual se maneja al inicio de la función render_content
+                    vdp_debug_log("Including messages-content.php (list view) - Caso del switch", "info");
+                    include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
                     break;
                     
                 case 'analytics':

@@ -46,7 +46,54 @@ if (!defined('ABSPATH')) {
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             margin-bottom: 1.5rem;
         }
+        
+        /* Estilos adicionales para asegurar la vista de detalle */
+        .vdp-message-subject h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .vdp-message-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 14px;
+            color: var(--vdp-message-text-light, #757575);
+        }
+        
+        .vdp-conversation {
+            margin-bottom: 2rem;
+        }
+        
+        .vdp-conversation-item {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+        
+        .vdp-customer-message {
+            flex-direction: row;
+        }
+        
+        .vdp-vendor-message {
+            flex-direction: row-reverse;
+        }
+        
+        .vdp-reply-form {
+            background-color: var(--vdp-gray-50, #f9fafb);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px dashed var(--vdp-gray-200, #e5e7eb);
+        }
     </style>
+    
+    <!-- Script para detectar si estamos en la vista correcta -->
+    <script>
+    console.log("CARGANDO PLANTILLA DE VISTA DE MENSAJE INDIVIDUAL");
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("DOM cargado en vista de mensaje individual");
+    });
+    </script>
     
     <?php if (!$message) : ?>
         <div class="vdp-notice vdp-notice-error">

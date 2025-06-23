@@ -700,6 +700,10 @@
             // Build URL with message ID - asegurar que usamos 'messages' (plural)
             var url = VDP.buildDashboardUrl('messages', messageId);
             
+            // FORZAR NAVEGACIÓN DIRECTA - Logging extra para ayudar a debugear
+            console.log('FORZANDO NAVEGACIÓN DIRECTA a URL: ' + url);
+            console.log('Esta línea fuerza un reload completo de la página');
+            
             // Force a page reload to this URL instead of AJAX
             window.location.href = url;
             
