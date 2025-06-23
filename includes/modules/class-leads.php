@@ -265,7 +265,7 @@ class VDP_Leads {
                 'website' as lead_source,
                 (SELECT COUNT(*) FROM {$this->eventos_table} WHERE lead_id = l._ID) as total_eventos
             FROM {$this->leads_table} l
-            LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID"
+            LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
             INNER JOIN {$wpdb->posts} listings ON (
                 CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
                 OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
