@@ -409,7 +409,45 @@ class VDP_Ajax_Handler {
         // Get vendor user ID for notification (if needed)
         $vendor_user_id = get_post_field('post_author', $vendor_id);
         
-        // Todo: Send notification email to vendor
+        // Send notification email to vendor
+        $sender_user = get_userdata($sender_id);
+        $vendor_user = get_userdata($vendor_user_id);
+        
+        if ($sender_user && $vendor_user && !empty($vendor_user->user_email)) {
+            $sender_name = $sender_user->display_name ?: $sender_user->user_login;
+            $sender_email = $sender_user->user_email;
+            $vendor_email = $vendor_user->user_email;
+            $vendor_name = $vendor_user->display_name ?: $vendor_user->user_login;
+            
+            // Email subject
+            $email_subject = sprintf(
+                __('[%s] New message about: %s', 'vendor-dashboard-pro'),
+                get_bloginfo('name'),
+                $listing->post_title
+            );
+            
+            // Email content
+            $email_message = sprintf(
+                __("Hello %s,\n\nYou have received a new message about your listing \"%s\".\n\nFrom: %s (%s)\nSubject: %s\n\nMessage:\n%s\n\nYou can view and respond to this message in your vendor dashboard:\n%s\n\nBest regards,\n%s", 'vendor-dashboard-pro'),
+                $vendor_name,
+                $listing->post_title,
+                $sender_name,
+                $sender_email,
+                $subject,
+                $message,
+                vdp_get_dashboard_url('messages'),
+                get_bloginfo('name')
+            );
+            
+            // Email headers
+            $headers = array(
+                'Content-Type: text/plain; charset=UTF-8',
+                'Reply-To: ' . $sender_name . ' <' . $sender_email . '>'
+            );
+            
+            // Send email
+            wp_mail($vendor_email, $email_subject, $email_message, $headers);
+        }
         
         wp_send_json_success(array(
             'message_id' => $message_id,
