@@ -40,6 +40,9 @@ class VDP_Messages {
         // Initialize hooks
         add_action('vdp_messages_content', array($this, 'render_messages_list'), 10);
         add_action('vdp_message_view_content', array($this, 'render_message_view'), 10);
+        
+        // AJAX hooks
+        add_action('wp_ajax_vdp_send_message', array($this, 'ajax_send_message'));
     }
 
     /**
@@ -62,6 +65,17 @@ class VDP_Messages {
             $vendor_id = ($vendor->get_id)();
         } else {
             return; // No podemos continuar sin un vendor_id
+        }
+        
+        // Check if compose mode is requested
+        $compose_mode = isset($_GET['compose']) && $_GET['compose'] === '1';
+        $lead_id = isset($_GET['lead_id']) ? absint($_GET['lead_id']) : 0;
+        $lead_email = isset($_GET['lead_email']) ? sanitize_email($_GET['lead_email']) : '';
+        
+        if ($compose_mode) {
+            // Include compose template
+            include VDP_PLUGIN_DIR . 'templates/compose-message-content.php';
+            return;
         }
         
         // Get current page
@@ -540,6 +554,153 @@ class VDP_Messages {
                 'title' => __('Out of stock', 'vendor-dashboard-pro'),
                 'content' => __('Thank you for your interest. Unfortunately, this product is currently out of stock. It should be available again within 2 weeks.', 'vendor-dashboard-pro'),
             ),
+        );
+    }
+    
+    /**
+     * AJAX handler for sending messages.
+     */
+    public function ajax_send_message() {
+        // Verify nonce
+        if (!check_ajax_referer('vdp_compose_message', 'nonce', false)) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Check if user is vendor
+        if (!vdp_is_user_vendor()) {
+            wp_send_json_error(array('message' => __('Access denied.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Get and validate input
+        $recipient_name = isset($_POST['recipient_name']) ? sanitize_text_field($_POST['recipient_name']) : '';
+        $recipient_email = isset($_POST['recipient_email']) ? sanitize_email($_POST['recipient_email']) : '';
+        $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
+        $content = isset($_POST['content']) ? sanitize_textarea_field($_POST['content']) : '';
+        $lead_id = isset($_POST['lead_id']) ? absint($_POST['lead_id']) : 0;
+
+        // Validate required fields
+        if (empty($recipient_name) || empty($recipient_email) || empty($subject) || empty($content)) {
+            wp_send_json_error(array('message' => __('Please fill in all required fields.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        if (!is_email($recipient_email)) {
+            wp_send_json_error(array('message' => __('Please enter a valid email address.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            wp_send_json_error(array('message' => __('Vendor information not found.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        $vendor_id = $vendor->get_id();
+        $vendor_user = wp_get_current_user();
+
+        // Prepare email headers
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . $vendor_user->display_name . ' <' . $vendor_user->user_email . '>',
+            'Reply-To: ' . $vendor_user->user_email
+        );
+
+        // Prepare email content
+        $email_subject = $subject;
+        $email_content = $this->format_email_content($content, $vendor_user, $lead_id);
+
+        // Send email
+        $sent = wp_mail($recipient_email, $email_subject, $email_content, $headers);
+
+        if ($sent) {
+            // Save message to database if tables exist
+            if (self::are_tables_created()) {
+                $this->save_sent_message($vendor_id, $recipient_name, $recipient_email, $subject, $content, $lead_id);
+            }
+
+            wp_send_json_success(array(
+                'message' => __('Message sent successfully!', 'vendor-dashboard-pro')
+            ));
+        } else {
+            wp_send_json_error(array(
+                'message' => __('Failed to send message. Please try again.', 'vendor-dashboard-pro')
+            ));
+        }
+    }
+    
+    /**
+     * Format email content with proper HTML structure.
+     */
+    private function format_email_content($content, $vendor_user, $lead_id = 0) {
+        $site_name = get_bloginfo('name');
+        $site_url = home_url();
+        
+        $html = '<html><head><title>' . esc_html($site_name) . '</title></head><body>';
+        $html .= '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">';
+        
+        // Header
+        $html .= '<div style="border-bottom: 2px solid #007cba; padding-bottom: 15px; margin-bottom: 25px;">';
+        $html .= '<h2 style="color: #007cba; margin: 0;">' . esc_html($site_name) . '</h2>';
+        $html .= '</div>';
+        
+        // Message content
+        $html .= '<div style="margin-bottom: 30px;">';
+        $html .= '<p style="color: #333; line-height: 1.6;">' . nl2br(esc_html($content)) . '</p>';
+        $html .= '</div>';
+        
+        // Vendor signature
+        $html .= '<div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">';
+        $html .= '<p style="color: #666; font-size: 14px; margin: 0;">';
+        $html .= __('Best regards,', 'vendor-dashboard-pro') . '<br>';
+        $html .= '<strong>' . esc_html($vendor_user->display_name) . '</strong><br>';
+        $html .= '<a href="' . esc_url($site_url) . '">' . esc_html($site_name) . '</a>';
+        $html .= '</p>';
+        $html .= '</div>';
+        
+        // Footer
+        $html .= '<div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 20px; text-align: center;">';
+        $html .= '<p style="color: #999; font-size: 12px;">';
+        $html .= __('This message was sent from', 'vendor-dashboard-pro') . ' ' . esc_html($site_name);
+        $html .= '</p>';
+        $html .= '</div>';
+        
+        $html .= '</div></body></html>';
+        
+        return $html;
+    }
+    
+    /**
+     * Save sent message to database.
+     */
+    private function save_sent_message($vendor_id, $recipient_name, $recipient_email, $subject, $content, $lead_id = 0) {
+        global $wpdb;
+        
+        $table_messages = $wpdb->prefix . 'vdp_messages';
+        
+        // Get or create recipient user
+        $recipient_user = get_user_by('email', $recipient_email);
+        $recipient_user_id = $recipient_user ? $recipient_user->ID : 0;
+        
+        // Insert message
+        $wpdb->insert(
+            $table_messages,
+            array(
+                'vendor_id' => $vendor_id,
+                'sender_id' => $recipient_user_id,
+                'recipient_name' => $recipient_name,
+                'recipient_email' => $recipient_email,
+                'subject' => $subject,
+                'content' => $content,
+                'lead_id' => $lead_id,
+                'is_read' => 1, // Mark as read since it's sent by vendor
+                'is_sent_by_vendor' => 1,
+                'date_created' => current_time('mysql'),
+                'is_archived' => 0
+            ),
+            array('%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%d')
         );
     }
 }
