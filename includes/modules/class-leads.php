@@ -249,6 +249,7 @@ class VDP_Leads {
         $values = array();
 
         // Base query - filter by vendor's listings using URL matching
+        $site_url = trailingslashit(site_url());
         $query = "
             SELECT DISTINCT
                 l._ID,
@@ -272,10 +273,9 @@ class VDP_Leads {
             FROM {$this->leads_table} l
             LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
             INNER JOIN {$wpdb->posts} listings ON (
-                CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR listings.guid = e.evento_servicio_de_interes
-                OR e.evento_servicio_de_interes LIKE CONCAT('%/', listings.post_name, '/%')
+                listings.guid = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}listing/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}', listings.post_name, '/') = e.evento_servicio_de_interes
             )
             WHERE listings.post_type = 'hp_listing' 
             AND listings.post_parent = %d
@@ -364,15 +364,15 @@ class VDP_Leads {
         $where = array('1=1');
         $values = array($vendor_id);
 
+        $site_url = trailingslashit(site_url());
         $query = "
             SELECT COUNT(DISTINCT l._ID)
             FROM {$this->leads_table} l
             LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
             INNER JOIN {$wpdb->posts} listings ON (
-                CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR listings.guid = e.evento_servicio_de_interes
-                OR e.evento_servicio_de_interes LIKE CONCAT('%/', listings.post_name, '/%')
+                listings.guid = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}listing/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}', listings.post_name, '/') = e.evento_servicio_de_interes
             )
             WHERE listings.post_type = 'hp_listing' 
             AND listings.post_parent = %d
@@ -462,15 +462,15 @@ class VDP_Leads {
 
         global $wpdb;
 
+        $site_url = trailingslashit(site_url());
         $count = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*)
             FROM {$this->leads_table} l
             INNER JOIN {$this->eventos_table} e ON e.lead_id = l._ID
             INNER JOIN {$wpdb->posts} listings ON (
-                CONCAT('/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR CONCAT('/listing/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR listings.guid = e.evento_servicio_de_interes
-                OR e.evento_servicio_de_interes LIKE CONCAT('%/', listings.post_name, '/%')
+                listings.guid = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}listing/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}', listings.post_name, '/') = e.evento_servicio_de_interes
             )
             WHERE l._ID = %d 
             AND listings.post_type = 'hp_listing' 

@@ -225,7 +225,7 @@ if (!isset($paged)) {
                                     vdp_debug_log("URL generada para mensaje ID {$message['id']}: $view_url", "info");
                                     ?>
                                     <!-- Enlace directo FORZADO para vista individual de mensaje -->
-                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm direct-link" onclick="window.location.href='<?php echo esc_url($view_url); ?>'; return false;">
+                                    <a href="<?php echo esc_url($view_url); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm direct-link" target="_blank">
                                         <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
                                     </a>
                                 </div>

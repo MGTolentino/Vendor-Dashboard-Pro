@@ -60,7 +60,7 @@ if (!defined('ABSPATH')) {
                                 </div>
                                 
                                 <div class="vdp-message-actions">
-                                    <a href="<?php echo esc_url(add_query_arg('message_id', $message['id'])); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm">
+                                    <a href="<?php echo esc_url(add_query_arg('message_id', $message['id'])); ?>" class="vdp-btn vdp-btn-primary vdp-btn-sm" target="_blank">
                                         <?php esc_html_e('View', 'vendor-dashboard-pro'); ?>
                                     </a>
                                 </div>
