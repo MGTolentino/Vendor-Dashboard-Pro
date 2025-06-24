@@ -45,6 +45,21 @@
                 VDP.triggerAddListingForm();
             });
             
+            // Handle Add Listing links that use ajax-link class with specific data attributes
+            $(document).on('click', 'a[data-action="products"][data-item="add"]', function(e) {
+                e.preventDefault();
+                VDP.triggerAddListingForm();
+            });
+            
+            // Handle Add Listing quick action cards
+            $(document).on('click', 'a[href*="vdp-action=products&vdp-item=add"]', function(e) {
+                // Only if it's not already handled by other listeners
+                if (!$(this).hasClass('vdp-add-listing-btn') && !$(this).data('action')) {
+                    e.preventDefault();
+                    VDP.triggerAddListingForm();
+                }
+            });
+            
             // Handle AJAX navigation
             $(document).on('click', '.vdp-content-area a.vdp-ajax-link', function(e) {
                 // Skip if this is a direct-link class or has message-related classes
@@ -970,8 +985,8 @@
          * Trigger HivePress add listing form
          */
         triggerAddListingForm: function() {
-            // Redirect directly to submit listing page
-            window.location.href = '/submit-listing/details/';
+            // Open submit listing page in new tab
+            window.open('/submit-listing/details/', '_blank');
         }
     };
 

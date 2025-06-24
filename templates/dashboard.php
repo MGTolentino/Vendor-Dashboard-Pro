@@ -257,13 +257,6 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                     </div>
                     
                     <div class="vdp-header-actions">
-                        <?php if ($current_action === 'products') : ?>
-                            <a href="<?php echo esc_url(vdp_get_dashboard_url('products', 'add')); ?>" class="vdp-btn vdp-btn-primary vdp-ajax-link" data-action="products" data-item="add">
-                                <i class="fas fa-plus"></i>
-                                <?php esc_html_e('Add New Listing', 'vendor-dashboard-pro'); ?>
-                            </a>
-                        <?php endif; ?>
-                        
                         <div class="vdp-notifications">
                             <a href="#" class="vdp-notification-toggle">
                                 <i class="fas fa-bell"></i>
