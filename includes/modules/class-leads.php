@@ -274,8 +274,8 @@ class VDP_Leads {
             LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
             INNER JOIN {$wpdb->posts} listings ON (
                 listings.guid = e.evento_servicio_de_interes
-                OR CONCAT('{$site_url}listing/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR CONCAT('{$site_url}', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}contrata-el-servicio-de/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}book-service-for/', listings.post_name, '/') = e.evento_servicio_de_interes
             )
             WHERE listings.post_type = 'hp_listing' 
             AND listings.post_parent = %d
@@ -371,8 +371,8 @@ class VDP_Leads {
             LEFT JOIN {$this->eventos_table} e ON e.lead_id = l._ID
             INNER JOIN {$wpdb->posts} listings ON (
                 listings.guid = e.evento_servicio_de_interes
-                OR CONCAT('{$site_url}listing/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR CONCAT('{$site_url}', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}contrata-el-servicio-de/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}book-service-for/', listings.post_name, '/') = e.evento_servicio_de_interes
             )
             WHERE listings.post_type = 'hp_listing' 
             AND listings.post_parent = %d
@@ -469,8 +469,8 @@ class VDP_Leads {
             INNER JOIN {$this->eventos_table} e ON e.lead_id = l._ID
             INNER JOIN {$wpdb->posts} listings ON (
                 listings.guid = e.evento_servicio_de_interes
-                OR CONCAT('{$site_url}listing/', listings.post_name, '/') = e.evento_servicio_de_interes
-                OR CONCAT('{$site_url}', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}contrata-el-servicio-de/', listings.post_name, '/') = e.evento_servicio_de_interes
+                OR CONCAT('{$site_url}book-service-for/', listings.post_name, '/') = e.evento_servicio_de_interes
             )
             WHERE l._ID = %d 
             AND listings.post_type = 'hp_listing' 
