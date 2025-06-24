@@ -5,7 +5,7 @@
 jQuery(document).ready(function($) {
     'use strict';
 
-    // Actions dropdown functionality
+    // Actions dropdown functionality with position detection
     $(document).on('click', '.vdp-actions-toggle', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -14,7 +14,19 @@ jQuery(document).ready(function($) {
         var $menu = $dropdown.find('.vdp-actions-menu');
         
         // Close other dropdowns
-        $('.vdp-actions-dropdown').not($dropdown).removeClass('active');
+        $('.vdp-actions-dropdown').not($dropdown).removeClass('active dropup');
+        
+        // Check if menu would go off screen
+        var dropdownOffset = $dropdown.offset();
+        var menuHeight = 200; // Estimated menu height
+        var windowHeight = $(window).height();
+        var windowScroll = $(window).scrollTop();
+        
+        if (dropdownOffset.top - windowScroll + menuHeight > windowHeight - 50) {
+            $dropdown.addClass('dropup');
+        } else {
+            $dropdown.removeClass('dropup');
+        }
         
         // Toggle current dropdown
         $dropdown.toggleClass('active');

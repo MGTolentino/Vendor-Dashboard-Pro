@@ -265,6 +265,8 @@ class VDP_Leads {
                 e.fecha_de_evento,
                 COALESCE(e.tipo_de_evento, 'General Inquiry') as event_name,
                 e.evento_servicio_de_interes,
+                listings.post_title as service_name,
+                listings.ID as listing_id,
                 'website' as lead_source,
                 (SELECT COUNT(*) FROM {$this->eventos_table} WHERE lead_id = l._ID) as total_eventos
             FROM {$this->leads_table} l

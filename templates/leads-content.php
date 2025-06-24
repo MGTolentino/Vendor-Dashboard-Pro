@@ -233,6 +233,7 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                     <tr>
                         <th><?php esc_html_e('Cliente', 'vendor-dashboard-pro'); ?></th>
                         <th><?php esc_html_e('Contacto', 'vendor-dashboard-pro'); ?></th>
+                        <th><?php esc_html_e('Servicio', 'vendor-dashboard-pro'); ?></th>
                         <th><?php esc_html_e('Evento', 'vendor-dashboard-pro'); ?></th>
                         <th><?php esc_html_e('Fecha', 'vendor-dashboard-pro'); ?></th>
                         <th><?php esc_html_e('Estado', 'vendor-dashboard-pro'); ?></th>
@@ -242,7 +243,7 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                 <tbody>
                     <?php if (empty($leads)) : ?>
                         <tr>
-                            <td colspan="6" class="vdp-empty-table">
+                            <td colspan="7" class="vdp-empty-table">
                                 <div class="vdp-empty-state">
                                     <div class="vdp-empty-icon">
                                         <i class="fas fa-user-plus"></i>
@@ -267,6 +268,15 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                                         <div class="vdp-lead-phone">
                                             <i class="fas fa-phone"></i> <?php echo esc_html($lead->lead_phone); ?>
                                         </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="vdp-lead-service">
+                                    <?php if (!empty($lead->service_name)): ?>
+                                        <a href="<?php echo get_permalink($lead->listing_id); ?>" target="_blank" class="vdp-service-link">
+                                            <?php echo esc_html($lead->service_name); ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <?php echo esc_html__('N/A', 'vendor-dashboard-pro'); ?>
                                     <?php endif; ?>
                                 </td>
                                 <td class="vdp-lead-source">
@@ -313,10 +323,10 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                                                 <i class="fas fa-edit"></i>
                                                 <?php esc_html_e('Update Status', 'vendor-dashboard-pro'); ?>
                                             </button>
-                                            <button type="button" class="vdp-action-item vdp-contact-lead" data-lead-id="<?php echo esc_attr($lead->_ID); ?>">
+                                            <a href="<?php echo esc_url(add_query_arg(array('vdp-action' => 'messages', 'compose' => '1', 'lead_id' => $lead->_ID, 'lead_email' => $lead->lead_email), vdp_get_dashboard_url())); ?>" class="vdp-action-item vdp-send-message">
                                                 <i class="fas fa-envelope"></i>
                                                 <?php esc_html_e('Send Message', 'vendor-dashboard-pro'); ?>
-                                            </button>
+                                            </a>
                                         </div>
                                     </div>
                                 </td>

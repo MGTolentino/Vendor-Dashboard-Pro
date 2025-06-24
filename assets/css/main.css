@@ -69,6 +69,11 @@
 }
 
 /* Dashboard Layout */
+.vdp-dashboard-wrapper {
+    width: 100%;
+    max-width: 100%;
+}
+
 .vdp-dashboard {
     display: flex;
     background-color: #fff;
@@ -77,6 +82,8 @@
     margin: var(--vdp-spacing-lg) 0;
     overflow: hidden;
     position: relative;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* Sidebar */
