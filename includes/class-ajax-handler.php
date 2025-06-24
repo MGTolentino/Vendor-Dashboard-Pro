@@ -413,11 +413,27 @@ class VDP_Ajax_Handler {
         $sender_user = get_userdata($sender_id);
         $vendor_user = get_userdata($vendor_user_id);
         
+        // Debug logging
+        if (function_exists('vdp_debug_log')) {
+            vdp_debug_log("VDP Messages - Sender ID: " . $sender_id, "info");
+            vdp_debug_log("VDP Messages - Vendor User ID: " . $vendor_user_id, "info");
+            vdp_debug_log("VDP Messages - Sender User: " . ($sender_user ? 'Found' : 'NOT FOUND'), "info");
+            vdp_debug_log("VDP Messages - Vendor User: " . ($vendor_user ? 'Found' : 'NOT FOUND'), "info");
+        }
+        
         if ($sender_user && $vendor_user && !empty($vendor_user->user_email)) {
             $sender_name = $sender_user->display_name ?: $sender_user->user_login;
             $sender_email = $sender_user->user_email;
             $vendor_email = $vendor_user->user_email;
             $vendor_name = $vendor_user->display_name ?: $vendor_user->user_login;
+            
+            // Debug logging emails
+            if (function_exists('vdp_debug_log')) {
+                vdp_debug_log("VDP Messages - Sender Name: " . $sender_name, "info");
+                vdp_debug_log("VDP Messages - Sender Email: " . $sender_email, "info");
+                vdp_debug_log("VDP Messages - Vendor Name: " . $vendor_name, "info");
+                vdp_debug_log("VDP Messages - Vendor Email: " . $vendor_email, "info");
+            }
             
             // Email subject
             $email_subject = sprintf(
@@ -445,8 +461,38 @@ class VDP_Ajax_Handler {
                 'Reply-To: ' . $sender_name . ' <' . $sender_email . '>'
             );
             
+            // Debug logging email details
+            if (function_exists('vdp_debug_log')) {
+                vdp_debug_log("VDP Messages - Email Subject: " . $email_subject, "info");
+                vdp_debug_log("VDP Messages - Email Headers: " . print_r($headers, true), "info");
+            }
+            
             // Send email
-            wp_mail($vendor_email, $email_subject, $email_message, $headers);
+            $mail_result = wp_mail($vendor_email, $email_subject, $email_message, $headers);
+            
+            // Debug logging result
+            if (function_exists('vdp_debug_log')) {
+                vdp_debug_log("VDP Messages - wp_mail result: " . ($mail_result ? 'SUCCESS' : 'FAILED'), $mail_result ? "info" : "error");
+                if (!$mail_result) {
+                    global $phpmailer;
+                    if (isset($phpmailer) && is_object($phpmailer)) {
+                        vdp_debug_log("VDP Messages - PHPMailer Error: " . $phpmailer->ErrorInfo, "error");
+                    }
+                }
+            }
+        } else {
+            // Debug logging why email was not sent
+            if (function_exists('vdp_debug_log')) {
+                if (!$sender_user) {
+                    vdp_debug_log("VDP Messages - Email NOT sent: Sender user not found", "error");
+                }
+                if (!$vendor_user) {
+                    vdp_debug_log("VDP Messages - Email NOT sent: Vendor user not found", "error");
+                }
+                if ($vendor_user && empty($vendor_user->user_email)) {
+                    vdp_debug_log("VDP Messages - Email NOT sent: Vendor email is empty", "error");
+                }
+            }
         }
         
         wp_send_json_success(array(
