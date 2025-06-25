@@ -157,6 +157,22 @@ class VDP_Assets {
         // También cargamos el CSS de mensajes en las páginas de listing individual para el modal de contacto
         if (is_singular('hp_listing') && vdp_is_active()) {
             wp_enqueue_style('vdp-messages');
+            wp_enqueue_script('vdp-contact-modal');
+            
+            // Localize script for contact modal
+            wp_localize_script(
+                'vdp-contact-modal',
+                'vdp_contact_vars',
+                array(
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                    'nonce' => wp_create_nonce('vdp-contact-nonce'),
+                    'texts' => array(
+                        'regarding' => __('Regarding:', 'vendor-dashboard-pro'),
+                        'message_sent' => __('Your message has been sent successfully!', 'vendor-dashboard-pro'),
+                        'error' => __('An error occurred. Please try again.', 'vendor-dashboard-pro'),
+                    ),
+                )
+            );
         }
     }
 

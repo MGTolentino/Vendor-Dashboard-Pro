@@ -670,7 +670,85 @@ class VDP_Ajax_Handler {
             array('%d')
         );
         
-        // Todo: Send notification email to customer
+        // Send notification email to customer
+        $customer_user = get_userdata($message->sender_id);
+        $vendor_user = get_userdata($user_id);
+        
+        // Debug logging
+        error_log("VDP Reply - Message ID: " . $message_id);
+        error_log("VDP Reply - Customer ID: " . $message->sender_id);
+        error_log("VDP Reply - Vendor ID: " . $user_id);
+        error_log("VDP Reply - Customer User: " . ($customer_user ? 'Found' : 'NOT FOUND'));
+        error_log("VDP Reply - Vendor User: " . ($vendor_user ? 'Found' : 'NOT FOUND'));
+        
+        if ($customer_user && $vendor_user && !empty($customer_user->user_email)) {
+            $customer_name = $customer_user->display_name ?: $customer_user->user_login;
+            $customer_email = $customer_user->user_email;
+            $vendor_name = $vendor_user->display_name ?: $vendor_user->user_login;
+            $vendor_email = $vendor_user->user_email;
+            
+            // Debug logging emails
+            error_log("VDP Reply - Customer Name: " . $customer_name);
+            error_log("VDP Reply - Customer Email: " . $customer_email);
+            error_log("VDP Reply - Vendor Name: " . $vendor_name);
+            error_log("VDP Reply - Vendor Email: " . $vendor_email);
+            
+            // Get listing info
+            $listing = get_post($message->listing_id);
+            $listing_title = $listing ? $listing->post_title : 'Unknown Listing';
+            
+            // Email subject
+            $email_subject = sprintf(
+                __('[%s] Reply to your message about: %s', 'vendor-dashboard-pro'),
+                get_bloginfo('name'),
+                $listing_title
+            );
+            
+            // Email content
+            $email_message = sprintf(
+                __("Hello %s,\n\n%s has replied to your message about \"%s\".\n\nOriginal Subject: %s\n\nReply:\n%s\n\nYou can view the full conversation or send another message by visiting:\n%s\n\nBest regards,\n%s", 'vendor-dashboard-pro'),
+                $customer_name,
+                $vendor_name,
+                $listing_title,
+                $message->subject,
+                $content,
+                get_permalink($message->listing_id),
+                get_bloginfo('name')
+            );
+            
+            // Email headers
+            $headers = array(
+                'Content-Type: text/plain; charset=UTF-8',
+                'Reply-To: ' . $vendor_name . ' <' . $vendor_email . '>'
+            );
+            
+            // Debug logging email details
+            error_log("VDP Reply - Email Subject: " . $email_subject);
+            error_log("VDP Reply - Email Headers: " . print_r($headers, true));
+            
+            // Send email
+            $mail_result = wp_mail($customer_email, $email_subject, $email_message, $headers);
+            
+            // Debug logging result
+            error_log("VDP Reply - wp_mail result: " . ($mail_result ? 'SUCCESS' : 'FAILED'));
+            if (!$mail_result) {
+                global $phpmailer;
+                if (isset($phpmailer) && is_object($phpmailer)) {
+                    error_log("VDP Reply - PHPMailer Error: " . $phpmailer->ErrorInfo);
+                }
+            }
+        } else {
+            // Debug logging why email was not sent
+            if (!$customer_user) {
+                error_log("VDP Reply - Email NOT sent: Customer user not found");
+            }
+            if (!$vendor_user) {
+                error_log("VDP Reply - Email NOT sent: Vendor user not found");
+            }
+            if ($customer_user && empty($customer_user->user_email)) {
+                error_log("VDP Reply - Email NOT sent: Customer email is empty");
+            }
+        }
         
         wp_send_json_success(array(
             'reply_id' => $reply_id,
