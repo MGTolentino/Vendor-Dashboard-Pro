@@ -139,6 +139,12 @@ class VDP_Products {
         do_action('vdp_before_products_content', $vendor_id, $listings, $total_listings);
         
         // *** ASEGURARNOS QUE LAS VARIABLES ESTÁN DISPONIBLES EN EL TEMPLATE ***
+        // Crear un array con todas las variables necesarias para el template
+        $template_vars = compact('vendor_id', 'listings', 'total_listings', 'total_pages', 'per_page', 'paged', 'categories');
+        
+        // Extraer las variables al scope actual para que estén disponibles en el template
+        extract($template_vars);
+        
         // Incluir explícitamente el template con las variables en el scope
         include VDP_PLUGIN_DIR . 'templates/products-content.php';
         

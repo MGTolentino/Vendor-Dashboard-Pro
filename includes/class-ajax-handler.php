@@ -413,11 +413,6 @@ class VDP_Ajax_Handler {
         $sender_user = get_userdata($sender_id);
         $vendor_user = get_userdata($vendor_user_id);
         
-        // Debug logging
-        error_log("VDP Messages - Sender ID: " . $sender_id);
-        error_log("VDP Messages - Vendor User ID: " . $vendor_user_id);
-        error_log("VDP Messages - Sender User: " . ($sender_user ? 'Found' : 'NOT FOUND'));
-        error_log("VDP Messages - Vendor User: " . ($vendor_user ? 'Found' : 'NOT FOUND'));
         
         if ($sender_user && $vendor_user && !empty($vendor_user->user_email)) {
             $sender_name = $sender_user->display_name ?: $sender_user->user_login;
@@ -425,11 +420,6 @@ class VDP_Ajax_Handler {
             $vendor_email = $vendor_user->user_email;
             $vendor_name = $vendor_user->display_name ?: $vendor_user->user_login;
             
-            // Debug logging emails
-            error_log("VDP Messages - Sender Name: " . $sender_name);
-            error_log("VDP Messages - Sender Email: " . $sender_email);
-            error_log("VDP Messages - Vendor Name: " . $vendor_name);
-            error_log("VDP Messages - Vendor Email: " . $vendor_email);
             
             // Email subject
             $email_subject = sprintf(
@@ -457,32 +447,12 @@ class VDP_Ajax_Handler {
                 'Reply-To: ' . $sender_name . ' <' . $sender_email . '>'
             );
             
-            // Debug logging email details
-            error_log("VDP Messages - Email Subject: " . $email_subject);
-            error_log("VDP Messages - Email Headers: " . print_r($headers, true));
             
             // Send email
             $mail_result = wp_mail($vendor_email, $email_subject, $email_message, $headers);
             
-            // Debug logging result
-            error_log("VDP Messages - wp_mail result: " . ($mail_result ? 'SUCCESS' : 'FAILED'));
-            if (!$mail_result) {
-                global $phpmailer;
-                if (isset($phpmailer) && is_object($phpmailer)) {
-                    error_log("VDP Messages - PHPMailer Error: " . $phpmailer->ErrorInfo);
-                }
-            }
-        } else {
-            // Debug logging why email was not sent
-            if (!$sender_user) {
-                error_log("VDP Messages - Email NOT sent: Sender user not found");
-            }
-            if (!$vendor_user) {
-                error_log("VDP Messages - Email NOT sent: Vendor user not found");
-            }
-            if ($vendor_user && empty($vendor_user->user_email)) {
-                error_log("VDP Messages - Email NOT sent: Vendor email is empty");
-            }
+            // Send email
+            $mail_result = wp_mail($vendor_email, $email_subject, $email_message, $headers);
         }
         
         wp_send_json_success(array(
@@ -674,12 +644,6 @@ class VDP_Ajax_Handler {
         $customer_user = get_userdata($message->sender_id);
         $vendor_user = get_userdata($user_id);
         
-        // Debug logging
-        error_log("VDP Reply - Message ID: " . $message_id);
-        error_log("VDP Reply - Customer ID: " . $message->sender_id);
-        error_log("VDP Reply - Vendor ID: " . $user_id);
-        error_log("VDP Reply - Customer User: " . ($customer_user ? 'Found' : 'NOT FOUND'));
-        error_log("VDP Reply - Vendor User: " . ($vendor_user ? 'Found' : 'NOT FOUND'));
         
         if ($customer_user && $vendor_user && !empty($customer_user->user_email)) {
             $customer_name = $customer_user->display_name ?: $customer_user->user_login;
@@ -687,11 +651,6 @@ class VDP_Ajax_Handler {
             $vendor_name = $vendor_user->display_name ?: $vendor_user->user_login;
             $vendor_email = $vendor_user->user_email;
             
-            // Debug logging emails
-            error_log("VDP Reply - Customer Name: " . $customer_name);
-            error_log("VDP Reply - Customer Email: " . $customer_email);
-            error_log("VDP Reply - Vendor Name: " . $vendor_name);
-            error_log("VDP Reply - Vendor Email: " . $vendor_email);
             
             // Get listing info
             $listing = get_post($message->listing_id);
@@ -722,32 +681,12 @@ class VDP_Ajax_Handler {
                 'Reply-To: ' . $vendor_name . ' <' . $vendor_email . '>'
             );
             
-            // Debug logging email details
-            error_log("VDP Reply - Email Subject: " . $email_subject);
-            error_log("VDP Reply - Email Headers: " . print_r($headers, true));
             
             // Send email
             $mail_result = wp_mail($customer_email, $email_subject, $email_message, $headers);
             
-            // Debug logging result
-            error_log("VDP Reply - wp_mail result: " . ($mail_result ? 'SUCCESS' : 'FAILED'));
-            if (!$mail_result) {
-                global $phpmailer;
-                if (isset($phpmailer) && is_object($phpmailer)) {
-                    error_log("VDP Reply - PHPMailer Error: " . $phpmailer->ErrorInfo);
-                }
-            }
-        } else {
-            // Debug logging why email was not sent
-            if (!$customer_user) {
-                error_log("VDP Reply - Email NOT sent: Customer user not found");
-            }
-            if (!$vendor_user) {
-                error_log("VDP Reply - Email NOT sent: Vendor user not found");
-            }
-            if ($customer_user && empty($customer_user->user_email)) {
-                error_log("VDP Reply - Email NOT sent: Customer email is empty");
-            }
+            // Send email
+            $mail_result = wp_mail($customer_email, $email_subject, $email_message, $headers);
         }
         
         wp_send_json_success(array(

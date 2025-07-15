@@ -89,6 +89,11 @@ if (!isset($listings) || !is_array($listings)) {
             $vendor_id
         ));
         
+        // Calculate total pages if not set
+        if (!isset($total_pages)) {
+            $total_pages = ceil($total_listings / $per_page);
+        }
+        
         // Get listing categories
         if (function_exists('get_terms')) {
             $categories_terms = get_terms(array(
@@ -235,7 +240,12 @@ if (!isset($listings) || !is_array($listings)) {
     </div>
     
     <!-- Pagination -->
-    <?php if (!empty($listings) && isset($total_pages) && $total_pages > 1) : ?>
+    <?php 
+    // Ensure total_pages is calculated if not set
+    if (!isset($total_pages) && isset($total_listings) && isset($per_page)) {
+        $total_pages = ceil($total_listings / $per_page);
+    }
+    if (!empty($listings) && isset($total_pages) && $total_pages > 1) : ?>
         <div class="vdp-pagination">
             <?php
             $current_page = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
@@ -244,7 +254,7 @@ if (!isset($listings) || !is_array($listings)) {
             // Previous page
             if ($current_page > 1) {
                 $prev_url = add_query_arg('paged', $current_page - 1, $current_url);
-                echo '<a href="' . esc_url($prev_url) . '" class="vdp-pagination-item vdp-pagination-prev">';
+                echo '<a href="' . esc_url($prev_url) . '" class="vdp-pagination-item vdp-pagination-prev vdp-ajax-link" data-action="products" data-paged="' . esc_attr($current_page - 1) . '">';
                 echo '<i class="fas fa-chevron-left"></i> ' . esc_html__('Previous', 'vendor-dashboard-pro');
                 echo '</a>';
             }
@@ -258,14 +268,14 @@ if (!isset($listings) || !is_array($listings)) {
                     echo '<span class="vdp-pagination-item vdp-pagination-current">' . esc_html($i) . '</span>';
                 } else {
                     $page_url = add_query_arg('paged', $i, $current_url);
-                    echo '<a href="' . esc_url($page_url) . '" class="vdp-pagination-item">' . esc_html($i) . '</a>';
+                    echo '<a href="' . esc_url($page_url) . '" class="vdp-pagination-item vdp-ajax-link" data-action="products" data-paged="' . esc_attr($i) . '">' . esc_html($i) . '</a>';
                 }
             }
             
             // Next page
             if ($current_page < $total_pages) {
                 $next_url = add_query_arg('paged', $current_page + 1, $current_url);
-                echo '<a href="' . esc_url($next_url) . '" class="vdp-pagination-item vdp-pagination-next">';
+                echo '<a href="' . esc_url($next_url) . '" class="vdp-pagination-item vdp-pagination-next vdp-ajax-link" data-action="products" data-paged="' . esc_attr($current_page + 1) . '">';
                 echo esc_html__('Next', 'vendor-dashboard-pro') . ' <i class="fas fa-chevron-right"></i>';
                 echo '</a>';
             }

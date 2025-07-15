@@ -69,7 +69,6 @@
                     $(this).parent().hasClass('vdp-message-actions') ||
                     $(this).text().trim() === 'View') {
                     
-                    console.log('Direct link or message view button clicked, allowing normal navigation to: ' + $(this).attr('href'));
                     return true; // Permitir comportamiento normal del enlace
                 }
                 
@@ -77,9 +76,10 @@
                 var url = $(this).attr('href');
                 var action = $(this).data('action');
                 var item = $(this).data('item');
+                var paged = $(this).data('paged');
                 
                 if (url && action) {
-                    VDP.loadContent(url, action, item);
+                    VDP.loadContent(url, action, item, true, paged);
                 }
             });
             
@@ -131,13 +131,14 @@
          * @param {string} action Current action
          * @param {string|number} item Current item ID (optional)
          * @param {boolean} updateHistory Whether to update browser history (default: true)
+         * @param {string|number} paged Page number for pagination (optional)
          */
-        loadContent: function(url, action, item, updateHistory) {
+        loadContent: function(url, action, item, updateHistory, paged) {
             // Default updateHistory to true if not specified
             updateHistory = (updateHistory !== false);
             
             // Comprobar si ya tenemos el contenido en caché
-            var cacheKey = 'vdp_cache_' + action + (item ? '_' + item : '');
+            var cacheKey = 'vdp_cache_' + action + (item ? '_' + item : '') + (paged ? '_page_' + paged : '');
             var cachedContent = sessionStorage.getItem(cacheKey);
             var cachedTimestamp = parseInt(sessionStorage.getItem(cacheKey + '_timestamp') || '0', 10);
             var now = new Date().getTime();
@@ -153,11 +154,9 @@
             $('.vdp-sidebar-nav a').removeClass('vdp-active');
             $('.vdp-sidebar-nav a[data-action="' + action + '"]').addClass('vdp-active');
             
-            console.log("VDP: Actualizando navegación, acción activa: " + action);
             
             // Si tenemos contenido en caché y no ha expirado, usarlo
             if (cachedContent && (now - cachedTimestamp < cacheExpiry)) {
-                console.log('Using cached content for: ' + action);
                 
                 // Primero destruimos cualquier gráfico existente para evitar errores de Canvas
                 if (action === 'dashboard') {
@@ -176,6 +175,8 @@
                     VDP.initMessages();
                 } else if (action === 'settings') {
                     VDP.initSettings();
+                } else if (action === 'leads') {
+                    VDP.initLeads();
                 }
                 
                 // Update browser history if needed
@@ -208,7 +209,8 @@
                     action: 'vdp_load_content',
                     nonce: vdp_vars.nonce,
                     section: action,
-                    item: item
+                    item: item,
+                    paged: paged || 1
                 },
                 success: function(response) {
                     if (!response || !response.success) {
@@ -229,18 +231,13 @@
                         $('.vdp-header-title h1').text(response.data.title);
                     }
                     
-                    // Log de depuración
-                    console.log("VDP: Contenido cargado para acción: " + response.data.action);
-                    console.log("VDP Debug:", response.data.debug_info);
                     
                     // Guardar en caché el contenido para futuras cargas
-                    var cacheKey = 'vdp_cache_' + action + (item ? '_' + item : '');
+                    var cacheKey = 'vdp_cache_' + action + (item ? '_' + item : '') + (paged ? '_page_' + paged : '');
                     try {
                         sessionStorage.setItem(cacheKey, response.data.content);
                         sessionStorage.setItem(cacheKey + '_timestamp', new Date().getTime().toString());
-                        console.log('Content cached for: ' + action);
                     } catch (e) {
-                        console.warn('Failed to cache content: ' + e.message);
                     }
                     
                     // Reinitialize components based on loaded content
@@ -252,6 +249,8 @@
                         VDP.initMessages();
                     } else if (action === 'settings') {
                         VDP.initSettings();
+                    } else if (action === 'leads') {
+                        VDP.initLeads();
                     }
                     
                     // Update browser history if needed
@@ -270,7 +269,6 @@
                     window.scrollTo(0, 0);
                 },
                 error: function(xhr, status, error) {
-                    console.error("VDP Error:", error);
                     VDP.showNotice(vdp_vars.texts.error, 'error');
                 },
                 complete: function() {
@@ -307,7 +305,6 @@
                 return;
             }
             
-            console.log('Initializing charts...');
             
             // Destroy ALL existing charts completely
             this.destroyExistingCharts();
@@ -366,25 +363,19 @@
          * Destroy existing charts to prevent Canvas reuse errors
          */
         destroyExistingCharts: function() {
-            console.log('Destroying all existing charts...');
-            
             // Destruir todas las instancias de Chart.js
             // Esto es más eficiente y previene fugas de memoria
             var allCharts = Object.values(Chart.instances || {});
             
             if (allCharts.length) {
-                console.log('Found ' + allCharts.length + ' charts to destroy');
-                
                 // Destruir todas las instancias existentes
                 allCharts.forEach(function(chart) {
                     if (chart && typeof chart.destroy === 'function') {
-                        console.log('Destroying chart instance');
                         chart.destroy();
                     }
                 });
             } else {
                 // Fallback al método por ID si Chart.instances no está disponible
-                console.log('No chart instances found, trying by ID');
                 var chartIds = ['salesChart', 'viewsChart', 'conversionChart'];
                 
                 chartIds.forEach(function(chartId) {
@@ -392,7 +383,6 @@
                     if (canvas) {
                         var existingChart = Chart.getChart(canvas);
                         if (existingChart) {
-                            console.log('Destroying chart: ' + chartId);
                             existingChart.destroy();
                         }
                     }
@@ -669,7 +659,6 @@
                 return;
             }
             
-            console.log('Initializing message features...');
             
             // Message filters
             $('.vdp-filter-select').on('change', function() {
@@ -689,13 +678,6 @@
             // Garantizar que todos los botones de vista de mensaje funcionen correctamente
             // Cuando se haga clic en un botón de vista de mensaje o en un enlace directo
             $(document).on('click', '.vdp-message-view-btn, .direct-link', function(e) {
-                console.log('Message view button clicked - allowing default navigation to: ' + $(this).attr('href'));
-                
-                // Registro adicional para depuración
-                var href = $(this).attr('href');
-                var hasDirectLink = $(this).hasClass('direct-link');
-                console.log('Link URL: ' + href + ', Is direct link: ' + hasDirectLink);
-                
                 // No prevenir el comportamiento predeterminado - permitir que el enlace funcione normalmente
                 // Esto es crucial para asegurar que la plantilla de vista se cargue correctamente
                 return true;
@@ -710,14 +692,8 @@
         loadMessageView: function(messageId) {
             if (!messageId) return;
             
-            console.log('Loading message view for ID: ' + messageId);
-            
             // Build URL with message ID - asegurar que usamos 'messages' (plural)
             var url = VDP.buildDashboardUrl('messages', messageId);
-            
-            // FORZAR NAVEGACIÓN DIRECTA - Logging extra para ayudar a debugear
-            console.log('FORZANDO NAVEGACIÓN DIRECTA a URL: ' + url);
-            console.log('Esta línea fuerza un reload completo de la página');
             
             // Force a page reload to this URL instead of AJAX
             window.location.href = url;
@@ -979,6 +955,21 @@
                     $notice.remove();
                 }, 300);
             }, 3000);
+        },
+        
+        /**
+         * Initialize leads
+         */
+        initLeads: function() {
+            // Check if we're on leads page
+            if (!$('.vdp-leads-content').length) {
+                return;
+            }
+            
+            // Initialize leads table functionality
+            if (window.VDPLeads && typeof window.VDPLeads.init === 'function') {
+                window.VDPLeads.init();
+            }
         },
         
         /**

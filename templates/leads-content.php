@@ -131,7 +131,23 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
 ?>
 
 <div class="vdp-leads-content">
-    <div class="vdp-section vdp-leads-overview-section">
+    <!-- View Toggle -->
+    <div class="vdp-view-toggle-section">
+        <div class="vdp-view-toggle-buttons">
+            <button id="vdp-table-view-btn" class="vdp-btn vdp-btn-secondary vdp-view-toggle-btn active">
+                <i class="fas fa-table"></i>
+                <?php esc_html_e('Table View', 'vendor-dashboard-pro'); ?>
+            </button>
+            <button id="vdp-pipeline-view-btn" class="vdp-btn vdp-btn-secondary vdp-view-toggle-btn">
+                <i class="fas fa-columns"></i>
+                <?php esc_html_e('Pipeline View', 'vendor-dashboard-pro'); ?>
+            </button>
+        </div>
+    </div>
+
+    <!-- Table View Container -->
+    <div id="vdp-table-view-container">
+        <div class="vdp-section vdp-leads-overview-section">
         <div class="vdp-leads-stats">
             <!-- Total Leads -->
             <div class="vdp-stat-box">
@@ -254,7 +270,7 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                         </tr>
                     <?php else : ?>
                         <?php foreach ($leads as $lead) : ?>
-                            <tr class="vdp-lead-row" data-status="<?php echo esc_attr($lead->lead_status ?: 'nuevo'); ?>" data-source="<?php echo esc_attr($lead->lead_source ?? 'website'); ?>">
+                            <tr class="vdp-lead-row" data-status="<?php echo esc_attr($lead->evento_status ?: 'nuevo'); ?>" data-source="<?php echo esc_attr($lead->lead_source ?? 'website'); ?>">
                                 <td class="vdp-lead-name">
                                     <a href="<?php echo esc_url(add_query_arg('lead_id', $lead->_ID, vdp_get_dashboard_url('lead-view'))); ?>" class="vdp-lead-view" data-lead-id="<?php echo esc_attr($lead->_ID); ?>">
                                         <?php echo esc_html($lead->lead_name); ?>
@@ -304,8 +320,8 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                                     <?php endif; ?>
                                 </td>
                                 <td class="vdp-lead-status">
-                                    <span class="vdp-status-badge <?php echo esc_attr(vdp_get_lead_status_class($lead->lead_status ?: 'nuevo')); ?>">
-                                        <?php echo esc_html(vdp_get_lead_status_label($lead->lead_status ?: 'nuevo')); ?>
+                                    <span class="vdp-status-badge <?php echo esc_attr(vdp_get_lead_status_class($lead->evento_status ?: 'nuevo')); ?>">
+                                        <?php echo esc_html(vdp_get_lead_status_label($lead->evento_status ?: 'nuevo')); ?>
                                     </span>
                                 </td>
                                 <td class="vdp-lead-actions">
@@ -319,7 +335,7 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                                                 <i class="fas fa-eye"></i>
                                                 <?php esc_html_e('View Details', 'vendor-dashboard-pro'); ?>
                                             </a>
-                                            <button type="button" class="vdp-action-item vdp-update-lead-status" data-lead-id="<?php echo esc_attr($lead->_ID); ?>" data-current-status="<?php echo esc_attr($lead->lead_status ?: 'nuevo'); ?>">
+                                            <button type="button" class="vdp-action-item vdp-update-lead-status" data-lead-id="<?php echo esc_attr($lead->_ID); ?>" data-current-status="<?php echo esc_attr($lead->evento_status ?: 'nuevo'); ?>">
                                                 <i class="fas fa-edit"></i>
                                                 <?php esc_html_e('Update Status', 'vendor-dashboard-pro'); ?>
                                             </button>
@@ -417,6 +433,12 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
                 </div>
             </div>
         </div>
+    </div>
+    </div> <!-- End Table View Container -->
+
+    <!-- Pipeline View Container -->
+    <div id="vdp-pipeline-view-container" style="display: none;">
+        <?php include VDP_PLUGIN_DIR . 'templates/vdp-pipeline-simple.php'; ?>
     </div>
 </div>
 
@@ -629,8 +651,86 @@ jQuery(document).ready(function($) {
             alert('In a real implementation, this would delete the lead with ID ' + leadId);
         }
     });
+    
+    // View Toggle Functionality
+    $('#vdp-table-view-btn').on('click', function() {
+        if (!$(this).hasClass('active')) {
+            // Switch to table view
+            $('.vdp-view-toggle-btn').removeClass('active');
+            $(this).addClass('active');
+            $('#vdp-pipeline-view-container').hide();
+            $('#vdp-table-view-container').show();
+            
+            // Store preference
+            localStorage.setItem('vdp_leads_view', 'table');
+        }
+    });
+    
+    $('#vdp-pipeline-view-btn').on('click', function() {
+        if (!$(this).hasClass('active')) {
+            // Switch to pipeline view
+            $('.vdp-view-toggle-btn').removeClass('active');
+            $(this).addClass('active');
+            $('#vdp-table-view-container').hide();
+            $('#vdp-pipeline-view-container').show();
+            
+            // Initialize pipeline if not already done
+            if (window.VDPPipeline && typeof window.VDPPipeline.init === 'function') {
+                window.VDPPipeline.init();
+            }
+            
+            // Store preference
+            localStorage.setItem('vdp_leads_view', 'pipeline');
+        }
+    });
+    
+    // Restore view preference on page load
+    var savedView = localStorage.getItem('vdp_leads_view');
+    if (savedView === 'pipeline') {
+        $('#vdp-pipeline-view-btn').click();
+    }
 });
 </script>
+
+<style>
+/* View Toggle Styles */
+.vdp-view-toggle-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--vdp-gray-300, #dee2e6);
+}
+
+.vdp-view-toggle-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.vdp-view-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid var(--vdp-gray-300, #dee2e6);
+    background: var(--vdp-gray-100, #f8f9fa);
+    color: var(--vdp-gray-700, #495057);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.vdp-view-toggle-btn:hover {
+    background: var(--vdp-gray-200, #e9ecef);
+    border-color: var(--vdp-gray-400, #ced4da);
+}
+
+.vdp-view-toggle-btn.active {
+    background: var(--vdp-primary, #3483fa);
+    border-color: var(--vdp-primary, #3483fa);
+    color: white;
+}
+
+.vdp-view-toggle-btn i {
+    font-size: 14px;
+}
 
 <style>
 /* Leads styles */

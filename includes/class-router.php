@@ -152,9 +152,10 @@ class VDP_Router {
         }
         
         $item = isset($_POST['item']) ? sanitize_key($_POST['item']) : '';
+        $paged = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
         
         // Additional debug for AJAX content loading
-        vdp_debug_log("AJAX loading content for action: " . $action . ", item: " . $item, "info");
+        vdp_debug_log("AJAX loading content for action: " . $action . ", item: " . $item . ", paged: " . $paged, "info");
         
         // Special handling for message view
         if ($action === 'messages' && !empty($item)) {
@@ -168,15 +169,19 @@ class VDP_Router {
         }
         
         // Set globals for template access
-        global $vdp_current_action, $vdp_current_item;
+        global $vdp_current_action, $vdp_current_item, $vdp_current_paged;
         $vdp_current_action = $action;
         $vdp_current_item = $item;
+        $vdp_current_paged = $paged;
+        
+        // Set $_GET['paged'] for compatibility with existing pagination code
+        $_GET['paged'] = $paged;
         
         // Start output buffering
         ob_start();
         
         // Render SOLO el contenido específico, no la estructura completa
-        self::render_content($action, $item);
+        self::render_content($action, $item, $paged);
         
         // Get buffered content
         $content = ob_get_clean();
@@ -194,7 +199,8 @@ class VDP_Router {
             'debug_info' => array(
                 'content_length' => strlen($content),
                 'action_loaded' => $action,
-                'item_loaded' => $item
+                'item_loaded' => $item,
+                'paged_loaded' => $paged
             )
         ));
     }
@@ -204,8 +210,9 @@ class VDP_Router {
      *
      * @param string $action Current action.
      * @param string $item Current item ID.
+     * @param int $paged Current page number.
      */
-    public static function render_content($action, $item) {
+    public static function render_content($action, $item, $paged = 1) {
         // VERIFICACIÓN CRÍTICA: Si estamos en una vista de mensaje con item, saltarnos toda la lógica
         // compleja y cargar directamente la plantilla de vista de mensaje
         if ($action === 'messages' && !empty($item)) {

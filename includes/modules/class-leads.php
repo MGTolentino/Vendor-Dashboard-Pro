@@ -54,6 +54,9 @@ class VDP_Leads {
         
         // AJAX hooks
         add_action('wp_ajax_vdp_update_lead_status', array($this, 'ajax_update_lead_status'));
+        add_action('wp_ajax_vdp_get_pipeline_leads', array($this, 'ajax_get_pipeline_leads'));
+        add_action('wp_ajax_vdp_add_pipeline_lead', array($this, 'ajax_add_pipeline_lead'));
+        add_action('wp_ajax_vdp_update_pipeline_status', array($this, 'ajax_update_pipeline_status'));
     }
 
     /**
@@ -79,6 +82,14 @@ class VDP_Leads {
             VDP_VERSION
         );
 
+        // Pipeline CSS
+        wp_enqueue_style(
+            'vdp-pipeline-simple',
+            VDP_PLUGIN_URL . 'assets/css/vdp-pipeline-simple.css',
+            array(),
+            VDP_VERSION
+        );
+
         // jQuery UI for datepicker
         wp_enqueue_style(
             'jquery-ui-style',
@@ -92,6 +103,15 @@ class VDP_Leads {
         wp_enqueue_script(
             'vdp-leads-pipeline',
             VDP_PLUGIN_URL . 'assets/js/leads-pipeline.js',
+            array('jquery', 'jquery-ui-datepicker'),
+            VDP_VERSION,
+            true
+        );
+
+        // Pipeline JavaScript
+        wp_enqueue_script(
+            'vdp-pipeline-simple',
+            VDP_PLUGIN_URL . 'assets/js/vdp-pipeline-simple.js',
             array('jquery', 'jquery-ui-datepicker'),
             VDP_VERSION,
             true
@@ -682,6 +702,345 @@ class VDP_Leads {
         }
         
         return $stats;
+    }
+    
+    /**
+     * Get mapped status options for pipeline (VDP system).
+     * Maps from LM system statuses to VDP system statuses.
+     *
+     * @return array Mapped status options.
+     */
+    public function get_pipeline_status_options() {
+        return array(
+            'nuevo' => __('New', 'vendor-dashboard-pro'),
+            'contactado' => __('Contacted', 'vendor-dashboard-pro'),
+            'cita-agendada' => __('Appointment Scheduled', 'vendor-dashboard-pro'),
+            'propuesta-enviada' => __('Proposal Sent', 'vendor-dashboard-pro'),
+            'negociacion' => __('Negotiation', 'vendor-dashboard-pro'),
+            'cerrado-ganado' => __('Closed Won', 'vendor-dashboard-pro'),
+            'cerrado-perdido' => __('Closed Lost', 'vendor-dashboard-pro')
+        );
+    }
+    
+    /**
+     * Map LM status to VDP status.
+     *
+     * @param string $lm_status LM system status.
+     * @return string VDP system status.
+     */
+    public function map_lm_to_vdp_status($lm_status) {
+        $mapping = array(
+            'nuevo' => 'nuevo',
+            'con-presupuesto' => 'contactado',
+            'por-cerrar' => 'negociacion',
+            'con-contrato' => 'cerrado-ganado',
+            'perdido' => 'cerrado-perdido'
+        );
+        
+        return isset($mapping[$lm_status]) ? $mapping[$lm_status] : 'nuevo';
+    }
+    
+    /**
+     * Map VDP status to LM status.
+     *
+     * @param string $vdp_status VDP system status.
+     * @return string LM system status.
+     */
+    public function map_vdp_to_lm_status($vdp_status) {
+        $mapping = array(
+            'nuevo' => 'nuevo',
+            'contactado' => 'con-presupuesto',
+            'cita-agendada' => 'con-presupuesto',
+            'propuesta-enviada' => 'con-presupuesto',
+            'negociacion' => 'por-cerrar',
+            'cerrado-ganado' => 'con-contrato',
+            'cerrado-perdido' => 'perdido'
+        );
+        
+        return isset($mapping[$vdp_status]) ? $mapping[$vdp_status] : 'nuevo';
+    }
+    
+    /**
+     * AJAX handler to get pipeline leads data.
+     */
+    public function ajax_get_pipeline_leads() {
+        // Verify request
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'vdp-ajax-nonce')) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
+        }
+        
+        // Check if user is logged in and is vendor
+        if (!is_user_logged_in() || !vdp_is_user_vendor()) {
+            wp_send_json_error(array('message' => __('Access denied.', 'vendor-dashboard-pro')));
+        }
+        
+        // Get filters
+        $filters = isset($_POST['filters']) ? $_POST['filters'] : array();
+        
+        // Get leads data
+        $leads = $this->get_vendor_leads();
+        
+        // Apply filters if any
+        if (!empty($filters)) {
+            $leads = $this->apply_pipeline_filters($leads, $filters);
+        }
+        
+        // Prepare response data
+        $response_data = array(
+            'leads' => $leads,
+            'total' => count($leads)
+        );
+        
+        wp_send_json_success($response_data);
+    }
+    
+    /**
+     * AJAX handler to add new pipeline lead.
+     */
+    public function ajax_add_pipeline_lead() {
+        // Verify request
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'vdp-ajax-nonce')) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
+        }
+        
+        // Check if user is logged in and is vendor
+        if (!is_user_logged_in() || !vdp_is_user_vendor()) {
+            wp_send_json_error(array('message' => __('Access denied.', 'vendor-dashboard-pro')));
+        }
+        
+        // Get vendor ID
+        $vendor_id = $this->get_current_vendor_id();
+        if (!$vendor_id) {
+            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+        }
+        
+        // Validate required fields
+        $required_fields = array('lead_nombre', 'lead_apellido', 'lead_email', 'lead_celular');
+        foreach ($required_fields as $field) {
+            if (empty($_POST[$field])) {
+                wp_send_json_error(array('message' => sprintf(__('Field %s is required.', 'vendor-dashboard-pro'), $field)));
+            }
+        }
+        
+        // Sanitize input data
+        $lead_data = array(
+            'lead_nombre' => sanitize_text_field($_POST['lead_nombre']),
+            'lead_apellido' => sanitize_text_field($_POST['lead_apellido']),
+            'lead_email' => sanitize_email($_POST['lead_email']),
+            'lead_celular' => sanitize_text_field($_POST['lead_celular']),
+            'service_url' => esc_url_raw($_POST['service_url'] ?? ''),
+            'lead_notas' => sanitize_textarea_field($_POST['lead_notas'] ?? ''),
+            'evento_status' => sanitize_text_field($_POST['evento_status'] ?? 'nuevo'),
+            'vendor_id' => $vendor_id,
+            'lead_created' => current_time('mysql')
+        );
+        
+        // Insert lead into database
+        global $wpdb;
+        $result = $wpdb->insert(
+            $this->leads_table,
+            $lead_data,
+            array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s')
+        );
+        
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Failed to create lead.', 'vendor-dashboard-pro')));
+        }
+        
+        wp_send_json_success(array(
+            'message' => __('Lead created successfully.', 'vendor-dashboard-pro'),
+            'lead_id' => $wpdb->insert_id
+        ));
+    }
+    
+    /**
+     * AJAX handler to update pipeline lead status.
+     */
+    public function ajax_update_pipeline_status() {
+        // Verify request
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'vdp-ajax-nonce')) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
+        }
+        
+        // Check if user is logged in and is vendor
+        if (!is_user_logged_in() || !vdp_is_user_vendor()) {
+            wp_send_json_error(array('message' => __('Access denied.', 'vendor-dashboard-pro')));
+        }
+        
+        // Get parameters
+        $lead_id = absint($_POST['lead_id'] ?? 0);
+        $new_status = sanitize_text_field($_POST['new_status'] ?? '');
+        $notes = sanitize_textarea_field($_POST['status_notes'] ?? '');
+        
+        if (!$lead_id || !$new_status) {
+            wp_send_json_error(array('message' => __('Missing required parameters.', 'vendor-dashboard-pro')));
+        }
+        
+        // Verify lead belongs to current vendor
+        $vendor_id = $this->get_current_vendor_id();
+        $lead = $this->get_lead_by_id($lead_id);
+        
+        if (!$lead || $lead->vendor_id != $vendor_id) {
+            wp_send_json_error(array('message' => __('Lead not found or access denied.', 'vendor-dashboard-pro')));
+        }
+        
+        // Update lead status
+        global $wpdb;
+        $result = $wpdb->update(
+            $this->leads_table,
+            array(
+                'evento_status' => $new_status,
+                'lead_updated' => current_time('mysql')
+            ),
+            array('_ID' => $lead_id),
+            array('%s', '%s'),
+            array('%d')
+        );
+        
+        if ($result === false) {
+            wp_send_json_error(array('message' => __('Failed to update lead status.', 'vendor-dashboard-pro')));
+        }
+        
+        // Add notes if provided
+        if (!empty($notes)) {
+            $this->add_lead_note($lead_id, $notes, 'Status changed to: ' . $new_status);
+        }
+        
+        wp_send_json_success(array(
+            'message' => __('Lead status updated successfully.', 'vendor-dashboard-pro'),
+            'new_status' => $new_status
+        ));
+    }
+    
+    /**
+     * Apply filters to pipeline leads.
+     *
+     * @param array $leads Array of lead objects.
+     * @param array $filters Filter parameters.
+     * @return array Filtered leads.
+     */
+    private function apply_pipeline_filters($leads, $filters) {
+        if (empty($filters)) {
+            return $leads;
+        }
+        
+        return array_filter($leads, function($lead) use ($filters) {
+            // Search filter
+            if (!empty($filters['search'])) {
+                $search = strtolower($filters['search']);
+                $searchable = strtolower($lead->lead_nombre . ' ' . $lead->lead_apellido . ' ' . $lead->lead_email);
+                if (strpos($searchable, $search) === false) {
+                    return false;
+                }
+            }
+            
+            // Service filter
+            if (!empty($filters['service']) && !empty($lead->service_url)) {
+                if (strpos($lead->service_url, $filters['service']) === false) {
+                    return false;
+                }
+            }
+            
+            // Priority filter
+            if (!empty($filters['priority']) && !empty($lead->lead_priority)) {
+                if ($lead->lead_priority !== $filters['priority']) {
+                    return false;
+                }
+            }
+            
+            // Period filter
+            if (!empty($filters['period'])) {
+                $created_date = strtotime($lead->lead_created);
+                if (!$this->check_period_filter($created_date, $filters['period'], $filters['date_range'] ?? '')) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+    }
+    
+    /**
+     * Check if date matches period filter.
+     *
+     * @param int $timestamp Unix timestamp.
+     * @param string $period Period filter.
+     * @param string $date_range Custom date range.
+     * @return bool True if matches filter.
+     */
+    private function check_period_filter($timestamp, $period, $date_range = '') {
+        $now = time();
+        
+        switch ($period) {
+            case 'today':
+                return date('Y-m-d', $timestamp) === date('Y-m-d', $now);
+                
+            case 'this_week':
+                $week_start = strtotime('monday this week', $now);
+                return $timestamp >= $week_start;
+                
+            case 'this_month':
+                $month_start = strtotime('first day of this month', $now);
+                return $timestamp >= $month_start;
+                
+            case 'this_year':
+                $year_start = strtotime('first day of January this year', $now);
+                return $timestamp >= $year_start;
+                
+            case 'custom':
+                if (!empty($date_range) && strpos($date_range, ' - ') !== false) {
+                    list($start, $end) = explode(' - ', $date_range);
+                    $start_time = strtotime($start);
+                    $end_time = strtotime($end . ' 23:59:59');
+                    return $timestamp >= $start_time && $timestamp <= $end_time;
+                }
+                break;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get lead by ID.
+     *
+     * @param int $lead_id Lead ID.
+     * @return object|null Lead object or null if not found.
+     */
+    private function get_lead_by_id($lead_id) {
+        global $wpdb;
+        
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->leads_table} WHERE _ID = %d",
+            $lead_id
+        ));
+    }
+    
+    /**
+     * Add note to lead.
+     *
+     * @param int $lead_id Lead ID.
+     * @param string $note Note content.
+     * @param string $context Note context.
+     */
+    private function add_lead_note($lead_id, $note, $context = '') {
+        global $wpdb;
+        
+        // For now, append to existing notes
+        $existing_notes = $wpdb->get_var($wpdb->prepare(
+            "SELECT lead_notas FROM {$this->leads_table} WHERE _ID = %d",
+            $lead_id
+        ));
+        
+        $new_note = date('Y-m-d H:i:s') . ' - ' . ($context ? $context . ': ' : '') . $note;
+        $updated_notes = $existing_notes ? $existing_notes . "\n" . $new_note : $new_note;
+        
+        $wpdb->update(
+            $this->leads_table,
+            array('lead_notas' => $updated_notes),
+            array('_ID' => $lead_id),
+            array('%s'),
+            array('%d')
+        );
     }
 }
 
