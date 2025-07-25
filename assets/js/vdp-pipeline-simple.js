@@ -29,7 +29,8 @@
             }
             
             // Asegurar que los contenedores de fecha estén ocultos al inicio
-            $('#vdp_custom_date_range, #vdp_specific_month_range').hide();
+            $('#vdp_custom_date_range').hide().css('display', 'none');
+            $('#vdp_specific_month_range').hide().css('display', 'none');
             
             this.initializeEvents();
             this.initializeDragAndDrop();
@@ -55,14 +56,15 @@
             $(document).on('change', '#vdp_period_filter', function() {
                 var selectedValue = $(this).val();
                 
-                // Ocultar todos los rangos
-                $('#vdp_custom_date_range, #vdp_specific_month_range').hide();
+                // Ocultar todos los rangos primero
+                $('#vdp_custom_date_range').hide().css('display', 'none');
+                $('#vdp_specific_month_range').hide().css('display', 'none');
                 
                 // Mostrar el rango correspondiente
                 if (selectedValue === 'custom') {
-                    $('#vdp_custom_date_range').show();
+                    $('#vdp_custom_date_range').show().css('display', 'block');
                 } else if (selectedValue === 'specific_month') {
-                    $('#vdp_specific_month_range').show();
+                    $('#vdp_specific_month_range').show().css('display', 'block');
                 } else if (selectedValue) {
                     // Limpiar valores y aplicar filtros automáticamente
                     $('#vdp_date_range').val('');

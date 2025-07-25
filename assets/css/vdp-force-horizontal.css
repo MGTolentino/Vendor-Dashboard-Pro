@@ -16,8 +16,9 @@
     align-items: center !important;
     width: 100% !important;
     overflow-x: auto !important;
-    gap: 4px !important;
-    padding: 8px !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    justify-content: space-between !important;
 }
 
 .vdp-inline-filters {
@@ -27,7 +28,8 @@
     align-items: center !important;
     flex: 1 !important;
     min-width: 0 !important;
-    gap: 3px !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
 }
 
 .vdp-filter-extras {
@@ -59,43 +61,42 @@
     align-items: center !important;
     width: 100% !important;
     overflow-x: auto !important;
-    gap: 3px !important;
-    padding: 6px !important;
+    gap: 8px !important;
+    padding: 10px !important;
+    justify-content: space-between !important;
 }
 
-/* Elementos individuales - hacerlos más compactos */
+/* Elementos individuales - optimizar tamaño */
 .vdp-filter-input,
 .vdp-filter-select,
 .vdp-btn {
     flex-shrink: 0 !important;
     white-space: nowrap !important;
-    font-size: 12px !important;
-    padding: 4px 6px !important;
-    margin: 0 2px !important;
+    font-size: 13px !important;
+    padding: 6px 8px !important;
+    margin: 0 !important;
 }
 
 .vdp-filter-input {
-    max-width: 100px !important;
-    min-width: 80px !important;
+    max-width: 130px !important;
+    min-width: 100px !important;
+    flex: 1 !important;
 }
 
 .vdp-filter-select {
-    max-width: 110px !important;
-    min-width: 90px !important;
+    max-width: 150px !important;
+    min-width: 120px !important;
+    flex: 1 !important;
 }
 
 .vdp-btn {
-    padding: 4px 8px !important;
-    font-size: 11px !important;
-}
-
-.vdp-date-range-container:not([style*="display:none"]):not([style*="display: none"]),
-.vdp-month-year-container:not([style*="display:none"]):not([style*="display: none"]) {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
     flex-shrink: 0 !important;
 }
+
+/* Contenedores de fecha - ELIMINAR reglas que fuerzan display */
+/* Solo aplicar flex cuando NO tengan display:none */
 
 .vdp-checkbox-filter {
     display: flex !important;

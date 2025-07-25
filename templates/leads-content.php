@@ -1051,14 +1051,15 @@ jQuery(document).ready(function($) {
     $('#table_period_filter').on('change', function() {
         var selectedValue = $(this).val();
         
-        // Ocultar todos los rangos
-        $('#table_custom_date_range, #table_specific_month_range').hide();
+        // Ocultar todos los rangos primero
+        $('#table_custom_date_range').hide().css('display', 'none');
+        $('#table_specific_month_range').hide().css('display', 'none');
         
         // Mostrar el rango correspondiente
         if (selectedValue === 'custom') {
-            $('#table_custom_date_range').show();
+            $('#table_custom_date_range').show().css('display', 'block');
         } else if (selectedValue === 'specific_month') {
-            $('#table_specific_month_range').show();
+            $('#table_specific_month_range').show().css('display', 'block');
         }
     });
     
@@ -1087,6 +1088,7 @@ jQuery(document).ready(function($) {
     }
     
     // Asegurar que los contenedores ocultos permanezcan ocultos al cargar
-    $('#table_custom_date_range, #table_specific_month_range').hide();
+    $('#table_custom_date_range').hide().css('display', 'none');
+    $('#table_specific_month_range').hide().css('display', 'none');
 });
 </script>
