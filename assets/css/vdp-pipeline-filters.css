@@ -160,27 +160,27 @@
     font-size: 14px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Forzar layout horizontal siempre */
+.vdp-pipeline-toolbar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+}
+
+.vdp-inline-filters {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+}
+
+/* Responsive solo para móviles muy pequeños */
+@media (max-width: 480px) {
     .vdp-pipeline-toolbar {
-        flex-direction: column;
-        align-items: stretch;
+        flex-wrap: wrap !important;
     }
     
     .vdp-inline-filters {
-        justify-content: stretch;
-    }
-    
-    .vdp-filter-input,
-    .vdp-filter-select {
-        flex: 1;
-        min-width: auto;
-    }
-    
-    .vdp-date-range-container,
-    .vdp-month-year-container {
-        flex-direction: column;
-        gap: 5px;
+        flex-wrap: wrap !important;
     }
 }
 

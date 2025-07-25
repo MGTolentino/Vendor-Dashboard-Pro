@@ -87,6 +87,27 @@ class VDP_Leads {
         );
 
         wp_enqueue_style(
+            'vdp-pipeline-filters',
+            VDP_PLUGIN_URL . 'assets/css/vdp-pipeline-filters.css',
+            array('vdp-pipeline-simple'),
+            VDP_VERSION
+        );
+
+        wp_enqueue_style(
+            'vdp-table-filters',
+            VDP_PLUGIN_URL . 'assets/css/vdp-table-filters.css',
+            array('vdp-pipeline-filters'),
+            VDP_VERSION
+        );
+
+        wp_enqueue_style(
+            'vdp-force-horizontal',
+            VDP_PLUGIN_URL . 'assets/css/vdp-force-horizontal.css',
+            array('vdp-table-filters'),
+            VDP_VERSION
+        );
+
+        wp_enqueue_style(
             'jquery-ui-style',
             'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css',
             array(),
