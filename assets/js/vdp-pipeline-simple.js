@@ -416,7 +416,6 @@
          * Aplicar filtros (versión actualizada)
          */
         applyFilters: function() {
-            console.log('Applying filters...');
             var filters = {
                 search: $('#vdp_quick_search').val(),
                 period: $('#vdp_period_filter').val(),
@@ -427,8 +426,6 @@
                 priority: $('#vdp_priority_filter').val(),
                 showWithoutEvent: $('#vdp_show_leads_without_event').is(':checked')
             };
-            
-            console.log('Active filters:', filters);
             this.currentFilters = filters;
             // Aquí implementarías la lógica real de filtrado
         },
@@ -516,7 +513,6 @@
          */
         initializeDateRangePicker: function() {
             if (typeof daterangepicker === 'undefined' || typeof moment === 'undefined') {
-                console.warn('DateRangePicker or Moment.js not loaded');
                 return;
             }
             
@@ -553,7 +549,6 @@
                 self.applyFilters();
             });
             
-            console.log('DateRangePicker initialized successfully');
         },
         
         /**

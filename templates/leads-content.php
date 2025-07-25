@@ -221,24 +221,78 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
         <div class="vdp-section-header">
             <h2 class="vdp-section-title"><?php esc_html_e('Mis Leads', 'vendor-dashboard-pro'); ?></h2>
             <div class="vdp-section-actions">
-                <div class="vdp-filters">
-                    <select class="vdp-filter-select" id="lead-status-filter">
-                        <option value=""><?php esc_html_e('Todos los Estados', 'vendor-dashboard-pro'); ?></option>
-                        <option value="inicial"><?php esc_html_e('Inicial', 'vendor-dashboard-pro'); ?></option>
-                        <option value="contactado"><?php esc_html_e('Contactado', 'vendor-dashboard-pro'); ?></option>
-                        <option value="cita-agendada"><?php esc_html_e('Cita Agendada', 'vendor-dashboard-pro'); ?></option>
-                        <option value="propuesta-enviada"><?php esc_html_e('Propuesta Enviada', 'vendor-dashboard-pro'); ?></option>
-                        <option value="negociacion"><?php esc_html_e('Negociación', 'vendor-dashboard-pro'); ?></option>
-                        <option value="cerrado-ganado"><?php esc_html_e('Cerrado Ganado', 'vendor-dashboard-pro'); ?></option>
-                        <option value="cerrado-perdido"><?php esc_html_e('Cerrado Perdido', 'vendor-dashboard-pro'); ?></option>
+                <div class="vdp-filters vdp-table-filters">
+                    <input type="text" class="vdp-filter-input" id="table_quick_search" placeholder="Buscar...">
+                    
+                    <select class="vdp-filter-select" id="table_period_filter">
+                        <option value="">Todos los períodos</option>
+                        <option value="today">Hoy</option>
+                        <option value="this_week">Esta semana</option>
+                        <option value="this_month">Este mes</option>
+                        <option value="this_year">Este año</option>
+                        <option value="specific_month">Mes/Año específico</option>
+                        <option value="custom">Rango personalizado</option>
                     </select>
                     
-                    <div class="vdp-search-filter">
-                        <input type="text" class="vdp-search-input" id="lead-search" placeholder="<?php esc_attr_e('Buscar leads...', 'vendor-dashboard-pro'); ?>">
-                        <button class="vdp-search-btn">
-                            <i class="fas fa-search"></i>
-                        </button>
+                    <div id="table_custom_date_range" class="vdp-date-range-container" style="display:none;">
+                        <input type="text" id="table_date_range" class="vdp-filter-input" title="Rango de fechas" placeholder="Seleccionar rango de fechas" readonly>
                     </div>
+                    
+                    <div id="table_specific_month_range" class="vdp-month-year-container" style="display:none;">
+                        <select id="table_mes_evento_basic" class="vdp-filter-select">
+                            <option value="">Mes</option>
+                            <option value="01">Enero</option>
+                            <option value="02">Febrero</option>
+                            <option value="03">Marzo</option>
+                            <option value="04">Abril</option>
+                            <option value="05">Mayo</option>
+                            <option value="06">Junio</option>
+                            <option value="07">Julio</option>
+                            <option value="08">Agosto</option>
+                            <option value="09">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                        
+                        <select id="table_anio_evento" class="vdp-filter-select">
+                            <option value="">Año</option>
+                            <?php
+                            $current_year = date('Y');
+                            for ($year = 2000; $year <= ($current_year + 5); $year++) {
+                                echo '<option value="' . $year . '">' . $year . '</option>';
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    
+                    <select class="vdp-filter-select" id="table_status_filter">
+                        <option value="">Todos los Estados</option>
+                        <option value="nuevo">Nuevo</option>
+                        <option value="con-presupuesto">Con Cotización</option>
+                        <option value="por-cerrar">Por cerrar</option>
+                        <option value="con-contrato">Con contrato</option>
+                        <option value="perdido">Perdido</option>
+                    </select>
+                    
+                    <select id="table_event_type_filter" class="vdp-filter-select">
+                        <option value="">Todos los tipos</option>
+                    </select>
+                    
+                    <select id="table_priority_filter" class="vdp-filter-select">
+                        <option value="">Todas las prioridades</option>
+                        <option value="alta">Alta</option>
+                        <option value="media">Media</option>
+                        <option value="baja">Baja</option>
+                    </select>
+                    
+                    <label class="vdp-checkbox-filter">
+                        <input type="checkbox" id="table_show_leads_without_event">
+                        <span>Sin evento</span>
+                    </label>
+                    
+                    <button id="table_apply_filters" class="vdp-btn vdp-btn-secondary">Filtrar</button>
+                    <button id="table_clear_filters" class="vdp-btn vdp-btn-text">Limpiar</button>
                 </div>
             </div>
         </div>

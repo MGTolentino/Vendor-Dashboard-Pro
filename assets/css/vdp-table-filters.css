@@ -1,0 +1,82 @@
+/**
+ * VDP Table Filters CSS
+ * Estilos específicos para filtros en vista de tabla
+ */
+
+.vdp-table-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.vdp-table-filters .vdp-filter-input,
+.vdp-table-filters .vdp-filter-select {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    background: white;
+    min-width: 90px;
+    max-width: 140px;
+}
+
+.vdp-table-filters .vdp-date-range-container,
+.vdp-table-filters .vdp-month-year-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px;
+    background: #f0f0f1;
+    border-radius: 4px;
+    border: 1px solid #c3c4c7;
+    max-width: 180px;
+}
+
+.vdp-table-filters .vdp-month-year-container select {
+    min-width: 60px;
+    max-width: 80px;
+    font-size: 12px;
+    padding: 4px 6px;
+}
+
+.vdp-checkbox-filter {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #50575e;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.vdp-checkbox-filter input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+}
+
+.vdp-table-filters .vdp-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Responsive para tabla */
+@media (max-width: 1200px) {
+    .vdp-table-filters {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .vdp-table-filters .vdp-filter-input,
+    .vdp-table-filters .vdp-filter-select {
+        min-width: 80px;
+        max-width: 120px;
+    }
+}
