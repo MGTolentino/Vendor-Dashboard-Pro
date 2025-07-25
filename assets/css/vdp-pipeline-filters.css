@@ -1,0 +1,201 @@
+/**
+ * VDP Pipeline Filters CSS
+ * Estilos para los filtros del pipeline
+ */
+
+.vdp-pipeline-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.vdp-inline-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.vdp-filter-input,
+.vdp-filter-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: white;
+    min-width: 120px;
+}
+
+.vdp-filter-input:focus,
+.vdp-filter-select:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 1px #007cba;
+}
+
+/* Contenedores de rangos de fecha */
+.vdp-date-range-container,
+.vdp-month-year-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px;
+    background: #f0f0f1;
+    border-radius: 4px;
+    border: 1px solid #c3c4c7;
+}
+
+.vdp-month-year-container select {
+    min-width: 100px;
+}
+
+/* Input de date range con cursor pointer */
+#vdp_date_range {
+    cursor: pointer;
+    background: white;
+    position: relative;
+}
+
+#vdp_date_range::after {
+    content: "📅";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Botones */
+.vdp-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+}
+
+.vdp-btn-primary {
+    background: #007cba;
+    color: white;
+}
+
+.vdp-btn-primary:hover {
+    background: #005a87;
+}
+
+.vdp-btn-secondary {
+    background: #50575e;
+    color: white;
+}
+
+.vdp-btn-secondary:hover {
+    background: #3c434a;
+}
+
+.vdp-btn-text {
+    background: transparent;
+    color: #646970;
+    padding: 8px 12px;
+}
+
+.vdp-btn-text:hover {
+    color: #007cba;
+    background: #f0f0f1;
+}
+
+/* Extras (checkbox) */
+.vdp-filter-extras {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid #e9ecef;
+    margin-top: 10px;
+}
+
+.vdp-filter-extras label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #50575e;
+    cursor: pointer;
+}
+
+.vdp-filter-extras input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+/* Stats */
+.vdp-pipeline-stats {
+    font-weight: 600;
+    color: #50575e;
+    font-size: 14px;
+}
+
+.vdp-pipeline-stats span {
+    color: #007cba;
+    font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .vdp-pipeline-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .vdp-inline-filters {
+        justify-content: stretch;
+    }
+    
+    .vdp-filter-input,
+    .vdp-filter-select {
+        flex: 1;
+        min-width: auto;
+    }
+    
+    .vdp-date-range-container,
+    .vdp-month-year-container {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+/* DateRangePicker custom styles */
+.daterangepicker {
+    z-index: 10000;
+}
+
+.daterangepicker .calendar-table {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.daterangepicker td.active,
+.daterangepicker td.active:hover {
+    background-color: #007cba;
+    border-color: #007cba;
+}
+
+.daterangepicker td:hover {
+    background-color: #f0f0f1;
+}
+
+.daterangepicker .ranges li.active,
+.daterangepicker .ranges li:hover {
+    background-color: #007cba;
+    color: white;
+}

@@ -47,7 +47,7 @@ $vdp_status_options = array(
         
         <!-- Filtros estilo Excel en línea -->
         <div class="vdp-inline-filters">
-            <input type="text" id="vdp_quick_search" placeholder="<?php esc_attr_e('Search...', 'vendor-dashboard-pro'); ?>" class="vdp-filter-input">
+            <input type="text" id="vdp_quick_search" placeholder="Buscar..." class="vdp-filter-input">
             
             <select id="vdp_period_filter" class="vdp-filter-select">
                 <option value="">Todos los períodos</option>
@@ -59,11 +59,11 @@ $vdp_status_options = array(
                 <option value="custom">Rango personalizado</option>
             </select>
             
-            <div id="vdp_custom_date_range" style="display:none;">
-                <input type="text" id="vdp_date_range" class="vdp-filter-input" title="Rango de fechas" placeholder="Seleccionar rango de fechas">
+            <div id="vdp_custom_date_range" class="vdp-date-range-container" style="display:none;">
+                <input type="text" id="vdp_date_range" class="vdp-filter-input" title="Rango de fechas" placeholder="Seleccionar rango de fechas" readonly>
             </div>
             
-            <div id="vdp_specific_month_range" style="display:none;">
+            <div id="vdp_specific_month_range" class="vdp-month-year-container" style="display:none;">
                 <select id="vdp_mes_evento_basic" class="vdp-filter-select">
                     <option value="">Seleccionar mes</option>
                     <option value="01">Enero</option>

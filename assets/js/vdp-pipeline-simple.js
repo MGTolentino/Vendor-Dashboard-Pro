@@ -38,6 +38,8 @@
          * Inicializar eventos
          */
         initializeEvents: function() {
+            var self = this;
+            
             // Botón agregar lead
             $(document).on('click', '#vdp_add_lead_btn', this.openAddLeadModal.bind(this));
             
@@ -45,7 +47,47 @@
             $(document).on('click', '#vdp_apply_filters', this.applyFilters.bind(this));
             $(document).on('click', '#vdp_clear_filters', this.clearFilters.bind(this));
             $(document).on('input', '#vdp_quick_search', this.debounce(this.quickSearch.bind(this), 300));
-            $(document).on('change', '#vdp_period_filter', this.onPeriodFilterChange.bind(this));
+            
+            // Period filter change
+            $(document).on('change', '#vdp_period_filter', function() {
+                var selectedValue = $(this).val();
+                
+                // Ocultar todos los rangos
+                $('#vdp_custom_date_range, #vdp_specific_month_range').hide();
+                
+                // Mostrar el rango correspondiente
+                if (selectedValue === 'custom') {
+                    $('#vdp_custom_date_range').show();
+                } else if (selectedValue === 'specific_month') {
+                    $('#vdp_specific_month_range').show();
+                } else if (selectedValue) {
+                    // Limpiar valores y aplicar filtros automáticamente
+                    $('#vdp_date_range').val('');
+                    $('#vdp_mes_evento_basic').val('');
+                    $('#vdp_anio_evento').val('');
+                    self.applyFilters();
+                }
+            });
+            
+            // Eventos para filtros de mes/año específico
+            $(document).on('change', '#vdp_mes_evento_basic, #vdp_anio_evento', function() {
+                self.applyFilters();
+            });
+            
+            // Otros filtros
+            $(document).on('change', '#vdp_event_type_filter, #vdp_priority_filter', function() {
+                self.applyFilters();
+            });
+            
+            // Checkbox leads sin evento
+            $(document).on('change', '#vdp_show_leads_without_event', function() {
+                self.applyFilters();
+            });
+            
+            // Inicializar DateRangePicker después de un breve delay
+            setTimeout(function() {
+                self.initializeDateRangePicker();
+            }, 100);
             
             // Modal events
             $(document).on('click', '.vdp-close-modal', this.closeModal.bind(this));
