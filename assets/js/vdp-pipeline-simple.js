@@ -432,7 +432,7 @@
                 showWithoutEvent: $('#vdp_show_leads_without_event').is(':checked')
             };
             this.currentFilters = filters;
-            // Aquí implementarías la lógica real de filtrado
+            this.loadPipelineData();
         },
         
         /**
@@ -448,11 +448,12 @@
             $('#vdp_anio_evento').val('');
             $('#vdp_show_leads_without_event').prop('checked', false);
             
-            // Ocultar rangos de fecha
-            $('#vdp_custom_date_range, #vdp_specific_month_range').hide();
+            // Ocultar rangos de fecha con CSS inline forzado
+            $('#vdp_custom_date_range').hide().css('display', 'none');
+            $('#vdp_specific_month_range').hide().css('display', 'none');
             
             this.currentFilters = {};
-            this.applyFilters();
+            this.loadPipelineData();
         },
         
         /**
