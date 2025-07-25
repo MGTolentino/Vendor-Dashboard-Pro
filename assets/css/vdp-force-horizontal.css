@@ -89,8 +89,8 @@
     font-size: 11px !important;
 }
 
-.vdp-date-range-container,
-.vdp-month-year-container {
+.vdp-date-range-container:not([style*="display:none"]):not([style*="display: none"]),
+.vdp-month-year-container:not([style*="display:none"]):not([style*="display: none"]) {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;

@@ -28,6 +28,9 @@
                 return;
             }
             
+            // Asegurar que los contenedores de fecha estén ocultos al inicio
+            $('#vdp_custom_date_range, #vdp_specific_month_range').hide();
+            
             this.initializeEvents();
             this.initializeDragAndDrop();
             this.loadPipelineData();

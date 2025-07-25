@@ -1039,3 +1039,54 @@ jQuery(document).ready(function($) {
     margin-top: 10px;
 }
 </style>
+
+<!-- Cargar librerías requeridas para DateRangePicker -->
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css">
+
+<script>
+jQuery(document).ready(function($) {
+    // Manejar cambio de filtro de período en tabla
+    $('#table_period_filter').on('change', function() {
+        var selectedValue = $(this).val();
+        
+        // Ocultar todos los rangos
+        $('#table_custom_date_range, #table_specific_month_range').hide();
+        
+        // Mostrar el rango correspondiente
+        if (selectedValue === 'custom') {
+            $('#table_custom_date_range').show();
+        } else if (selectedValue === 'specific_month') {
+            $('#table_specific_month_range').show();
+        }
+    });
+    
+    // Inicializar DateRangePicker para tabla
+    if ($('#table_date_range').length) {
+        $('#table_date_range').daterangepicker({
+            autoUpdateInput: false,
+            locale: {
+                cancelLabel: 'Limpiar',
+                applyLabel: 'Aplicar',
+                format: 'DD/MM/YYYY',
+                daysOfWeek: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+                monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                           'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                firstDay: 1
+            }
+        });
+        
+        $('#table_date_range').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format('DD/MM/YYYY'));
+        });
+        
+        $('#table_date_range').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+        });
+    }
+    
+    // Asegurar que los contenedores ocultos permanezcan ocultos al cargar
+    $('#table_custom_date_range, #table_specific_month_range').hide();
+});
+</script>
