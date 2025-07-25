@@ -186,7 +186,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: {
                 action: 'vdp_client_send_reply',
-                nonce: '<?php echo wp_create_nonce('vdp-client-messages-nonce'); ?>',
+                nonce: '<?php echo wp_create_nonce('vdp-ajax-nonce'); ?>',
                 message_id: messageId,
                 content: replyContent
             },

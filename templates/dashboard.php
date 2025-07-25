@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Get current action and item
+// Get current action and item for page title generation
 $current_action = vdp_get_current_action();
 $current_item = vdp_get_current_item();
 
@@ -128,9 +128,8 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                     <ul class="vdp-nav-list">
                         <?php 
                         // Asegurar que la acción actual esté correctamente identificada
-                        // Usar vdp_get_current_action() que obtendrá el valor de la variable global $vdp_current_action
+                        // Usar vdp_get_current_action() que obtendrá el valor desde VDP_Router
                         $active_action = vdp_get_current_action();
-                        vdp_debug_log("Acción activa en navegación: " . $active_action);
                         ?>
                         <li class="vdp-nav-item <?php echo $active_action === 'dashboard' ? 'vdp-active' : ''; ?>" id="vdp-nav-dashboard">
                             <a href="<?php echo esc_url(vdp_get_dashboard_url()); ?>" class="vdp-nav-link vdp-ajax-link" data-action="dashboard">
@@ -309,11 +308,8 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                     // Para evitar duplicaciones, siempre usamos el router para renderizar el contenido
                     // El router ya maneja las acciones específicas para cada sección
                     
-                    // Renderizar el contenido basado en la acción actual
-                    vdp_debug_log("Dashboard renderizando contenido para acción: " . $current_action);
-                    
-                    // Usamos el método del router que maneja las acciones y hooks adecuados
-                    VDP_Router::render_content($current_action, $current_item);
+                    // Renderizar el contenido basado en la acción actual almacenada en VDP_Router
+                    VDP_Router::render_current_content();
                     ?>
                 </div>
             </div>

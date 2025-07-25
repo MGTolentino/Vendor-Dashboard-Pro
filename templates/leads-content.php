@@ -24,7 +24,7 @@ $leads_handler = new VDP_Leads();
 
 // Get pagination parameters
 $paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
-$per_page = 10;
+$per_page = apply_filters('vdp_leads_per_page', 10);
 $offset = ($paged - 1) * $per_page;
 
 // Get filter parameters

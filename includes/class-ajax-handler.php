@@ -18,7 +18,6 @@ class VDP_Ajax_Handler {
      * Initialize Ajax handler.
      */
     public static function init() {
-        // Register Ajax actions
         add_action('wp_ajax_vdp_save_listing', array(__CLASS__, 'save_listing'));
         add_action('wp_ajax_vdp_delete_listing', array(__CLASS__, 'delete_listing'));
         add_action('wp_ajax_vdp_get_dashboard_data', array(__CLASS__, 'get_dashboard_data'));
@@ -26,7 +25,6 @@ class VDP_Ajax_Handler {
         add_action('wp_ajax_vdp_get_chart_data', array(__CLASS__, 'get_chart_data'));
         add_action('wp_ajax_vdp_trigger_listing_form', array(__CLASS__, 'trigger_listing_form'));
         
-        // Messages actions
         add_action('wp_ajax_vdp_send_message', array(__CLASS__, 'send_message'));
         add_action('wp_ajax_vdp_mark_message_read', array(__CLASS__, 'mark_message_read'));
         add_action('wp_ajax_vdp_archive_message', array(__CLASS__, 'archive_message'));
@@ -40,13 +38,11 @@ class VDP_Ajax_Handler {
      * @return bool
      */
     private static function verify_ajax_request($nonce_action = 'vdp-ajax-nonce') {
-        // Check if user is logged in
         if (!is_user_logged_in()) {
             wp_send_json_error(array('message' => __('You must be logged in to perform this action.', 'vendor-dashboard-pro')));
             return false;
         }
         
-        // Check nonce
         if (!check_ajax_referer($nonce_action, 'nonce', false)) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
             return false;
@@ -345,7 +341,7 @@ class VDP_Ajax_Handler {
         }
         
         // Verify nonce
-        if (!check_ajax_referer('vdp-contact-nonce', 'nonce', false)) {
+        if (!check_ajax_referer('vdp-ajax-nonce', 'nonce', false)) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
             return;
         }
@@ -444,12 +440,9 @@ class VDP_Ajax_Handler {
             // Email headers
             $headers = array(
                 'Content-Type: text/plain; charset=UTF-8',
-                'Reply-To: ' . $sender_name . ' <' . $sender_email . '>'
+                'Reply-To: ' . sanitize_text_field($sender_name) . ' <' . sanitize_email($sender_email) . '>'
             );
             
-            
-            // Send email
-            $mail_result = wp_mail($vendor_email, $email_subject, $email_message, $headers);
             
             // Send email
             $mail_result = wp_mail($vendor_email, $email_subject, $email_message, $headers);
@@ -466,7 +459,7 @@ class VDP_Ajax_Handler {
      */
     public static function mark_message_read() {
         // Verify request
-        if (!self::verify_ajax_request('vdp-messages-nonce')) {
+        if (!self::verify_ajax_request('vdp-ajax-nonce')) {
             return;
         }
         
@@ -516,7 +509,7 @@ class VDP_Ajax_Handler {
      */
     public static function archive_message() {
         // Verify request
-        if (!self::verify_ajax_request('vdp-messages-nonce')) {
+        if (!self::verify_ajax_request('vdp-ajax-nonce')) {
             return;
         }
         
@@ -566,7 +559,7 @@ class VDP_Ajax_Handler {
      */
     public static function send_reply() {
         // Verify request
-        if (!self::verify_ajax_request('vdp-messages-nonce')) {
+        if (!self::verify_ajax_request('vdp-ajax-nonce')) {
             return;
         }
         

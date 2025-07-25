@@ -5,7 +5,6 @@
 jQuery(document).ready(function($) {
     'use strict';
 
-    // Actions dropdown functionality with position detection
     $(document).on('click', '.vdp-actions-toggle', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -13,12 +12,10 @@ jQuery(document).ready(function($) {
         var $dropdown = $(this).closest('.vdp-actions-dropdown');
         var $menu = $dropdown.find('.vdp-actions-menu');
         
-        // Close other dropdowns
         $('.vdp-actions-dropdown').not($dropdown).removeClass('active dropup');
         
-        // Check if menu would go off screen
         var dropdownOffset = $dropdown.offset();
-        var menuHeight = 200; // Estimated menu height
+        var menuHeight = 200;
         var windowHeight = $(window).height();
         var windowScroll = $(window).scrollTop();
         
@@ -28,25 +25,21 @@ jQuery(document).ready(function($) {
             $dropdown.removeClass('dropup');
         }
         
-        // Toggle current dropdown
         $dropdown.toggleClass('active');
     });
 
-    // Close dropdown when clicking outside
     $(document).on('click', function(e) {
         if (!$(e.target).closest('.vdp-actions-dropdown').length) {
             $('.vdp-actions-dropdown').removeClass('active');
         }
     });
 
-    // Update lead status functionality
     $(document).on('click', '.vdp-update-lead-status', function(e) {
         e.preventDefault();
         
         var leadId = $(this).data('lead-id');
         var currentStatus = $(this).data('current-status') || 'nuevo';
         
-        // Create status selection modal
         showStatusUpdateModal(leadId, currentStatus);
     });
 

@@ -19,7 +19,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Define plugin constants
 define('VDP_VERSION', '1.0.0');
 define('VDP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('VDP_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -52,27 +51,17 @@ class Vendor_Dashboard_Pro {
      * Constructor.
      */
     public function __construct() {
-        // Include required files
         $this->includes();
-
-        // Initialize hooks
         $this->init_hooks();
-
-        // Load textdomain
         add_action('plugins_loaded', array($this, 'load_textdomain'));
         
-        // Register the 'leads' module
         if (file_exists(VDP_PLUGIN_DIR . 'includes/modules/class-leads.php')) {
             require_once VDP_PLUGIN_DIR . 'includes/modules/class-leads.php';
         }
         
-        // Comprobar si necesitamos instalar o actualizar tablas de base de datos
         add_action('plugins_loaded', array($this, 'check_tables'));
     }
     
-    /**
-     * Comprobar si las tablas de la base de datos necesitan ser instaladas o actualizadas.
-     */
     public function check_tables() {
         if (class_exists('VDP_Installer') && method_exists('VDP_Installer', 'needs_db_update') && VDP_Installer::needs_db_update()) {
             VDP_Installer::install();
@@ -83,7 +72,6 @@ class Vendor_Dashboard_Pro {
      * Include required files.
      */
     private function includes() {
-        // Core files
         require_once VDP_PLUGIN_DIR . 'includes/functions.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-api.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-router.php';
@@ -92,10 +80,6 @@ class Vendor_Dashboard_Pro {
         require_once VDP_PLUGIN_DIR . 'includes/class-installer.php';
         require_once VDP_PLUGIN_DIR . 'includes/class-client-messages.php';
         
-        // Debug helper - only load when WP_DEBUG is enabled
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            require_once VDP_PLUGIN_DIR . 'includes/debug-vdp.php';
-        }
 
         // Module files
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-dashboard.php';
@@ -105,10 +89,8 @@ class Vendor_Dashboard_Pro {
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-analytics.php';
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-settings.php';
         
-        // Integration files
         require_once VDP_PLUGIN_DIR . 'includes/integrations/class-listing-integration.php';
 
-        // Admin files
         if (is_admin()) {
             require_once VDP_PLUGIN_DIR . 'includes/admin/class-admin.php';
         }
@@ -118,19 +100,10 @@ class Vendor_Dashboard_Pro {
      * Initialize hooks.
      */
     private function init_hooks() {
-        // Initialize router
         add_action('init', array('VDP_Router', 'init'));
-        
-        // Initialize assets
         add_action('init', array('VDP_Assets', 'init'));
-        
-        // Initialize Ajax handler
         add_action('init', array('VDP_Ajax_Handler', 'init'));
-        
-        // Register shortcode
         add_shortcode('vendor_dashboard_pro', array('VDP_Router', 'shortcode_callback'));
-        
-        // Register AJAX handler for content loading
         add_action('wp_ajax_vdp_load_content', array('VDP_Router', 'ajax_load_content'));
     }
 
@@ -145,11 +118,9 @@ class Vendor_Dashboard_Pro {
      * Activate plugin.
      */
     public static function activate() {
-        // Create database tables
         if (class_exists('VDP_Installer')) {
             VDP_Installer::install();
         } else {
-            // Si por alguna razón la clase no existe, cargamos el archivo primero
             require_once VDP_PLUGIN_DIR . 'includes/class-installer.php';
             VDP_Installer::install();
         }

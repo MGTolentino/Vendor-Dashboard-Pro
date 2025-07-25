@@ -87,13 +87,6 @@ if (!defined('ABSPATH')) {
         }
     </style>
     
-    <!-- Script para detectar si estamos en la vista correcta -->
-    <script>
-    console.log("CARGANDO PLANTILLA DE VISTA DE MENSAJE INDIVIDUAL");
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("DOM cargado en vista de mensaje individual");
-    });
-    </script>
     
     <?php if (!$message) : ?>
         <div class="vdp-notice vdp-notice-error">
@@ -327,7 +320,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: {
                 action: 'vdp_mark_message_read',
-                nonce: '<?php echo wp_create_nonce('vdp-messages-nonce'); ?>',
+                nonce: '<?php echo wp_create_nonce('vdp-ajax-nonce'); ?>',
                 message_id: messageId
             },
             success: function(response) {
@@ -390,7 +383,7 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'vdp_archive_message',
-                    nonce: '<?php echo wp_create_nonce('vdp-messages-nonce'); ?>',
+                    nonce: '<?php echo wp_create_nonce('vdp-ajax-nonce'); ?>',
                     message_id: messageId
                 },
                 success: function(response) {
@@ -464,7 +457,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: {
                 action: 'vdp_send_reply',
-                nonce: '<?php echo wp_create_nonce('vdp-messages-nonce'); ?>',
+                nonce: '<?php echo wp_create_nonce('vdp-ajax-nonce'); ?>',
                 message_id: messageId,
                 content: replyContent
             },

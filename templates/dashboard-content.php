@@ -10,24 +10,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Get statistics if not provided
 if (!isset($statistics) || empty($statistics)) {
     $statistics = VDP_Dashboard::get_demo_statistics();
 }
 
-// Get performance level
 $performance_level = VDP_Dashboard::get_performance_level($statistics);
-
-// Get sales trend
 $sales_trend = VDP_Dashboard::get_sales_trend();
-
-// Get quick actions
 $quick_actions = VDP_Dashboard::get_quick_actions();
-
-// Get greeting
 $greeting = VDP_Dashboard::get_greeting();
-
-// Get vendor name safely
 $vendor_name = 'Vendor';
 if (is_object($vendor) && method_exists($vendor, 'get_name')) {
     $vendor_name = $vendor->get_name();

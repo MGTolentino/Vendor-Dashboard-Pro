@@ -37,7 +37,6 @@ class VDP_Orders {
      * Constructor.
      */
     public function __construct() {
-        // Initialize hooks
         add_action('vdp_orders_content', array($this, 'render_orders_list'), 10);
         add_action('vdp_order_view_content', array($this, 'render_order_view'), 10);
     }
@@ -46,28 +45,20 @@ class VDP_Orders {
      * Render orders list.
      */
     public function render_orders_list() {
-        // Get vendor
         $vendor = vdp_get_current_vendor();
         
         if (!$vendor) {
             return;
         }
         
-        // Get current page
         $paged = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
+        $per_page = apply_filters('vdp_orders_per_page', 10);
         
-        // Get orders per page
-        $per_page = 10;
-        
-        // For demo purposes, we'll create sample orders
-        // In a real implementation, you would get actual orders from HivePress
         $orders = self::get_demo_orders();
         
-        // Calculate total pages (for demo)
         $total_orders = count($orders);
         $total_pages = ceil($total_orders / $per_page);
         
-        // Include orders list template
         include VDP_PLUGIN_DIR . 'templates/orders-content.php';
     }
 
@@ -75,14 +66,12 @@ class VDP_Orders {
      * Render order view.
      */
     public function render_order_view() {
-        // Get vendor
         $vendor = vdp_get_current_vendor();
         
         if (!$vendor) {
             return;
         }
         
-        // Get order ID
         $order_id = get_query_var('vdp_item', 0);
         
         if (!$order_id) {
@@ -92,8 +81,6 @@ class VDP_Orders {
             return;
         }
         
-        // For demo purposes, we'll get a sample order
-        // In a real implementation, you would get the actual order from HivePress
         $order = self::get_demo_order($order_id);
         
         if (!$order) {
@@ -103,7 +90,6 @@ class VDP_Orders {
             return;
         }
         
-        // Include order view template
         include VDP_PLUGIN_DIR . 'templates/order-view-content.php';
     }
 
@@ -147,7 +133,6 @@ class VDP_Orders {
         
         foreach ($orders as $order) {
             if ($order['id'] == $order_id) {
-                // Add more details for the single order view
                 $order['items_details'] = self::get_demo_order_items($order_id);
                 $order['shipping_address'] = self::get_demo_shipping_address();
                 $order['billing_address'] = self::get_demo_billing_address();
@@ -324,5 +309,4 @@ class VDP_Orders {
     }
 }
 
-// Initialize Orders module
 VDP_Orders::instance();

@@ -11,9 +11,6 @@
      * Vendor Dashboard Pro Main Object
      */
     var VDP = {
-        /**
-         * Initialize the application
-         */
         init: function() {
             this.initNotifications();
             this.initCharts();
@@ -27,11 +24,7 @@
             this.initNavigation();
         },
 
-        /**
-         * Initialize navigation
-         */
         initNavigation: function() {
-            // Handle menu item clicks
             $('.vdp-sidebar-nav a').on('click', function(e) {
                 e.preventDefault();
                 var action = $(this).data('action');
@@ -39,37 +32,30 @@
                 VDP.loadContent(url, action);
             });
             
-            // Handle Add Listing button clicks
             $(document).on('click', '.vdp-add-listing-btn', function(e) {
                 e.preventDefault();
                 VDP.triggerAddListingForm();
             });
             
-            // Handle Add Listing links that use ajax-link class with specific data attributes
             $(document).on('click', 'a[data-action="products"][data-item="add"]', function(e) {
                 e.preventDefault();
                 VDP.triggerAddListingForm();
             });
             
-            // Handle Add Listing quick action cards
             $(document).on('click', 'a[href*="vdp-action=products&vdp-item=add"]', function(e) {
-                // Only if it's not already handled by other listeners
                 if (!$(this).hasClass('vdp-add-listing-btn') && !$(this).data('action')) {
                     e.preventDefault();
                     VDP.triggerAddListingForm();
                 }
             });
             
-            // Handle AJAX navigation
             $(document).on('click', '.vdp-content-area a.vdp-ajax-link', function(e) {
-                // Skip if this is a direct-link class or has message-related classes
-                // o si es un botón de Ver mensaje (texto "View")
                 if ($(this).hasClass('direct-link') || 
                     $(this).hasClass('vdp-message-view-btn') || 
                     $(this).parent().hasClass('vdp-message-actions') ||
                     $(this).text().trim() === 'View') {
                     
-                    return true; // Permitir comportamiento normal del enlace
+                    return true;
                 }
                 
                 e.preventDefault();
@@ -83,7 +69,6 @@
                 }
             });
             
-            // Handle browser back/forward buttons
             $(window).on('popstate', function(e) {
                 if (e.originalEvent.state) {
                     var state = e.originalEvent.state;
@@ -96,25 +81,16 @@
             });
         },
         
-        /**
-         * Build dashboard URL with action and item parameters
-         * 
-         * @param {string} action Action name
-         * @param {string|number} item Item ID (optional)
-         * @returns {string} URL
-         */
         buildDashboardUrl: function(action, item) {
             var url = vdp_vars.dashboard_url;
             var separator = url.indexOf('?') !== -1 ? '&' : '?';
             
-            // Si la acción es 'dashboard', usamos la URL base sin parámetros
             if (action && action !== 'dashboard') {
                 url += separator + 'vdp-action=' + action;
                 separator = '&';
             } else {
-                // Eliminar cualquier parámetro vdp-action existente si estamos construyendo la URL para dashboard
-                url = url.split('?')[0]; // Mantener solo la parte base de la URL
-                separator = '?'; // Reiniciar el separador
+                url = url.split('?')[0];
+                separator = '?';
             }
             
             if (item) {
@@ -124,49 +100,30 @@
             return url;
         },
         
-        /**
-         * Load content via AJAX
-         * 
-         * @param {string} url URL to load
-         * @param {string} action Current action
-         * @param {string|number} item Current item ID (optional)
-         * @param {boolean} updateHistory Whether to update browser history (default: true)
-         * @param {string|number} paged Page number for pagination (optional)
-         */
         loadContent: function(url, action, item, updateHistory, paged) {
-            // Default updateHistory to true if not specified
             updateHistory = (updateHistory !== false);
             
-            // Comprobar si ya tenemos el contenido en caché
             var cacheKey = 'vdp_cache_' + action + (item ? '_' + item : '') + (paged ? '_page_' + paged : '');
             var cachedContent = sessionStorage.getItem(cacheKey);
             var cachedTimestamp = parseInt(sessionStorage.getItem(cacheKey + '_timestamp') || '0', 10);
             var now = new Date().getTime();
-            var cacheExpiry = 60000; // 1 minuto de caché
+            var cacheExpiry = 60000;
             
-            // Actualizar correctamente el elemento activo del menú
-            // Primero quitamos la clase activa de todos los elementos
             $('.vdp-nav-item').removeClass('vdp-active');
-            // Luego añadimos la clase activa al elemento correspondiente a la acción actual
             $('#vdp-nav-' + action).addClass('vdp-active');
             
-            // También aseguramos que los enlaces tengan el estado correcto
             $('.vdp-sidebar-nav a').removeClass('vdp-active');
             $('.vdp-sidebar-nav a[data-action="' + action + '"]').addClass('vdp-active');
             
             
-            // Si tenemos contenido en caché y no ha expirado, usarlo
             if (cachedContent && (now - cachedTimestamp < cacheExpiry)) {
                 
-                // Primero destruimos cualquier gráfico existente para evitar errores de Canvas
                 if (action === 'dashboard') {
                     VDP.destroyExistingCharts();
                 }
                 
-                // Actualizar contenido desde caché
                 $('.vdp-content-area').html(cachedContent);
                 
-                // Reinicializar componentes
                 if (action === 'dashboard') {
                     VDP.initCharts();
                 } else if (action === 'products') {
@@ -179,7 +136,6 @@
                     VDP.initLeads();
                 }
                 
-                // Update browser history if needed
                 if (updateHistory) {
                     var state = {
                         url: url,
@@ -191,17 +147,13 @@
                     window.history.pushState(state, title, url);
                 }
                 
-                // Scroll to top
                 window.scrollTo(0, 0);
                 
                 return;
             }
             
-            // Si no hay caché o ha expirado, cargar contenido mediante AJAX
-            // Show loading indicator
             VDP.showLoading();
             
-            // Usamos POST en vez de GET para evitar problemas de caché
             $.ajax({
                 url: vdp_vars.ajax_url,
                 type: 'POST',
@@ -218,21 +170,17 @@
                         return;
                     }
                     
-                    // Primero destruimos cualquier gráfico existente para evitar errores de Canvas
                     if (action === 'dashboard') {
                         VDP.destroyExistingCharts();
                     }
                     
-                    // Actualizar solo el área de contenido con el HTML devuelto
                     $('.vdp-content-area').html(response.data.content);
                     
-                    // Actualizar el título de la página si es necesario
                     if (response.data.title) {
                         $('.vdp-header-title h1').text(response.data.title);
                     }
                     
                     
-                    // Guardar en caché el contenido para futuras cargas
                     var cacheKey = 'vdp_cache_' + action + (item ? '_' + item : '') + (paged ? '_page_' + paged : '');
                     try {
                         sessionStorage.setItem(cacheKey, response.data.content);
@@ -240,7 +188,6 @@
                     } catch (e) {
                     }
                     
-                    // Reinitialize components based on loaded content
                     if (action === 'dashboard') {
                         VDP.initCharts();
                     } else if (action === 'products') {
@@ -253,7 +200,6 @@
                         VDP.initLeads();
                     }
                     
-                    // Update browser history if needed
                     if (updateHistory) {
                         var state = {
                             url: url,
@@ -265,7 +211,6 @@
                         window.history.pushState(state, title, url);
                     }
                     
-                    // Scroll to top
                     window.scrollTo(0, 0);
                 },
                 error: function(xhr, status, error) {
@@ -277,18 +222,13 @@
             });
         },
 
-        /**
-         * Initialize notifications
-         */
         initNotifications: function() {
-            // Toggle notification dropdown
             $('.vdp-notification-toggle').on('click', function(e) {
                 e.preventDefault();
                 $('.vdp-notification-dropdown').toggleClass('vdp-show');
                 e.stopPropagation();
             });
 
-            // Close notification dropdown when clicking outside
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.vdp-notifications').length) {
                     $('.vdp-notification-dropdown').removeClass('vdp-show');
@@ -296,34 +236,25 @@
             });
         },
 
-        /**
-         * Initialize charts
-         */
         initCharts: function() {
-            // Check if we're on dashboard page and Chart.js is loaded
             if (!$('.vdp-dashboard-content').length || typeof Chart === 'undefined') {
                 return;
             }
             
             
-            // Destroy ALL existing charts completely
             this.destroyExistingCharts();
             
-            // Use fixed chart data instead of AJAX to improve performance
             var salesData = [];
             var viewsData = [];
             var conversionData = [];
             
-            // Generate some demo data
             for (var i = 0; i < 14; i++) {
                 salesData.push({date: 'Day ' + (i+1), value: 30 + Math.floor(Math.random() * 60)});
                 viewsData.push({date: 'Day ' + (i+1), value: 300 + Math.floor(Math.random() * 300)});
                 conversionData.push({date: 'Day ' + (i+1), value: 2 + Math.random() * 2.5});
             }
             
-            // Render charts with a small delay to ensure DOM is ready
             setTimeout(function() {
-                // Only attempt to render if charts don't exist yet
                 if (!Chart.getChart('salesChart')) {
                     VDP.renderChart('salesChart', 'Sales', salesData, '#3483fa');
                 }
@@ -338,13 +269,6 @@
             }, 100);
         },
 
-        /**
-         * Load chart data via AJAX
-         * 
-         * @param {string} metric Metric name
-         * @param {string} period Period
-         * @param {function} callback Callback function
-         */
         loadChartData: function(metric, period, callback) {
             $.ajax({
                 url: vdp_vars.ajax_url,
@@ -359,23 +283,16 @@
             });
         },
 
-        /**
-         * Destroy existing charts to prevent Canvas reuse errors
-         */
         destroyExistingCharts: function() {
-            // Destruir todas las instancias de Chart.js
-            // Esto es más eficiente y previene fugas de memoria
             var allCharts = Object.values(Chart.instances || {});
             
             if (allCharts.length) {
-                // Destruir todas las instancias existentes
                 allCharts.forEach(function(chart) {
                     if (chart && typeof chart.destroy === 'function') {
                         chart.destroy();
                     }
                 });
             } else {
-                // Fallback al método por ID si Chart.instances no está disponible
                 var chartIds = ['salesChart', 'viewsChart', 'conversionChart'];
                 
                 chartIds.forEach(function(chartId) {
@@ -390,14 +307,6 @@
             }
         },
 
-        /**
-         * Create gradient helper function
-         * 
-         * @param {CanvasRenderingContext2D} ctx Canvas context
-         * @param {string} startColor Start color
-         * @param {string} endColor End color
-         * @return {CanvasGradient} Gradient
-         */
         createGradient: function(ctx, startColor, endColor) {
             var gradient = ctx.createLinearGradient(0, 0, 0, 160);
             gradient.addColorStop(0, startColor);
@@ -405,19 +314,10 @@
             return gradient;
         },
 
-        /**
-         * Render chart
-         * 
-         * @param {string} chartId Chart canvas ID
-         * @param {string} label Chart label
-         * @param {array} data Chart data
-         * @param {string} color Chart color
-         */
         renderChart: function(chartId, label, data, color) {
             var canvas = document.getElementById(chartId);
             if (!canvas) return;
             
-            // Destruir gráfico existente si existe
             var existingChart = Chart.getChart(canvas);
             if (existingChart) {
                 existingChart.destroy();
@@ -425,7 +325,6 @@
 
             var ctx = canvas.getContext('2d');
             
-            // Extract dates and values
             var dates = [];
             var values = [];
             
@@ -434,7 +333,6 @@
                 values.push(item.value);
             });
             
-            // Create chart
             new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -500,25 +398,23 @@
             });
         },
 
-        /**
-         * Initialize products
-         */
         initProducts: function() {
-            // Check if we're on products page
             if (!$('.vdp-products-content').length) {
                 return;
             }
 
-            // Init product filters
             $('.vdp-filter-select').on('change', function() {
                 VDP.filterProducts();
             });
 
+            var searchTimeout;
             $('.vdp-search-products').on('input', function() {
-                VDP.filterProducts();
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    VDP.filterProducts();
+                }, 300);
             });
 
-            // Delete product/listing
             $(document).on('click', '.vdp-delete-product, .vdp-delete-listing', function(e) {
                 e.preventDefault();
                 
@@ -533,22 +429,17 @@
                 }
             });
 
-            // Listing form submission
             $('#vdp-listing-form').on('submit', function(e) {
                 e.preventDefault();
                 VDP.saveProduct($(this));
             });
         },
 
-        /**
-         * Filter products/listings
-         */
         filterProducts: function() {
             var category = $('.vdp-filter-select[name="category"]').val();
             var status = $('.vdp-filter-select[name="status"]').val();
             var search = $('.vdp-search-products').val().toLowerCase();
             
-            // Handle both old product rows and new listing cards
             var $items = $('.vdp-product-row, .vdp-listing-card');
             
             $items.each(function() {
@@ -569,11 +460,6 @@
             });
         },
 
-        /**
-         * Delete product
-         * 
-         * @param {int} productId Product ID
-         */
         deleteProduct: function(productId) {
             $.ajax({
                 url: vdp_vars.ajax_url,
@@ -589,7 +475,6 @@
                 success: function(response) {
                     if (response.success) {
                         VDP.showNotice(response.data.message, 'success');
-                        // Remove product row or listing card
                         $('.vdp-product-row[data-product-id="' + productId + '"], .vdp-listing-card[data-id="' + productId + '"]').fadeOut(300, function() {
                             $(this).remove();
                         });
@@ -606,11 +491,6 @@
             });
         },
 
-        /**
-         * Save product
-         * 
-         * @param {object} $form Form jQuery object
-         */
         saveProduct: function($form) {
             var formData = new FormData($form[0]);
             formData.append('action', 'vdp_save_listing');
@@ -630,7 +510,6 @@
                     if (response.success) {
                         VDP.showNotice(response.data.message, 'success');
                         
-                        // Redirect after a short delay
                         if (response.data.redirect) {
                             setTimeout(function() {
                                 window.location.href = response.data.redirect;
@@ -650,60 +529,43 @@
             });
         },
 
-        /**
-         * Initialize messages
-         */
         initMessages: function() {
-            // Check if we're on messages page
             if (!$('.vdp-messages-content').length && !$('.vdp-message-view-content').length) {
                 return;
             }
             
             
-            // Message filters
             $('.vdp-filter-select').on('change', function() {
                 VDP.filterMessages();
             });
             
+            var messagesSearchTimeout;
             $('.vdp-search-messages').on('input', function() {
-                VDP.filterMessages();
+                clearTimeout(messagesSearchTimeout);
+                messagesSearchTimeout = setTimeout(function() {
+                    VDP.filterMessages();
+                }, 300);
             });
             
-            // Message reply
             $('#vdp-message-reply-form').on('submit', function(e) {
                 e.preventDefault();
                 VDP.replyMessage($(this));
             });
             
-            // Garantizar que todos los botones de vista de mensaje funcionen correctamente
-            // Cuando se haga clic en un botón de vista de mensaje o en un enlace directo
             $(document).on('click', '.vdp-message-view-btn, .direct-link', function(e) {
-                // No prevenir el comportamiento predeterminado - permitir que el enlace funcione normalmente
-                // Esto es crucial para asegurar que la plantilla de vista se cargue correctamente
                 return true;
             });
         },
         
-        /**
-         * Load message view via direct navigation
-         * 
-         * @param {int} messageId Message ID
-         */
         loadMessageView: function(messageId) {
             if (!messageId) return;
             
-            // Build URL with message ID - asegurar que usamos 'messages' (plural)
             var url = VDP.buildDashboardUrl('messages', messageId);
             
-            // Force a page reload to this URL instead of AJAX
             window.location.href = url;
             
-            /* NO usar AJAX para cargar vistas de mensajes - siempre navegación directa */
         },
 
-        /**
-         * Filter messages
-         */
         filterMessages: function() {
             var status = $('.vdp-filter-select[name="status"]').val();
             var search = $('.vdp-search-messages').val().toLowerCase();
@@ -725,11 +587,6 @@
             });
         },
 
-        /**
-         * Reply to message
-         * 
-         * @param {object} $form Form jQuery object
-         */
         replyMessage: function($form) {
             var formData = new FormData($form[0]);
             formData.append('action', 'vdp_reply_message');
@@ -749,7 +606,6 @@
                     if (response.success) {
                         VDP.showNotice(response.data.message, 'success');
                         
-                        // Add reply to messages
                         if (response.data.reply_html) {
                             $('.vdp-message-thread').append(response.data.reply_html);
                             $form.find('textarea').val('');
@@ -768,27 +624,17 @@
             });
         },
 
-        /**
-         * Initialize settings
-         */
         initSettings: function() {
-            // Check if we're on settings page
             if (!$('.vdp-settings-content').length) {
                 return;
             }
             
-            // Settings form submission
             $('#vdp-settings-form').on('submit', function(e) {
                 e.preventDefault();
                 VDP.saveSettings($(this));
             });
         },
 
-        /**
-         * Save settings
-         * 
-         * @param {object} $form Form jQuery object
-         */
         saveSettings: function($form) {
             var formData = new FormData($form[0]);
             formData.append('action', 'vdp_save_vendor_settings');
@@ -821,9 +667,6 @@
             });
         },
 
-        /**
-         * Initialize expandable text
-         */
         initExpandableText: function() {
             $('.vdp-expand-toggle').on('click', function() {
                 var $expandable = $(this).closest('.vdp-expandable-text');
@@ -831,15 +674,11 @@
             });
         },
 
-        /**
-         * Initialize mobile menu
-         */
         initMobileMenu: function() {
             $('.vdp-mobile-menu-toggle').on('click', function() {
                 $('.vdp-sidebar').toggleClass('vdp-mobile-open');
             });
             
-            // Close mobile menu when clicking outside
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.vdp-sidebar, .vdp-mobile-menu-toggle').length) {
                     $('.vdp-sidebar').removeClass('vdp-mobile-open');
@@ -847,11 +686,7 @@
             });
         },
 
-        /**
-         * Initialize forms
-         */
         initForms: function() {
-            // File input
             $('.vdp-file-input').each(function() {
                 var $input = $(this);
                 var $fileBtn = $input.siblings('.vdp-file-btn');
@@ -879,65 +714,42 @@
             });
         },
 
-        /**
-         * Initialize AJAX loading
-         */
         initAjaxLoading: function() {
-            // Add loading container if not exists
             if (!$('.vdp-loading').length) {
                 $('body').append('<div class="vdp-loading"><div class="vdp-loading-spinner"></div></div>');
             }
             
-            // Add progress bar for smoother visual feedback during navigation
             if (!$('.vdp-progress').length) {
                 $('body').append('<div class="vdp-progress"></div>');
             }
             
-            // Add notice container if not exists
             if (!$('.vdp-notices').length) {
                 $('body').append('<div class="vdp-notices"></div>');
             }
         },
 
-        /**
-         * Show loading spinner
-         */
         showLoading: function() {
-            // Mostrar la barra de progreso animada
             $('.vdp-progress').addClass('vdp-active');
             
-            // Si tarda más de 500ms, mostrar el spinner también
             this.loadingTimeout = setTimeout(function() {
                 $('.vdp-loading').addClass('vdp-active');
             }, 500);
         },
 
-        /**
-         * Hide loading spinner
-         */
         hideLoading: function() {
-            // Ocultar tanto la barra de progreso como el spinner
             $('.vdp-loading').removeClass('vdp-active');
             $('.vdp-progress').removeClass('vdp-active');
             
-            // Reiniciar el ancho de la barra de progreso
             setTimeout(function() {
                 $('.vdp-progress').css('width', '0%');
             }, 300);
             
-            // Limpiar el timeout si existe
             if (this.loadingTimeout) {
                 clearTimeout(this.loadingTimeout);
                 this.loadingTimeout = null;
             }
         },
 
-        /**
-         * Show notice
-         * 
-         * @param {string} message Notice message
-         * @param {string} type Notice type (success, error, warning, info)
-         */
         showNotice: function(message, type) {
             type = type || 'info';
             
@@ -957,31 +769,21 @@
             }, 3000);
         },
         
-        /**
-         * Initialize leads
-         */
         initLeads: function() {
-            // Check if we're on leads page
             if (!$('.vdp-leads-content').length) {
                 return;
             }
             
-            // Initialize leads table functionality
             if (window.VDPLeads && typeof window.VDPLeads.init === 'function') {
                 window.VDPLeads.init();
             }
         },
         
-        /**
-         * Trigger HivePress add listing form
-         */
         triggerAddListingForm: function() {
-            // Open submit listing page in new tab
             window.open('/submit-listing/details/', '_blank');
         }
     };
 
-    // Initialize when DOM is ready
     $(document).ready(function() {
         VDP.init();
     });

@@ -47,12 +47,10 @@ class VDP_Leads {
         $this->leads_table = $wpdb->prefix . 'jet_cct_leads';
         $this->eventos_table = $wpdb->prefix . 'jet_cct_eventos';
         
-        // Initialize hooks
         add_action('vdp_leads_content', array($this, 'render_leads_dashboard'), 10);
         add_action('vdp_lead_view_content', array($this, 'render_lead_view'), 10);
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
         
-        // AJAX hooks
         add_action('wp_ajax_vdp_update_lead_status', array($this, 'ajax_update_lead_status'));
         add_action('wp_ajax_vdp_get_pipeline_leads', array($this, 'ajax_get_pipeline_leads'));
         add_action('wp_ajax_vdp_add_pipeline_lead', array($this, 'ajax_add_pipeline_lead'));
@@ -67,7 +65,6 @@ class VDP_Leads {
             return;
         }
 
-        // Copy styles from leads management plugin
         wp_enqueue_style(
             'vdp-leads-admin',
             VDP_PLUGIN_URL . 'assets/css/leads.css',
@@ -82,7 +79,6 @@ class VDP_Leads {
             VDP_VERSION
         );
 
-        // Pipeline CSS
         wp_enqueue_style(
             'vdp-pipeline-simple',
             VDP_PLUGIN_URL . 'assets/css/vdp-pipeline-simple.css',
@@ -90,7 +86,6 @@ class VDP_Leads {
             VDP_VERSION
         );
 
-        // jQuery UI for datepicker
         wp_enqueue_style(
             'jquery-ui-style',
             'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css',
@@ -108,7 +103,6 @@ class VDP_Leads {
             true
         );
 
-        // Pipeline JavaScript
         wp_enqueue_script(
             'vdp-pipeline-simple',
             VDP_PLUGIN_URL . 'assets/js/vdp-pipeline-simple.js',
@@ -119,7 +113,7 @@ class VDP_Leads {
 
         wp_localize_script('vdp-leads-pipeline', 'vdpLeads', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('vdp_leads_nonce'),
+            'nonce' => wp_create_nonce('vdp-ajax-nonce'),
             'site_url' => site_url(),
             'vendor_id' => $this->get_current_vendor_id(),
             'statusOptions' => $this->get_status_options()
@@ -130,7 +124,6 @@ class VDP_Leads {
      * Render leads dashboard.
      */
     public function render_leads_dashboard() {
-        // Get vendor
         $vendor = vdp_get_current_vendor();
         
         if (!$vendor) {
@@ -144,46 +137,12 @@ class VDP_Leads {
         
         // Check if leads tables exist
         if (!$this->check_leads_tables()) {
-            if (function_exists('vdp_debug_log')) {
-                vdp_debug_log("VDP Leads - Tables check failed. Leads table: {$this->leads_table}, Events table: {$this->eventos_table}", "error");
-            }
-            echo '<div class="vdp-notice vdp-notice-warning">';
+                echo '<div class="vdp-notice vdp-notice-warning">';
             echo '<p>' . esc_html__('Leads Management plugin tables not found. Please make sure the Leads Management plugin is installed and activated.', 'vendor-dashboard-pro') . '</p>';
             echo '</div>';
             return;
         }
         
-        // Debug additional table information
-        if (function_exists('vdp_debug_log')) {
-            global $wpdb;
-            
-            // Check table counts
-            $leads_count = $wpdb->get_var("SELECT COUNT(*) FROM {$this->leads_table}");
-            $eventos_count = $wpdb->get_var("SELECT COUNT(*) FROM {$this->eventos_table}");
-            
-            vdp_debug_log("VDP Leads - Total leads in database: " . $leads_count, "info");
-            vdp_debug_log("VDP Leads - Total events in database: " . $eventos_count, "info");
-            
-            // Check specific vendor listings
-            $vendor_listings = $wpdb->get_results($wpdb->prepare(
-                "SELECT ID, post_title, post_name FROM {$wpdb->posts} 
-                WHERE post_type = 'hp_listing' AND post_parent = %d",
-                $vendor_id
-            ));
-            
-            vdp_debug_log("VDP Leads - Vendor {$vendor_id} listings: " . json_encode($vendor_listings), "info");
-            
-            // Check sample events with URLs
-            $sample_events = $wpdb->get_results(
-                "SELECT evento_servicio_de_interes, COUNT(*) as count 
-                FROM {$this->eventos_table} 
-                WHERE evento_servicio_de_interes IS NOT NULL 
-                GROUP BY evento_servicio_de_interes 
-                LIMIT 10"
-            );
-            
-            vdp_debug_log("VDP Leads - Sample event URLs: " . json_encode($sample_events), "info");
-        }
 
         // Include leads dashboard template
         include VDP_PLUGIN_DIR . 'templates/leads-content.php';
@@ -250,16 +209,8 @@ class VDP_Leads {
         $args = wp_parse_args($args, $defaults);
         $vendor_id = $this->get_current_vendor_id();
         
-        // Debug logging for leads query
-        if (function_exists('vdp_debug_log')) {
-            vdp_debug_log("VDP Leads - get_vendor_leads called with vendor_id: " . $vendor_id, "info");
-            vdp_debug_log("VDP Leads - Query args: " . json_encode($args), "info");
-        }
         
         if (!$vendor_id) {
-            if (function_exists('vdp_debug_log')) {
-                vdp_debug_log("VDP Leads - No vendor_id found, returning empty array", "warning");
-            }
             return array();
         }
 
@@ -341,27 +292,9 @@ class VDP_Leads {
             $query .= $wpdb->prepare(" LIMIT %d OFFSET %d", $args['per_page'], $offset);
         }
 
-        // Debug logging final query
-        if (function_exists('vdp_debug_log')) {
-            $final_query = $wpdb->prepare($query, $values);
-            vdp_debug_log("VDP Leads - Final SQL query: " . $final_query, "info");
-            vdp_debug_log("VDP Leads - Query values: " . json_encode($values), "info");
-        }
 
         $results = $wpdb->get_results($wpdb->prepare($query, $values));
         
-        // Debug logging results
-        if (function_exists('vdp_debug_log')) {
-            vdp_debug_log("VDP Leads - Query returned " . count($results) . " results", "info");
-            if (!empty($results)) {
-                vdp_debug_log("VDP Leads - First result sample: " . json_encode($results[0]), "info");
-            }
-            
-            // Check for database errors
-            if ($wpdb->last_error) {
-                vdp_debug_log("VDP Leads - Database error: " . $wpdb->last_error, "error");
-            }
-        }
 
         return $results;
     }
@@ -515,11 +448,6 @@ class VDP_Leads {
             $vendor_id = $vendor->get_id();
         }
         
-        // Debug logging
-        if (function_exists('vdp_debug_log')) {
-            vdp_debug_log("VDP Leads - Current vendor object type: " . get_class($vendor), "info");
-            vdp_debug_log("VDP Leads - Current vendor ID: " . $vendor_id, "info");
-        }
         
         return $vendor_id;
     }
@@ -611,7 +539,7 @@ class VDP_Leads {
      */
     public function ajax_update_lead_status() {
         // Verify nonce
-        if (!check_ajax_referer('vdp_leads_nonce', 'nonce', false)) {
+        if (!check_ajax_referer('vdp-ajax-nonce', 'nonce', false)) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
             return;
         }
@@ -679,11 +607,6 @@ class VDP_Leads {
         
         $leads = $this->get_vendor_leads();
         
-        // Debug logging
-        if (function_exists('vdp_debug_log')) {
-            vdp_debug_log("VDP Leads - get_vendor_lead_stats called with vendor_id: " . $vendor_id, "info");
-            vdp_debug_log("VDP Leads - Stats leads count: " . count($leads), "info");
-        }
         
         // Initialize stats
         $stats = array('total' => count($leads));

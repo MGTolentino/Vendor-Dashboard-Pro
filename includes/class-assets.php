@@ -138,18 +138,6 @@ class VDP_Assets {
             }
             
             // Log para depuración CSS
-            if (function_exists('vdp_debug_log')) {
-                vdp_debug_log("Cargando estilos CSS de mensajes en todas las páginas", "info");
-                
-                // Log adicional para mensajes específicos
-                if (isset($_GET['vdp-action'])) {
-                    vdp_debug_log("Acción actual: " . $_GET['vdp-action'], "info");
-                    
-                    if (isset($_GET['vdp-item'])) {
-                        vdp_debug_log("Viendo mensaje con ID: " . $_GET['vdp-item'], "info");
-                    }
-                }
-            }
             
             wp_enqueue_script('vdp-main');
         }
@@ -165,7 +153,7 @@ class VDP_Assets {
                 'vdp_contact_vars',
                 array(
                     'ajax_url' => admin_url('admin-ajax.php'),
-                    'nonce' => wp_create_nonce('vdp-contact-nonce'),
+                    'nonce' => wp_create_nonce('vdp-ajax-nonce'),
                     'texts' => array(
                         'regarding' => __('Regarding:', 'vendor-dashboard-pro'),
                         'message_sent' => __('Your message has been sent successfully!', 'vendor-dashboard-pro'),
@@ -223,7 +211,7 @@ class VDP_Assets {
                 'vdpAdmin',
                 array(
                     'ajaxUrl' => admin_url('admin-ajax.php'),
-                    'nonce' => wp_create_nonce('vdp-admin-nonce'),
+                    'nonce' => wp_create_nonce('vdp-ajax-nonce'),
                 )
             );
         }

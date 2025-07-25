@@ -10,8 +10,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Si este template se carga directamente sin pasar por render_products_list,
-// cargar los listings automáticamente
 global $wpdb;
 $user_id = get_current_user_id();
 $auto_loaded_listings = false;
@@ -19,7 +17,6 @@ $auto_loaded_listings = false;
 if (!isset($listings) || !is_array($listings)) {
     $auto_loaded_listings = true;
     
-    // Obtener vendor_id
     if (!isset($vendor_id) && isset($vendor) && is_object($vendor)) {
         if (method_exists($vendor, 'get_id')) {
             $vendor_id = $vendor->get_id();
@@ -49,7 +46,7 @@ if (!isset($listings) || !is_array($listings)) {
     // Obtener listings si tenemos vendor_id
     if (isset($vendor_id)) {
         // Get vendor listings directamente por post_parent
-        $per_page = 10;
+        $per_page = apply_filters('vdp_products_per_page', 10);
         $paged = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
         
         $listings_posts = $wpdb->get_results($wpdb->prepare(

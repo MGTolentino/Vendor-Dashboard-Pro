@@ -15,11 +15,93 @@ if (!defined('ABSPATH')) {
  */
 class VDP_Router {
     /**
+     * Current dashboard action
+     *
+     * @var string
+     */
+    private static $current_action = '';
+    
+    /**
+     * Current dashboard item
+     *
+     * @var string
+     */
+    private static $current_item = '';
+    
+    /**
+     * Current page number
+     *
+     * @var int
+     */
+    private static $current_paged = 1;
+    
+    /**
      * Initialize router.
      */
     public static function init() {
         // Handle AJAX requests
         add_action('wp_ajax_vdp_load_content', array(__CLASS__, 'ajax_load_content'));
+    }
+    
+    /**
+     * Get the current dashboard action
+     *
+     * @return string
+     */
+    public static function get_current_action() {
+        return self::$current_action;
+    }
+    
+    /**
+     * Get the current dashboard item
+     *
+     * @return string
+     */
+    public static function get_current_item() {
+        return self::$current_item;
+    }
+    
+    /**
+     * Get the current page number
+     *
+     * @return int
+     */
+    public static function get_current_paged() {
+        return self::$current_paged;
+    }
+    
+    /**
+     * Set the current dashboard action
+     *
+     * @param string $action The action to set
+     */
+    public static function set_current_action($action) {
+        self::$current_action = $action;
+    }
+    
+    /**
+     * Set the current dashboard item
+     *
+     * @param string $item The item to set
+     */
+    public static function set_current_item($item) {
+        self::$current_item = $item;
+    }
+    
+    /**
+     * Set the current page number
+     *
+     * @param int $paged The page number to set
+     */
+    public static function set_current_paged($paged) {
+        self::$current_paged = $paged;
+    }
+    
+    /**
+     * Render content using stored action and item values
+     */
+    public static function render_current_content() {
+        self::render_content(self::$current_action, self::$current_item, self::$current_paged);
     }
 
     /**
@@ -44,32 +126,17 @@ class VDP_Router {
             return self::get_not_vendor_message();
         }
         
-        // Debug request parameters before processing
-        vdp_debug_log("Shortcode callback triggered with URL: " . $_SERVER['REQUEST_URI'], "info");
-        vdp_debug_log("GET parameters: " . json_encode($_GET), "info");
-        
         // Get current action and item from URL parameters
-        // Importante: Siempre usar 'dashboard' como acción por defecto
         $current_action = isset($_GET['vdp-action']) ? sanitize_key($_GET['vdp-action']) : 'dashboard';
         $current_item = isset($_GET['vdp-item']) ? sanitize_key($_GET['vdp-item']) : '';
         
-        // Corregir acción si viene como 'message' (singular) en lugar de 'messages' (plural)
         if ($current_action === 'message') {
-            vdp_debug_log("Corrigiendo acción 'message' a 'messages' en shortcode", "info");
             $current_action = 'messages';
         }
         
-        // Debugging importante - verificar que los parámetros de la URL se capturan correctamente
-        vdp_debug_log("Shortcode callback capturando parámetros: action=$current_action, item=$current_item", "info");
-        vdp_debug_log("URL Parameters: " . json_encode($_GET), "info");
-        
-        // Debug parsed parameters
-        vdp_debug_log("Parsed action: '$current_action', item: '$current_item'", "info");
-        
-        // Store current action and item in globals for template access
-        global $vdp_current_action, $vdp_current_item;
-        $vdp_current_action = $current_action;
-        $vdp_current_item = $current_item;
+        // Store current action and item in static properties
+        self::set_current_action($current_action);
+        self::set_current_item($current_item);
         
         // Si la URL actual es la URL base (sin vdp-action=dashboard), actualizar para evitar duplicidad
         if ($current_action === 'dashboard') {
@@ -78,7 +145,6 @@ class VDP_Router {
             
             // Si hay parámetros en la URL actual que incluyen vdp-action=dashboard
             if (strpos($current_url, 'vdp-action=dashboard') !== false) {
-                vdp_debug_log("Redirigiendo de URL con parámetros a URL base");
                 
                 // Eliminar solo el parámetro vdp-action=dashboard, manteniendo otros parámetros si existen
                 $url_parts = parse_url($current_url);
@@ -101,7 +167,6 @@ class VDP_Router {
         }
         
         // Registrar para depuración
-        vdp_debug_log("Acción actual establecida en router: " . $vdp_current_action);
         
         // Check if this is an AJAX request
         $is_ajax = isset($_GET['vdp_ajax']) && $_GET['vdp_ajax'] == 1;
@@ -142,8 +207,6 @@ class VDP_Router {
         }
         
         // Debug AJAX request
-        vdp_debug_log("AJAX load_content called with parameters:", "info");
-        vdp_debug_log("POST data: " . json_encode($_POST), "info");
         
         // Get action and item from request
         $action = isset($_POST['action']) ? sanitize_key($_POST['action']) : 'dashboard';
@@ -155,24 +218,20 @@ class VDP_Router {
         $paged = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
         
         // Additional debug for AJAX content loading
-        vdp_debug_log("AJAX loading content for action: " . $action . ", item: " . $item . ", paged: " . $paged, "info");
         
         // Special handling for message view
         if ($action === 'messages' && !empty($item)) {
-            vdp_debug_log("AJAX loading message view for message ID: " . $item, "info");
         }
         
         // Corregir acción si viene como 'message' (singular) en lugar de 'messages' (plural)
         if ($action === 'message') {
-            vdp_debug_log("Corrigiendo acción 'message' a 'messages'", "info");
             $action = 'messages';
         }
         
-        // Set globals for template access
-        global $vdp_current_action, $vdp_current_item, $vdp_current_paged;
-        $vdp_current_action = $action;
-        $vdp_current_item = $item;
-        $vdp_current_paged = $paged;
+        // Set static properties for template access
+        self::set_current_action($action);
+        self::set_current_item($item);
+        self::set_current_paged($paged);
         
         // Set $_GET['paged'] for compatibility with existing pagination code
         $_GET['paged'] = $paged;
@@ -188,7 +247,6 @@ class VDP_Router {
         
         // Verificar si el contenido es demasiado grande (posible inclusión de estructura completa)
         if (strlen($content) > 50000) { // Umbral arbitrario para detectar contenido excesivo
-            vdp_debug_log("Respuesta AJAX muy grande (" . strlen($content) . " bytes) para acción: " . $action, "warning");
         }
         
         // Send response con información adicional para depuración
@@ -216,7 +274,6 @@ class VDP_Router {
         // VERIFICACIÓN CRÍTICA: Si estamos en una vista de mensaje con item, saltarnos toda la lógica
         // compleja y cargar directamente la plantilla de vista de mensaje
         if ($action === 'messages' && !empty($item)) {
-            vdp_debug_log("SOLUCIÓN DIRECTA: Detectado acción 'messages' con item ID: " . $item, "info");
             
             // Obtener datos del vendedor y mensaje
             $vendor = vdp_get_current_vendor();
@@ -232,13 +289,11 @@ class VDP_Router {
             
             // Obtener el mensaje - primero intentar real, luego demo
             if (class_exists('VDP_Messages')) {
-                vdp_debug_log("Obteniendo datos del mensaje ID: " . $item, "info");
                 
                 if (method_exists('VDP_Messages', 'are_tables_created') && VDP_Messages::are_tables_created()) {
                     $message = VDP_Messages::get_message($item, $vendor_id);
                     
                     if (!$message) {
-                        vdp_debug_log("Mensaje real no encontrado, usando mensaje demo", "info");
                         $message = VDP_Messages::get_demo_message($item);
                     }
                 } else {
@@ -246,7 +301,6 @@ class VDP_Router {
                 }
             } else {
                 // Mensaje ficticio
-                vdp_debug_log("Clase VDP_Messages no encontrada, creando mensaje ficticio", "warning");
                 $message = array(
                     'id' => $item,
                     'subject' => 'Mensaje de ejemplo',
@@ -264,7 +318,6 @@ class VDP_Router {
             }
             
             // FORZAR INCLUIR LA PLANTILLA DE VISTA DE MENSAJE
-            vdp_debug_log("Forzando carga de plantilla message-view-content.php", "info");
             include(VDP_PLUGIN_DIR . 'templates/message-view-content.php');
             return;
         }
@@ -273,11 +326,6 @@ class VDP_Router {
         $content_rendered = false;
         
         // Registrar para depuración
-        vdp_debug_log("Renderizando contenido para acción: " . $action . ", item: " . $item);
-        
-        // Log detailed request information
-        vdp_debug_log("URL Parameters: " . json_encode($_GET), "info");
-        vdp_debug_log("Request URI: " . $_SERVER['REQUEST_URI'], "info");
         
         // Crear un nombre de acción basado en el módulo
         $action_hook = 'vdp_' . $action . '_content';
@@ -287,28 +335,23 @@ class VDP_Router {
             // Ejecutar hook específico para vista de detalle
             $detail_hook = 'vdp_' . $action . '_view_content';
             
-            vdp_debug_log("Attempting to use detail hook: " . $detail_hook, "info");
             
             // Primero verificar si alguien está escuchando este hook
             if (has_action($detail_hook)) {
-                vdp_debug_log("Detail hook found, executing: " . $detail_hook, "info");
                 do_action($detail_hook, $item);
                 $content_rendered = true;
                 return; // Salir después de renderizar
             } else {
-                vdp_debug_log("No listeners found for detail hook: " . $detail_hook, "warning");
             }
         }
         
         // Verificar si hay manejadores para este hook
         if (has_action($action_hook) && !$content_rendered) {
-            vdp_debug_log("Action hook found, executing: " . $action_hook, "info");
             // Ejecutar la acción que renderizará el contenido
             do_action($action_hook, $item);
             $content_rendered = true;
             return; // Salir después de renderizar
         } else if (!$content_rendered) {
-            vdp_debug_log("No listeners found for action hook: " . $action_hook, "warning");
         }
         
         // Fallback al sistema de include de templates si no hay hooks y aún no se ha renderizado contenido
@@ -343,7 +386,6 @@ class VDP_Router {
                 case 'messages':
                     // Este caso ahora es sólo para la lista de mensajes,
                     // la vista individual se maneja al inicio de la función render_content
-                    vdp_debug_log("Including messages-content.php (list view) - Caso del switch", "info");
                     include(VDP_PLUGIN_DIR . 'templates/messages-content.php');
                     break;
                     

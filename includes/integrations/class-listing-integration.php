@@ -127,7 +127,7 @@ class VDP_Listing_Integration {
             'vdp_contact_vars',
             array(
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('vdp-contact-nonce'),
+                'nonce' => wp_create_nonce('vdp-ajax-nonce'),
                 'texts' => array(
                     'send_message' => __('Send Message', 'vendor-dashboard-pro'),
                     'message_sent' => __('Your message has been sent!', 'vendor-dashboard-pro'),

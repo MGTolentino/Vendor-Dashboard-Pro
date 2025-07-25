@@ -81,7 +81,6 @@ class VDP_Dashboard {
             // Asegurar que siempre usemos la misma función para obtener listings
             $recent_listings = self::get_recent_vendor_listings($vendor_id, 3);
             // Registrar para depuración
-            vdp_debug_log("Cargados " . count($recent_listings) . " listings recientes para el dashboard");
         }
         
         // Get recent messages placeholder

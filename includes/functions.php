@@ -20,10 +20,8 @@ function vdp_is_user_vendor() {
         return false;
     }
 
-    // Get current user ID
     $user_id = get_current_user_id();
     
-    // Query for hp_vendor post where current user is the author
     global $wpdb;
     
     $vendor_count = $wpdb->get_var($wpdb->prepare(
@@ -53,16 +51,12 @@ function vdp_get_current_vendor() {
     }
     
     if (!is_user_logged_in()) {
-        vdp_debug_log("User not logged in in vdp_get_current_vendor()", "warning");
         $cache_checked = true;
         return null;
     }
 
-    // Get current user ID
     $user_id = get_current_user_id();
-    vdp_debug_log("Current user ID: " . $user_id);
     
-    // Query for hp_vendor post where current user is the author
     global $wpdb;
     
     $query = $wpdb->prepare(
@@ -74,16 +68,13 @@ function vdp_get_current_vendor() {
         $user_id
     );
     
-    vdp_debug_log("Vendor query: " . $query);
     
     $vendor_post = $wpdb->get_row($query);
     
     if ($vendor_post) {
-        vdp_debug_log("Vendor post found, ID: " . $vendor_post->ID . ", Title: " . $vendor_post->post_title);
         // Create a vendor object from post data
         $cached_vendor = vdp_create_vendor_from_post($vendor_post);
     } else {
-        vdp_debug_log("No vendor post found for user ID: " . $user_id, "warning");
         // No vendor found for this user
         $cached_vendor = null;
     }
@@ -240,7 +231,6 @@ function vdp_get_dashboard_url($action = '', $item = '') {
     // Para dashboard, usar URL base sin parámetros
     if (empty($action) || $action === 'dashboard') {
         // Para dashboard, no añadir parámetros de acción, usar URL base
-        vdp_debug_log("URL para dashboard sin parámetros: " . $url);
     } else {
         // Verificar si la acción incluye una ruta como 'messages/view'
         if (strpos($action, '/') !== false) {
@@ -258,18 +248,15 @@ function vdp_get_dashboard_url($action = '', $item = '') {
             // Para otras secciones, añadir el parámetro vdp-action
             $url = add_query_arg('vdp-action', $action, $url);
         }
-        vdp_debug_log("URL para " . $action . ": " . $url);
     }
     
     // Add item
     if (!empty($item)) {
         $url = add_query_arg('vdp-item', $item, $url);
         // Debug URL with item parameter
-        vdp_debug_log("Added item parameter '$item' to URL: $url", "info");
     }
     
     // Final debug output of constructed URL
-    vdp_debug_log("Final dashboard URL for action '$action', item '$item': $url", "info");
     
     return $url;
 }
@@ -311,28 +298,33 @@ function vdp_get_dashboard_page_id() {
  * @return string
  */
 function vdp_get_current_action() {
-    global $vdp_current_action;
-    
-    // Si la variable global está definida, usarla
-    if (isset($vdp_current_action) && !empty($vdp_current_action)) {
-        vdp_debug_log("Usando acción de variable global: " . $vdp_current_action);
-        return $vdp_current_action;
+    // First try to get from VDP_Router static property
+    if (class_exists('VDP_Router')) {
+        $action = VDP_Router::get_current_action();
+        if (!empty($action)) {
+            return $action;
+        }
     }
     
-    // Si hay un parámetro en la URL, usarlo
+    // Fallback to URL parameter
     if (isset($_GET['vdp-action']) && !empty($_GET['vdp-action'])) {
         $action = sanitize_key($_GET['vdp-action']);
-        vdp_debug_log("Usando acción de parámetro URL: " . $action);
         
-        // Establecer la variable global para uso futuro
-        $vdp_current_action = $action;
+        // Set in router if available
+        if (class_exists('VDP_Router')) {
+            VDP_Router::set_current_action($action);
+        }
+        
         return $action;
     }
     
-    // Si no hay variable global ni parámetro URL, establecer 'dashboard' como valor predeterminado
-    vdp_debug_log("No se encontró acción, usando default 'dashboard'");
-    $vdp_current_action = 'dashboard';
-    return 'dashboard';
+    // Default to dashboard
+    $default_action = 'dashboard';
+    if (class_exists('VDP_Router')) {
+        VDP_Router::set_current_action($default_action);
+    }
+    
+    return $default_action;
 }
 
 /**
@@ -341,14 +333,23 @@ function vdp_get_current_action() {
  * @return string
  */
 function vdp_get_current_item() {
-    global $vdp_current_item;
-    
-    if (isset($vdp_current_item)) {
-        return $vdp_current_item;
+    // First try to get from VDP_Router static property
+    if (class_exists('VDP_Router')) {
+        $item = VDP_Router::get_current_item();
+        if (!empty($item)) {
+            return $item;
+        }
     }
     
     // Fallback to URL parameter
-    return isset($_GET['vdp-item']) ? sanitize_key($_GET['vdp-item']) : '';
+    $item = isset($_GET['vdp-item']) ? sanitize_key($_GET['vdp-item']) : '';
+    
+    // Set in router if available
+    if (class_exists('VDP_Router') && !empty($item)) {
+        VDP_Router::set_current_item($item);
+    }
+    
+    return $item;
 }
 
 /**
@@ -467,7 +468,7 @@ function vdp_debug_log($message, $type = 'info') {
  * @return array Información sobre el estado actual.
  */
 function vdp_get_system_status() {
-    global $wpdb, $vdp_current_action, $vdp_current_item;
+    global $wpdb;
     
     $user_id = get_current_user_id();
     $vendor_id = null;
@@ -495,11 +496,20 @@ function vdp_get_system_status() {
         ));
     }
     
+    // Get current action and item from VDP_Router
+    $current_action = 'not set';
+    $current_item = 'not set';
+    
+    if (class_exists('VDP_Router')) {
+        $current_action = VDP_Router::get_current_action() ?: 'not set';
+        $current_item = VDP_Router::get_current_item() ?: 'not set';
+    }
+    
     return array(
         'user_id' => $user_id,
         'vendor_id' => $vendor_id,
-        'current_action' => isset($vdp_current_action) ? $vdp_current_action : 'not set',
-        'current_item' => isset($vdp_current_item) ? $vdp_current_item : 'not set',
+        'current_action' => $current_action,
+        'current_item' => $current_item,
         'listings_count' => isset($listings_count) ? $listings_count : 0,
         'request_url' => isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '',
         'is_ajax' => defined('DOING_AJAX') && DOING_AJAX,

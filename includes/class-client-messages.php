@@ -65,7 +65,7 @@ class VDP_Client_Messages {
             // Localizar script
             wp_localize_script('vdp-client-messages', 'vdp_client_messages', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('vdp-client-messages-nonce'),
+                'nonce' => wp_create_nonce('vdp-ajax-nonce'),
                 'messages_url' => get_permalink(),
                 'texts' => array(
                     'reply_sent' => __('Your reply has been sent!', 'vendor-dashboard-pro'),
@@ -331,7 +331,7 @@ class VDP_Client_Messages {
      */
     public function ajax_get_messages() {
         // Verificar nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-client-messages-nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
         }
         
@@ -361,7 +361,7 @@ class VDP_Client_Messages {
      */
     public function ajax_get_message() {
         // Verificar nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-client-messages-nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
         }
         
@@ -401,7 +401,7 @@ class VDP_Client_Messages {
      */
     public function ajax_send_reply() {
         // Verificar nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-client-messages-nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
         }
         

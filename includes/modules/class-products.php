@@ -244,7 +244,6 @@ class VDP_Products {
         
         // Si ya tenemos estos listings en caché, devolverlos directamente
         if (isset($listings_cache[$cache_key])) {
-            vdp_debug_log("Usando listings en caché para vendor_id: {$vendor_id}, limit: {$limit}, offset: {$offset}");
             return $listings_cache[$cache_key];
         }
         
@@ -273,7 +272,6 @@ class VDP_Products {
             $vendor_id, $limit, $offset
         );
         
-        vdp_debug_log("Consulta optimizada de listings: " . $query);
         
         // Ejecutar la consulta
         $listings = $wpdb->get_results($query);
@@ -314,7 +312,6 @@ class VDP_Products {
         
         // Si ya tenemos este conteo en caché, devolverlo directamente
         if (isset($count_cache[$vendor_id])) {
-            vdp_debug_log("Usando conteo de listings en caché para vendor_id: {$vendor_id}");
             return $count_cache[$vendor_id];
         }
         
@@ -334,11 +331,9 @@ class VDP_Products {
             $vendor_id
         );
         
-        vdp_debug_log("Listing count query: " . $query);
         
         $count = (int) $wpdb->get_var($query);
         
-        vdp_debug_log("Listing count result: " . $count);
         
         // Guardar en caché para futuras peticiones
         $count_cache[$vendor_id] = $count;

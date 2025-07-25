@@ -37,7 +37,6 @@ class VDP_Analytics {
      * Constructor.
      */
     public function __construct() {
-        // Initialize hooks
         add_action('vdp_analytics_content', array($this, 'render_analytics'), 10);
     }
 
@@ -45,17 +44,14 @@ class VDP_Analytics {
      * Render analytics content.
      */
     public function render_analytics() {
-        // Get vendor
         $vendor = vdp_get_current_vendor();
         
         if (!$vendor) {
             return;
         }
         
-        // Get analytics data
         $analytics_data = self::get_demo_analytics_data();
         
-        // Include analytics template
         include VDP_PLUGIN_DIR . 'templates/analytics-content.php';
     }
 
@@ -102,7 +98,6 @@ class VDP_Analytics {
         $current_month = date('n');
         $current_year = date('Y');
         
-        // Last 12 months data
         for ($i = 11; $i >= 0; $i--) {
             $month = $current_month - $i;
             $year = $current_year;
@@ -230,5 +225,4 @@ class VDP_Analytics {
     }
 }
 
-// Initialize Analytics module
 VDP_Analytics::instance();

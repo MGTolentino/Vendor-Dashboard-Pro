@@ -82,7 +82,7 @@ class VDP_Messages {
         $paged = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
         
         // Get messages per page
-        $per_page = 10;
+        $per_page = apply_filters('vdp_messages_per_page', 10);
         
         // Check if we should use real or demo data
         if (self::are_tables_created()) {
@@ -127,9 +127,6 @@ class VDP_Messages {
         $message_id = isset($_GET['vdp-item']) ? absint($_GET['vdp-item']) : 0;
         
         // Debugging message ID detection
-        vdp_debug_log("Message view render function called with vendor_id: $vendor_id", "info");
-        vdp_debug_log("GET parameters: " . json_encode($_GET), "info");
-        vdp_debug_log("Detected message_id: $message_id", "info");
         
         // Show error if no message ID
         if (!$message_id) {
@@ -174,8 +171,8 @@ class VDP_Messages {
         $table_messages = $wpdb->prefix . 'vdp_messages';
         $table_replies = $wpdb->prefix . 'vdp_message_replies';
         
-        $messages_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_messages}'") === $table_messages;
-        $replies_exists = $wpdb->get_var("SHOW TABLES LIKE '{$table_replies}'") === $table_replies;
+        $messages_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_messages)) === $table_messages;
+        $replies_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_replies)) === $table_replies;
         
         return $messages_exists && $replies_exists;
     }
@@ -191,11 +188,18 @@ class VDP_Messages {
     public static function get_vendor_messages($vendor_id, $paged = 1, $per_page = 10) {
         global $wpdb;
         
+        // Check cache first
+        $cache_key = 'vdp_vendor_messages_' . $vendor_id . '_' . $paged . '_' . $per_page;
+        $cached_messages = wp_cache_get($cache_key, 'vdp_messages');
+        
+        if ($cached_messages !== false) {
+            return $cached_messages;
+        }
+        
         $offset = ($paged - 1) * $per_page;
         $table_messages = $wpdb->prefix . 'vdp_messages';
         $table_replies = $wpdb->prefix . 'vdp_message_replies';
         
-        // Obtener mensajes de la base de datos
         $query = $wpdb->prepare(
             "SELECT m.*, 
                    COUNT(r.id) > 0 AS has_response,
@@ -263,6 +267,9 @@ class VDP_Messages {
             }
         }
         
+        // Cache the results for 5 minutes
+        wp_cache_set($cache_key, $messages, 'vdp_messages', 300);
+        
         return $messages;
     }
     
@@ -275,6 +282,14 @@ class VDP_Messages {
     public static function get_total_messages_count($vendor_id) {
         global $wpdb;
         
+        // Check cache first
+        $cache_key = 'vdp_total_messages_count_' . $vendor_id;
+        $cached_count = wp_cache_get($cache_key, 'vdp_messages');
+        
+        if ($cached_count !== false) {
+            return $cached_count;
+        }
+        
         $table_messages = $wpdb->prefix . 'vdp_messages';
         
         $count = $wpdb->get_var($wpdb->prepare(
@@ -282,7 +297,12 @@ class VDP_Messages {
             $vendor_id
         ));
         
-        return (int) $count;
+        $count = (int) $count;
+        
+        // Cache for 5 minutes
+        wp_cache_set($cache_key, $count, 'vdp_messages', 300);
+        
+        return $count;
     }
     
     /**
@@ -562,7 +582,7 @@ class VDP_Messages {
      */
     public function ajax_send_message() {
         // Verify nonce
-        if (!check_ajax_referer('vdp_compose_message', 'nonce', false)) {
+        if (!check_ajax_referer('vdp-ajax-nonce', 'nonce', false)) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
             return;
         }
