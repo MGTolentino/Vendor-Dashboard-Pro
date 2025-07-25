@@ -50,36 +50,72 @@ $vdp_status_options = array(
             <input type="text" id="vdp_quick_search" placeholder="<?php esc_attr_e('Search...', 'vendor-dashboard-pro'); ?>" class="vdp-filter-input">
             
             <select id="vdp_period_filter" class="vdp-filter-select">
-                <option value=""><?php esc_html_e('All periods', 'vendor-dashboard-pro'); ?></option>
-                <option value="today"><?php esc_html_e('Today', 'vendor-dashboard-pro'); ?></option>
-                <option value="this_week"><?php esc_html_e('This week', 'vendor-dashboard-pro'); ?></option>
-                <option value="this_month"><?php esc_html_e('This month', 'vendor-dashboard-pro'); ?></option>
-                <option value="this_year"><?php esc_html_e('This year', 'vendor-dashboard-pro'); ?></option>
-                <option value="custom"><?php esc_html_e('Custom range', 'vendor-dashboard-pro'); ?></option>
+                <option value="">Todos los períodos</option>
+                <option value="today">Hoy</option>
+                <option value="this_week">Esta semana</option>
+                <option value="this_month">Este mes</option>
+                <option value="this_year">Este año</option>
+                <option value="specific_month">Mes/Año específico</option>
+                <option value="custom">Rango personalizado</option>
             </select>
             
             <div id="vdp_custom_date_range" style="display:none;">
-                <input type="text" id="vdp_date_range" class="vdp-filter-input" title="<?php esc_attr_e('Date range', 'vendor-dashboard-pro'); ?>" placeholder="<?php esc_attr_e('Select date range', 'vendor-dashboard-pro'); ?>">
+                <input type="text" id="vdp_date_range" class="vdp-filter-input" title="Rango de fechas" placeholder="Seleccionar rango de fechas">
             </div>
             
-            <select id="vdp_service_filter" class="vdp-filter-select">
-                <option value=""><?php esc_html_e('All services', 'vendor-dashboard-pro'); ?></option>
-                <!-- Los servicios se cargarán dinámicamente -->
+            <div id="vdp_specific_month_range" style="display:none;">
+                <select id="vdp_mes_evento_basic" class="vdp-filter-select">
+                    <option value="">Seleccionar mes</option>
+                    <option value="01">Enero</option>
+                    <option value="02">Febrero</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Mayo</option>
+                    <option value="06">Junio</option>
+                    <option value="07">Julio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+                
+                <select id="vdp_anio_evento" class="vdp-filter-select">
+                    <option value="">Seleccionar año</option>
+                    <?php
+                    $current_year = date('Y');
+                    for ($year = 2000; $year <= ($current_year + 5); $year++) {
+                        echo '<option value="' . $year . '">' . $year . '</option>';
+                    }
+                    ?>
+                </select>
+            </div>
+            
+            <select id="vdp_event_type_filter" class="vdp-filter-select">
+                <option value="">Todos los tipos</option>
+                <!-- Los tipos se cargarán dinámicamente -->
             </select>
             
             <select id="vdp_priority_filter" class="vdp-filter-select">
-                <option value=""><?php esc_html_e('All priorities', 'vendor-dashboard-pro'); ?></option>
-                <option value="alta"><?php esc_html_e('High', 'vendor-dashboard-pro'); ?></option>
-                <option value="media"><?php esc_html_e('Medium', 'vendor-dashboard-pro'); ?></option>
-                <option value="baja"><?php esc_html_e('Low', 'vendor-dashboard-pro'); ?></option>
+                <option value="">Todas las prioridades</option>
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
             </select>
             
-            <button id="vdp_apply_filters" class="vdp-btn vdp-btn-secondary"><?php esc_html_e('Filter', 'vendor-dashboard-pro'); ?></button>
-            <button id="vdp_clear_filters" class="vdp-btn vdp-btn-text"><?php esc_html_e('Clear', 'vendor-dashboard-pro'); ?></button>
+            <button id="vdp_apply_filters" class="vdp-btn vdp-btn-secondary">Filtrar</button>
+            <button id="vdp_clear_filters" class="vdp-btn vdp-btn-text">Limpiar</button>
+        </div>
+        
+        <div class="vdp-filter-extras">
+            <label>
+                <input type="checkbox" id="vdp_show_leads_without_event">
+                Mostrar leads sin evento
+            </label>
         </div>
         
         <div class="vdp-pipeline-stats">
-            <?php esc_html_e('Total:', 'vendor-dashboard-pro'); ?> <span id="vdp_total_leads">0</span>
+            Total: <span id="vdp_total_leads">0</span>
         </div>
     </div>
 
