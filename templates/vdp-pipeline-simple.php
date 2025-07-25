@@ -199,6 +199,11 @@ $vdp_status_options = array(
     </div>
 </div>
 
+<!-- Cargar librerías requeridas directamente -->
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css">
+
 <!-- Modal para actualizar status -->
 <div id="vdp_status_modal" class="vdp-modal">
     <div class="vdp-modal-content vdp-modal-small">
