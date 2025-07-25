@@ -413,33 +413,44 @@
         },
         
         /**
-         * Aplicar filtros
+         * Aplicar filtros (versión actualizada)
          */
         applyFilters: function() {
-            this.currentFilters = {
+            console.log('Applying filters...');
+            var filters = {
                 search: $('#vdp_quick_search').val(),
                 period: $('#vdp_period_filter').val(),
-                service: $('#vdp_service_filter').val(),
+                month: $('#vdp_mes_evento_basic').val(),
+                year: $('#vdp_anio_evento').val(),
+                dateRange: $('#vdp_date_range').val(),
+                eventType: $('#vdp_event_type_filter').val(),
                 priority: $('#vdp_priority_filter').val(),
-                date_range: $('#vdp_date_range').val()
+                showWithoutEvent: $('#vdp_show_leads_without_event').is(':checked')
             };
             
-            this.loadPipelineData();
+            console.log('Active filters:', filters);
+            this.currentFilters = filters;
+            // Aquí implementarías la lógica real de filtrado
         },
         
         /**
-         * Limpiar filtros
+         * Limpiar filtros (versión actualizada)
          */
         clearFilters: function() {
             $('#vdp_quick_search').val('');
             $('#vdp_period_filter').val('');
-            $('#vdp_service_filter').val('');
+            $('#vdp_event_type_filter').val('');
             $('#vdp_priority_filter').val('');
             $('#vdp_date_range').val('');
-            $('#vdp_custom_date_range').hide();
+            $('#vdp_mes_evento_basic').val('');
+            $('#vdp_anio_evento').val('');
+            $('#vdp_show_leads_without_event').prop('checked', false);
+            
+            // Ocultar rangos de fecha
+            $('#vdp_custom_date_range, #vdp_specific_month_range').hide();
             
             this.currentFilters = {};
-            this.loadPipelineData();
+            this.applyFilters();
         },
         
         /**
@@ -450,16 +461,20 @@
         },
         
         /**
-         * Cambio en filtro de período
+         * Debounce function
          */
-        onPeriodFilterChange: function() {
-            const period = $('#vdp_period_filter').val();
-            
-            if (period === 'custom') {
-                $('#vdp_custom_date_range').show();
-            } else {
-                $('#vdp_custom_date_range').hide();
-            }
+        debounce: function(func, wait) {
+            var timeout;
+            return function executedFunction() {
+                var context = this;
+                var args = arguments;
+                var later = function() {
+                    timeout = null;
+                    func.apply(context, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         },
         
         /**
@@ -494,6 +509,51 @@
                 // Fallback simple
                 alert(message);
             }
+        },
+        
+        /**
+         * Inicializar DateRangePicker
+         */
+        initializeDateRangePicker: function() {
+            if (typeof daterangepicker === 'undefined' || typeof moment === 'undefined') {
+                console.warn('DateRangePicker or Moment.js not loaded');
+                return;
+            }
+            
+            var self = this;
+            
+            // Configurar DateRangePicker
+            $('#vdp_date_range').daterangepicker({
+                autoUpdateInput: false,
+                autoApply: true,
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    separator: ' - ',
+                    daysOfWeek: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                    monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                               'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    firstDay: 1,
+                    cancelLabel: 'Limpiar',
+                    applyLabel: 'Aplicar'
+                },
+                singleDatePicker: false,
+                showDropdowns: true,
+                minYear: 2000,
+                maxYear: parseInt(moment().format('YYYY'), 10) + 5
+            });
+            
+            // Event handlers para DateRangePicker
+            $('#vdp_date_range').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                self.applyFilters();
+            });
+            
+            $('#vdp_date_range').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                self.applyFilters();
+            });
+            
+            console.log('DateRangePicker initialized successfully');
         },
         
         /**
