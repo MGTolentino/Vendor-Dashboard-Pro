@@ -27,15 +27,13 @@ if (!$vendor) {
     return;
 }
 
-// Status mapping - mapear de sistema LM a VDP
+// Status mapping - usar exactamente los mismos estados del plugin original Leads-Management
 $vdp_status_options = array(
-    'nuevo' => __('New', 'vendor-dashboard-pro'),
-    'contactado' => __('Contacted', 'vendor-dashboard-pro'),
-    'cita-agendada' => __('Appointment Scheduled', 'vendor-dashboard-pro'),
-    'propuesta-enviada' => __('Proposal Sent', 'vendor-dashboard-pro'),
-    'negociacion' => __('Negotiation', 'vendor-dashboard-pro'),
-    'cerrado-ganado' => __('Closed Won', 'vendor-dashboard-pro'),
-    'cerrado-perdido' => __('Closed Lost', 'vendor-dashboard-pro')
+    'nuevo' => 'Nuevo',
+    'con-presupuesto' => 'Con Cotización',
+    'por-cerrar' => 'Por cerrar',
+    'con-contrato' => 'Con contrato',
+    'perdido' => 'Perdido'
 );
 ?>
 

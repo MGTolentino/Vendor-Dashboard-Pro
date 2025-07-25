@@ -171,31 +171,15 @@
          * Crear tarjeta de lead
          */
         createLeadCard: function(lead) {
-            const serviceName = lead.service_url ? this.extractServiceName(lead.service_url) : 'General';
-            const priority = lead.lead_priority || 'media';
-            
             return $(`
-                <div class=\"vdp-lead-card\" data-lead-id=\"${lead._ID}\" data-status=\"${lead.evento_status}\" data-priority=\"${priority}\" draggable=\"true\">
-                    <div class=\"vdp-lead-name\">${this.escapeHtml(lead.lead_nombre + ' ' + lead.lead_apellido)}</div>
-                    <div class=\"vdp-lead-info\">
-                        <i class=\"fas fa-envelope\"></i>
-                        ${this.escapeHtml(lead.lead_email)}
-                    </div>
-                    <div class=\"vdp-lead-info\">
-                        <i class=\"fas fa-phone\"></i>
-                        ${this.escapeHtml(lead.lead_celular)}
-                    </div>
-                    <div class=\"vdp-lead-info\">
-                        <i class=\"fas fa-heart\"></i>
-                        ${this.escapeHtml(serviceName)}
-                    </div>
+                <div class=\"vdp-lead-card\" data-lead-id=\"${lead.lead_id}\" data-evento-id=\"${lead.evento_id || ''}\" data-status=\"${lead.evento_status}\" draggable=\"${lead.evento_id ? 'true' : 'false'}\">
+                    <div class=\"vdp-lead-name\">${this.escapeHtml(lead.nombre_completo)}</div>
+                    ${lead.tipo_evento ? `<div class=\"vdp-lead-info\">Evento: ${this.escapeHtml(lead.tipo_evento)}</div>` : ''}
+                    ${lead.fecha_evento ? `<div class=\"vdp-lead-info\">Fecha: ${this.escapeHtml(lead.fecha_evento)}</div>` : ''}
+                    ${lead.servicio_titulo ? `<div class=\"vdp-lead-info service-info\">Servicio: ${this.escapeHtml(lead.servicio_titulo)}</div>` : ''}
                     <div class=\"vdp-lead-actions\">
-                        <button class=\"vdp-update-status\" data-lead-id=\"${lead._ID}\">
-                            <i class=\"fas fa-edit\"></i> Update Status
-                        </button>
-                        <button class=\"vdp-view-details\" data-lead-id=\"${lead._ID}\">
-                            <i class=\"fas fa-eye\"></i> View
-                        </button>
+                        <a href=\"/lead-details/lead-${lead.lead_id}\" target=\"_blank\" onclick=\"event.stopPropagation();\">Ver lead</a>
+                        ${lead.evento_id ? `<a href=\"/event-details/event-${lead.evento_id}\" target=\"_blank\" onclick=\"event.stopPropagation();\">Ver evento</a>` : ''}
                     </div>
                 </div>
             `);
