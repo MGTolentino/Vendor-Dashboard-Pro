@@ -43,9 +43,9 @@
     box-shadow: 0 0 0 1px #007cba;
 }
 
-/* Contenedores de rangos de fecha */
-.vdp-date-range-container,
-.vdp-month-year-container {
+/* Contenedores de rangos de fecha - solo mostrar cuando NO tienen display:none */
+.vdp-date-range-container:not([style*="display:none"]):not([style*="display: none"]),
+.vdp-month-year-container:not([style*="display:none"]):not([style*="display: none"]) {
     display: flex;
     align-items: center;
     gap: 4px;

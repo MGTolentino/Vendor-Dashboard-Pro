@@ -28,8 +28,8 @@
     max-width: 140px;
 }
 
-.vdp-table-filters .vdp-date-range-container,
-.vdp-table-filters .vdp-month-year-container {
+.vdp-table-filters .vdp-date-range-container:not([style*="display:none"]):not([style*="display: none"]),
+.vdp-table-filters .vdp-month-year-container:not([style*="display:none"]):not([style*="display: none"]) {
     display: flex;
     align-items: center;
     gap: 4px;
