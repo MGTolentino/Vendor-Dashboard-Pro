@@ -50,74 +50,13 @@ class VDP_Analytics {
             return;
         }
         
-        $analytics_data = self::get_demo_analytics_data();
+        // Get real analytics data for this vendor
+        $analytics_data = self::get_vendor_analytics_data($vendor->get_id());
         
         include VDP_PLUGIN_DIR . 'templates/analytics-content.php';
     }
 
-    /**
-     * Get demo analytics data.
-     *
-     * @return array
-     */
-    public static function get_demo_analytics_data() {
-        return array(
-            'summary' => self::get_demo_summary_data(),
-            'sales_chart' => self::get_demo_sales_chart_data(),
-            'visits_chart' => self::get_demo_visits_chart_data(),
-            'top_products' => self::get_demo_top_products(),
-            'conversion_rate' => self::get_demo_conversion_rate_data(),
-            'performance_metrics' => self::get_demo_performance_metrics(),
-        );
-    }
 
-    /**
-     * Get demo summary data.
-     *
-     * @return array
-     */
-    public static function get_demo_summary_data() {
-        return array(
-            'sales_count' => rand(50, 500),
-            'sales_amount' => rand(5000, 50000),
-            'views_count' => rand(1000, 10000),
-            'conversion_rate' => rand(3, 8),
-            'average_order_value' => rand(50, 200),
-            'sales_increase' => rand(5, 20),
-            'views_increase' => rand(10, 30),
-        );
-    }
-
-    /**
-     * Get demo sales chart data.
-     *
-     * @return array
-     */
-    public static function get_demo_sales_chart_data() {
-        $data = array();
-        $current_month = date('n');
-        $current_year = date('Y');
-        
-        for ($i = 11; $i >= 0; $i--) {
-            $month = $current_month - $i;
-            $year = $current_year;
-            
-            if ($month <= 0) {
-                $month += 12;
-                $year--;
-            }
-            
-            $month_name = date('F', mktime(0, 0, 0, $month, 1, $year));
-            $sales = rand(5000, 20000);
-            
-            $data[] = array(
-                'month' => $month_name,
-                'sales' => $sales,
-            );
-        }
-        
-        return $data;
-    }
 
     /**
      * Get vendor visits chart data.
@@ -133,25 +72,198 @@ class VDP_Analytics {
     }
 
     /**
-     * Get demo top products.
+     * Get vendor analytics data.
      *
+     * @param int $vendor_id Vendor post ID
+     * @param array $args Date range and other filters
      * @return array
      */
-    public static function get_demo_top_products() {
-        $products = array();
+    public static function get_vendor_analytics_data($vendor_id, $args = array()) {
+        $args = wp_parse_args($args, array(
+            'date_from' => date('Y-m-d', strtotime('-30 days')),
+            'date_to' => date('Y-m-d'),
+        ));
         
-        for ($i = 1; $i <= 5; $i++) {
-            $products[] = array(
-                'id' => $i,
-                'title' => 'Product ' . $i,
-                'sales_count' => rand(10, 100),
-                'sales_amount' => rand(1000, 10000),
-                'views' => rand(100, 1000),
-                'conversion_rate' => rand(3, 15),
-            );
+        return array(
+            'summary' => self::get_vendor_summary_data($vendor_id, $args),
+            'sales_chart' => self::get_vendor_sales_chart_data($vendor_id, $args),
+            'top_products' => self::get_vendor_top_products($vendor_id, $args),
+            'performance_metrics' => self::get_vendor_performance_metrics($vendor_id, $args),
+        );
+    }
+
+    /**
+     * Get vendor summary data.
+     *
+     * @param int $vendor_id Vendor post ID
+     * @param array $args Date range and other filters
+     * @return array
+     */
+    public static function get_vendor_summary_data($vendor_id, $args = array()) {
+        // Get current period orders
+        $current_orders = wc_get_orders(array(
+            'status' => array('wc-processing', 'wc-completed'),
+            'date_created' => $args['date_from'] . '...' . $args['date_to'],
+            'meta_key' => 'hp_vendor',
+            'meta_value' => $vendor_id,
+            'limit' => -1,
+        ));
+        
+        // Get previous period for comparison
+        $days_diff = (strtotime($args['date_to']) - strtotime($args['date_from'])) / 86400;
+        $previous_from = date('Y-m-d', strtotime($args['date_from'] . ' -' . $days_diff . ' days'));
+        $previous_to = date('Y-m-d', strtotime($args['date_from'] . ' -1 day'));
+        
+        $previous_orders = wc_get_orders(array(
+            'status' => array('wc-processing', 'wc-completed'),
+            'date_created' => $previous_from . '...' . $previous_to,
+            'meta_key' => 'hp_vendor',
+            'meta_value' => $vendor_id,
+            'limit' => -1,
+        ));
+        
+        // Calculate current period metrics
+        $current_sales_count = count($current_orders);
+        $current_sales_amount = array_sum(array_map(function($order) {
+            return $order->get_total();
+        }, $current_orders));
+        
+        // Calculate previous period metrics
+        $previous_sales_count = count($previous_orders);
+        $previous_sales_amount = array_sum(array_map(function($order) {
+            return $order->get_total();
+        }, $previous_orders));
+        
+        // Calculate percentage changes
+        $sales_increase = $previous_sales_count > 0 
+            ? round((($current_sales_count - $previous_sales_count) / $previous_sales_count) * 100, 1)
+            : 0;
+            
+        $amount_increase = $previous_sales_amount > 0 
+            ? round((($current_sales_amount - $previous_sales_amount) / $previous_sales_amount) * 100, 1)
+            : 0;
+        
+        // Get views count from listings
+        $listings = self::get_vendor_listings($vendor_id);
+        $views_count = 0;
+        foreach ($listings as $listing_id) {
+            $views_count += (int) get_post_meta($listing_id, 'hp_view_count', true);
         }
         
-        return $products;
+        // Calculate conversion rate
+        $conversion_rate = $views_count > 0 ? round(($current_sales_count / $views_count) * 100, 2) : 0;
+        
+        // Calculate average order value
+        $average_order_value = $current_sales_count > 0 ? $current_sales_amount / $current_sales_count : 0;
+        
+        return array(
+            'sales_count' => $current_sales_count,
+            'sales_amount' => $current_sales_amount,
+            'views_count' => $views_count,
+            'conversion_rate' => $conversion_rate,
+            'average_order_value' => $average_order_value,
+            'sales_increase' => $sales_increase,
+            'amount_increase' => $amount_increase,
+        );
+    }
+
+    /**
+     * Get vendor sales chart data.
+     *
+     * @param int $vendor_id Vendor post ID
+     * @param array $args Date range and other filters
+     * @return array
+     */
+    public static function get_vendor_sales_chart_data($vendor_id, $args = array()) {
+        $chart_data = array();
+        $start_date = new DateTime($args['date_from']);
+        $end_date = new DateTime($args['date_to']);
+        
+        while ($start_date <= $end_date) {
+            $current_date = $start_date->format('Y-m-d');
+            
+            // Get orders for this specific day
+            $daily_orders = wc_get_orders(array(
+                'status' => array('wc-processing', 'wc-completed'),
+                'date_created' => $current_date,
+                'meta_key' => 'hp_vendor',
+                'meta_value' => $vendor_id,
+                'limit' => -1,
+            ));
+            
+            $daily_sales = array_sum(array_map(function($order) {
+                return $order->get_total();
+            }, $daily_orders));
+            
+            $chart_data[] = array(
+                'date' => $current_date,
+                'sales' => $daily_sales,
+                'orders' => count($daily_orders),
+            );
+            
+            $start_date->modify('+1 day');
+        }
+        
+        return $chart_data;
+    }
+
+    /**
+     * Get vendor top products.
+     *
+     * @param int $vendor_id Vendor post ID
+     * @param array $args Date range and other filters
+     * @return array
+     */
+    public static function get_vendor_top_products($vendor_id, $args = array()) {
+        // Get all orders in the period
+        $orders = wc_get_orders(array(
+            'status' => array('wc-processing', 'wc-completed'),
+            'date_created' => $args['date_from'] . '...' . $args['date_to'],
+            'meta_key' => 'hp_vendor',
+            'meta_value' => $vendor_id,
+            'limit' => -1,
+        ));
+        
+        $product_stats = array();
+        
+        foreach ($orders as $order) {
+            foreach ($order->get_items() as $item) {
+                $product_id = $item->get_product_id();
+                $product = $item->get_product();
+                
+                if (!$product) continue;
+                
+                if (!isset($product_stats[$product_id])) {
+                    $product_stats[$product_id] = array(
+                        'id' => $product_id,
+                        'title' => $product->get_name(),
+                        'sales_count' => 0,
+                        'quantity_sold' => 0,
+                        'sales_amount' => 0,
+                        'views' => (int) get_post_meta($product_id, 'hp_view_count', true),
+                    );
+                }
+                
+                $product_stats[$product_id]['sales_count']++;
+                $product_stats[$product_id]['quantity_sold'] += $item->get_quantity();
+                $product_stats[$product_id]['sales_amount'] += $item->get_total();
+            }
+        }
+        
+        // Calculate conversion rates and sort by sales amount
+        foreach ($product_stats as &$stats) {
+            $stats['conversion_rate'] = $stats['views'] > 0 
+                ? round(($stats['sales_count'] / $stats['views']) * 100, 2) 
+                : 0;
+        }
+        
+        // Sort by sales amount descending
+        uasort($product_stats, function($a, $b) {
+            return $b['sales_amount'] <=> $a['sales_amount'];
+        });
+        
+        // Return top 5 products
+        return array_slice($product_stats, 0, 5);
     }
 
     /**
