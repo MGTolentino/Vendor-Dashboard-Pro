@@ -393,6 +393,14 @@ class VDP_Router {
                     include(VDP_PLUGIN_DIR . 'templates/analytics-content.php');
                     break;
                     
+                case 'bookings':
+                    include(VDP_PLUGIN_DIR . 'templates/bookings-content.php');
+                    break;
+                    
+                case 'calendar':
+                    include(VDP_PLUGIN_DIR . 'templates/calendar-content.php');
+                    break;
+                    
                 case 'settings':
                     include(VDP_PLUGIN_DIR . 'templates/settings-content.php');
                     break;

@@ -87,10 +87,19 @@ class VDP_Assets {
             true
         );
         
+        // Register FullCalendar for booking calendar functionality
+        wp_register_script(
+            'vdp-fullcalendar',
+            'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js',
+            array(),
+            '6.1.8',
+            true
+        );
+        
         wp_register_script(
             'vdp-main',
             VDP_PLUGIN_URL . 'assets/js/main.js',
-            array('jquery', 'vdp-chart'),
+            array('jquery', 'vdp-chart', 'vdp-fullcalendar'),
             VDP_VERSION,
             true
         );
@@ -113,6 +122,18 @@ class VDP_Assets {
                     'send_reply' => __('Send Reply', 'vendor-dashboard-pro'),
                     'sending' => __('Sending...', 'vendor-dashboard-pro'),
                 ),
+            )
+        );
+        
+        // Additional localization for calendar and bookings
+        wp_localize_script(
+            'vdp-main',
+            'vdp_ajax',
+            array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('vdp_orders_nonce'),
+                'calendar_nonce' => wp_create_nonce('vdp_calendar_nonce'),
+                'bookings_nonce' => wp_create_nonce('vdp_bookings_nonce'),
             )
         );
     }

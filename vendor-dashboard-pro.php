@@ -88,6 +88,7 @@ class Vendor_Dashboard_Pro {
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-messages.php';
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-analytics.php';
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-bookings.php';
+        require_once VDP_PLUGIN_DIR . 'includes/modules/class-calendar.php';
         require_once VDP_PLUGIN_DIR . 'includes/modules/class-settings.php';
         
         require_once VDP_PLUGIN_DIR . 'includes/integrations/class-listing-integration.php';

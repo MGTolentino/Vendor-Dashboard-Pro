@@ -14,16 +14,78 @@ $summary = $bookings_data['summary'];
 $bookings = $bookings_data['bookings'];
 $statistics = $bookings_data['statistics'];
 $calendar_data = $bookings_data['calendar_data'];
+
+// Get calendar configuration and language detection
+$calendar_config = VDP_Calendar::get_calendar_config();
+$locale = VDP_Calendar::get_calendar_locale();
+$is_spanish = strpos($locale, 'es') === 0;
+
+// Text labels based on language
+$labels = $is_spanish ? array(
+    'title' => 'Reservaciones',
+    'export' => 'Exportar',
+    'total_bookings' => 'Total Reservaciones',
+    'confirmed' => 'Confirmadas',
+    'pending' => 'Pendientes',
+    'total_revenue' => 'Ingresos Totales',
+    'list_view' => 'Lista',
+    'calendar_view' => 'Calendario',
+    'all_statuses' => 'Todos los estados',
+    'cancelled' => 'Canceladas',
+    'all_listings' => 'Todos los listings',
+    'date_from' => 'Fecha desde',
+    'date_to' => 'Fecha hasta',
+    'filter' => 'Filtrar',
+    'clear' => 'Limpiar',
+    'listing' => 'Listing',
+    'customer' => 'Cliente',
+    'dates' => 'Fechas',
+    'status' => 'Estado',
+    'price' => 'Precio',
+    'actions' => 'Acciones',
+    'confirm' => 'Confirmar',
+    'cancel' => 'Cancelar',
+    'view_order' => 'Ver Orden',
+    'no_bookings' => 'No se encontraron reservaciones.',
+    'booking_details' => 'Detalles de la Reservación'
+) : array(
+    'title' => 'Bookings',
+    'export' => 'Export',
+    'total_bookings' => 'Total Bookings',
+    'confirmed' => 'Confirmed',
+    'pending' => 'Pending',
+    'total_revenue' => 'Total Revenue',
+    'list_view' => 'List',
+    'calendar_view' => 'Calendar',
+    'all_statuses' => 'All statuses',
+    'cancelled' => 'Cancelled',
+    'all_listings' => 'All listings',
+    'date_from' => 'Date from',
+    'date_to' => 'Date to',
+    'filter' => 'Filter',
+    'clear' => 'Clear',
+    'listing' => 'Listing',
+    'customer' => 'Customer',
+    'dates' => 'Dates',
+    'status' => 'Status',
+    'price' => 'Price',
+    'actions' => 'Actions',
+    'confirm' => 'Confirm',
+    'cancel' => 'Cancel',
+    'view_order' => 'View Order',
+    'no_bookings' => 'No bookings found.',
+    'booking_details' => 'Booking Details'
+);
 ?>
 
 <div class="vdp-bookings-wrapper">
     <!-- Bookings Header -->
     <div class="vdp-section-header">
-        <h2 class="vdp-section-title"><?php esc_html_e('Mis Reservaciones', 'vendor-dashboard-pro'); ?></h2>
+        <h2 class="vdp-section-title"><?php echo esc_html($labels['title']); ?></h2>
         <div class="vdp-section-actions">
             <button type="button" class="vdp-btn vdp-btn-secondary" id="vdp_export_bookings">
                 <i class="fas fa-download"></i>
-                <?php esc_html_e('Exportar', 'vendor-dashboard-pro'); ?>
+                <?php echo esc_html($labels['export']); ?>
             </button>
         </div>
     </div>
@@ -37,7 +99,7 @@ $calendar_data = $bookings_data['calendar_data'];
                 </div>
                 <div class="vdp-summary-content">
                     <h3><?php echo number_format($summary['total_bookings']); ?></h3>
-                    <p><?php esc_html_e('Total Reservaciones', 'vendor-dashboard-pro'); ?></p>
+                    <p><?php echo esc_html($labels['total_bookings']); ?></p>
                 </div>
             </div>
             
@@ -47,7 +109,7 @@ $calendar_data = $bookings_data['calendar_data'];
                 </div>
                 <div class="vdp-summary-content">
                     <h3><?php echo number_format($summary['confirmed_bookings']); ?></h3>
-                    <p><?php esc_html_e('Confirmadas', 'vendor-dashboard-pro'); ?></p>
+                    <p><?php echo esc_html($labels['confirmed']); ?></p>
                 </div>
             </div>
             
@@ -57,7 +119,7 @@ $calendar_data = $bookings_data['calendar_data'];
                 </div>
                 <div class="vdp-summary-content">
                     <h3><?php echo number_format($summary['pending_bookings']); ?></h3>
-                    <p><?php esc_html_e('Pendientes', 'vendor-dashboard-pro'); ?></p>
+                    <p><?php echo esc_html($labels['pending']); ?></p>
                 </div>
             </div>
             
@@ -67,7 +129,7 @@ $calendar_data = $bookings_data['calendar_data'];
                 </div>
                 <div class="vdp-summary-content">
                     <h3><?php echo wc_price($summary['total_revenue']); ?></h3>
-                    <p><?php esc_html_e('Ingresos Totales', 'vendor-dashboard-pro'); ?></p>
+                    <p><?php echo esc_html($labels['total_revenue']); ?></p>
                 </div>
             </div>
         </div>
@@ -78,11 +140,11 @@ $calendar_data = $bookings_data['calendar_data'];
         <div class="vdp-toggle-buttons">
             <button type="button" class="vdp-toggle-btn active" data-view="list">
                 <i class="fas fa-list"></i>
-                <?php esc_html_e('Lista', 'vendor-dashboard-pro'); ?>
+                <?php echo esc_html($labels['list_view']); ?>
             </button>
             <button type="button" class="vdp-toggle-btn" data-view="calendar">
                 <i class="fas fa-calendar"></i>
-                <?php esc_html_e('Calendario', 'vendor-dashboard-pro'); ?>
+                <?php echo esc_html($labels['calendar_view']); ?>
             </button>
         </div>
     </div>
@@ -91,14 +153,14 @@ $calendar_data = $bookings_data['calendar_data'];
     <div class="vdp-bookings-filters">
         <div class="vdp-filters">
             <select id="booking_status_filter" class="vdp-filter-select">
-                <option value="all"><?php esc_html_e('Todos los estados', 'vendor-dashboard-pro'); ?></option>
-                <option value="confirmed"><?php esc_html_e('Confirmadas', 'vendor-dashboard-pro'); ?></option>
-                <option value="pending"><?php esc_html_e('Pendientes', 'vendor-dashboard-pro'); ?></option>
-                <option value="cancelled"><?php esc_html_e('Canceladas', 'vendor-dashboard-pro'); ?></option>
+                <option value="all"><?php echo esc_html($labels['all_statuses']); ?></option>
+                <option value="confirmed"><?php echo esc_html($labels['confirmed']); ?></option>
+                <option value="pending"><?php echo esc_html($labels['pending']); ?></option>
+                <option value="cancelled"><?php echo esc_html($labels['cancelled']); ?></option>
             </select>
             
             <select id="booking_listing_filter" class="vdp-filter-select">
-                <option value=""><?php esc_html_e('Todos los listings', 'vendor-dashboard-pro'); ?></option>
+                <option value=""><?php echo esc_html($labels['all_listings']); ?></option>
                 <?php
                 $vendor_listings = VDP_Bookings::get_vendor_listings($vendor->get_id());
                 foreach ($vendor_listings as $listing_id) {
@@ -110,15 +172,15 @@ $calendar_data = $bookings_data['calendar_data'];
                 ?>
             </select>
             
-            <input type="date" id="booking_date_from" class="vdp-filter-input" placeholder="<?php esc_attr_e('Fecha desde', 'vendor-dashboard-pro'); ?>">
-            <input type="date" id="booking_date_to" class="vdp-filter-input" placeholder="<?php esc_attr_e('Fecha hasta', 'vendor-dashboard-pro'); ?>">
+            <input type="date" id="booking_date_from" class="vdp-filter-input" placeholder="<?php echo esc_attr($labels['date_from']); ?>">
+            <input type="date" id="booking_date_to" class="vdp-filter-input" placeholder="<?php echo esc_attr($labels['date_to']); ?>">
             
             <button type="button" class="vdp-btn vdp-btn-primary" id="apply_booking_filters">
-                <?php esc_html_e('Filtrar', 'vendor-dashboard-pro'); ?>
+                <?php echo esc_html($labels['filter']); ?>
             </button>
             
             <button type="button" class="vdp-btn vdp-btn-secondary" id="clear_booking_filters">
-                <?php esc_html_e('Limpiar', 'vendor-dashboard-pro'); ?>
+                <?php echo esc_html($labels['clear']); ?>
             </button>
         </div>
     </div>
@@ -129,12 +191,12 @@ $calendar_data = $bookings_data['calendar_data'];
             <table class="vdp-bookings-table">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e('Listing', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Cliente', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Fechas', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Estado', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Precio', 'vendor-dashboard-pro'); ?></th>
-                        <th><?php esc_html_e('Acciones', 'vendor-dashboard-pro'); ?></th>
+                        <th><?php echo esc_html($labels['listing']); ?></th>
+                        <th><?php echo esc_html($labels['customer']); ?></th>
+                        <th><?php echo esc_html($labels['dates']); ?></th>
+                        <th><?php echo esc_html($labels['status']); ?></th>
+                        <th><?php echo esc_html($labels['price']); ?></th>
+                        <th><?php echo esc_html($labels['actions']); ?></th>
                     </tr>
                 </thead>
                 <tbody id="bookings-table-body">
@@ -189,7 +251,7 @@ $calendar_data = $bookings_data['calendar_data'];
                                             <button type="button" class="vdp-btn vdp-btn-sm vdp-btn-success update-booking-status" 
                                                     data-booking-id="<?php echo esc_attr($booking['id']); ?>" 
                                                     data-status="confirmed">
-                                                <?php esc_html_e('Confirmar', 'vendor-dashboard-pro'); ?>
+                                                <?php echo esc_html($labels['confirm']); ?>
                                             </button>
                                         <?php endif; ?>
                                         
@@ -197,14 +259,14 @@ $calendar_data = $bookings_data['calendar_data'];
                                             <button type="button" class="vdp-btn vdp-btn-sm vdp-btn-danger update-booking-status" 
                                                     data-booking-id="<?php echo esc_attr($booking['id']); ?>" 
                                                     data-status="cancelled">
-                                                <?php esc_html_e('Cancelar', 'vendor-dashboard-pro'); ?>
+                                                <?php echo esc_html($labels['cancel']); ?>
                                             </button>
                                         <?php endif; ?>
                                         
                                         <?php if (isset($booking['order_id'])) : ?>
                                             <a href="<?php echo esc_url(admin_url('post.php?post=' . $booking['order_id'] . '&action=edit')); ?>" 
                                                class="vdp-btn vdp-btn-sm vdp-btn-secondary" target="_blank">
-                                                <?php esc_html_e('Ver Orden', 'vendor-dashboard-pro'); ?>
+                                                <?php echo esc_html($labels['view_order']); ?>
                                             </a>
                                         <?php endif; ?>
                                     </div>
@@ -214,7 +276,7 @@ $calendar_data = $bookings_data['calendar_data'];
                     <?php else : ?>
                         <tr>
                             <td colspan="6" class="no-bookings">
-                                <?php esc_html_e('No se encontraron reservaciones.', 'vendor-dashboard-pro'); ?>
+                                <?php echo esc_html($labels['no_bookings']); ?>
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -225,7 +287,9 @@ $calendar_data = $bookings_data['calendar_data'];
 
     <!-- Calendar View -->
     <div id="bookings-calendar-view" class="vdp-bookings-view" style="display: none;">
-        <div id="bookings-calendar"></div>
+        <div class="vdp-calendar-integrated">
+            <div id="bookings-calendar" class="vdp-fullcalendar"></div>
+        </div>
     </div>
 </div>
 
@@ -233,7 +297,7 @@ $calendar_data = $bookings_data['calendar_data'];
 <div id="booking-details-modal" class="vdp-modal" style="display: none;">
     <div class="vdp-modal-content">
         <div class="vdp-modal-header">
-            <h3><?php esc_html_e('Detalles de la Reservación', 'vendor-dashboard-pro'); ?></h3>
+            <h3><?php echo esc_html($labels['booking_details']); ?></h3>
             <button type="button" class="vdp-modal-close">&times;</button>
         </div>
         <div class="vdp-modal-body">
@@ -246,6 +310,95 @@ $calendar_data = $bookings_data['calendar_data'];
 
 <script>
 jQuery(document).ready(function($) {
+    let bookingsCalendar;
+    const calendarConfig = <?php echo json_encode($calendar_config); ?>;
+    const calendarData = <?php echo json_encode($calendar_data); ?>;
+    const isSpanish = <?php echo json_encode($is_spanish); ?>;
+    const labels = <?php echo json_encode($labels); ?>;
+    
+    // Initialize Bookings Calendar
+    function initBookingsCalendar() {
+        if (bookingsCalendar) {
+            return; // Already initialized
+        }
+        
+        const calendarEl = document.getElementById('bookings-calendar');
+        
+        bookingsCalendar = new FullCalendar.Calendar(calendarEl, {
+            locale: calendarConfig.locale,
+            firstDay: calendarConfig.firstDay,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            buttonText: calendarConfig.buttonText,
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            weekNumbers: false,
+            dayMaxEvents: 3,
+            events: calendarData.events || [],
+            
+            // Event click handler
+            eventClick: function(info) {
+                showBookingDetails(info.event);
+            },
+            
+            // Event display
+            eventDisplay: 'block',
+            eventTextColor: '#fff',
+            
+            // Custom event rendering
+            eventDidMount: function(info) {
+                const event = info.event;
+                const extendedProps = event.extendedProps;
+                
+                // Add tooltip with booking details
+                info.el.title = `${event.title}\n${labels.customer}: ${extendedProps.customer}\n${labels.status}: ${getStatusText(extendedProps.status)}`;
+                
+                // Add custom classes based on status
+                info.el.classList.add('booking-status-' + extendedProps.status);
+            },
+            
+            // Date click for new bookings (optional)
+            dateClick: function(info) {
+                console.log('Date clicked:', info.dateStr);
+                // Could open a "new booking" modal here
+            }
+        });
+        
+        bookingsCalendar.render();
+    }
+    
+    // Show booking details modal
+    function showBookingDetails(event) {
+        const extendedProps = event.extendedProps;
+        const content = `
+            <div class="booking-detail-item">
+                <strong>${labels.listing}:</strong> ${extendedProps.listing_title}
+            </div>
+            <div class="booking-detail-item">
+                <strong>${labels.customer}:</strong> ${extendedProps.customer}
+            </div>
+            <div class="booking-detail-item">
+                <strong>${labels.dates}:</strong> ${event.startStr} - ${event.endStr}
+            </div>
+            <div class="booking-detail-item">
+                <strong>${labels.status}:</strong> 
+                <span class="booking-status booking-status-${extendedProps.status}">
+                    ${getStatusText(extendedProps.status)}
+                </span>
+            </div>
+            ${extendedProps.amount ? `
+            <div class="booking-detail-item">
+                <strong>${labels.price}:</strong> ${formatPrice(extendedProps.amount)}
+            </div>` : ''}
+        `;
+        
+        $('#booking-details-content').html(content);
+        $('#booking-details-modal').show();
+    }
+    
     // View toggle
     $('.vdp-toggle-btn').on('click', function() {
         var view = $(this).data('view');
@@ -256,7 +409,7 @@ jQuery(document).ready(function($) {
         $('.vdp-bookings-view').hide();
         $('#bookings-' + view + '-view').show();
         
-        if (view === 'calendar' && typeof initBookingsCalendar === 'function') {
+        if (view === 'calendar') {
             initBookingsCalendar();
         }
     });
@@ -607,12 +760,106 @@ jQuery(document).ready(function($) {
     font-style: italic;
 }
 
-#bookings-calendar {
+.vdp-calendar-integrated {
     background: #fff;
-    padding: 20px;
     border-radius: 8px;
     border: 1px solid #e1e1e1;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+#bookings-calendar {
     min-height: 600px;
+}
+
+/* Booking status colors in calendar */
+.fc-event.booking-status-publish {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+.fc-event.booking-status-pending {
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.fc-event.booking-status-draft {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.fc-event.booking-status-trash {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+/* Booking details modal styling */
+.booking-detail-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.booking-detail-item strong {
+    color: #333;
+    margin-right: 8px;
+}
+
+/* Modal improvements */
+.vdp-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vdp-modal-content {
+    background: #fff;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.vdp-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+.vdp-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.vdp-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vdp-modal-body {
+    padding: 20px;
 }
 
 @media (max-width: 768px) {
