@@ -120,29 +120,16 @@ class VDP_Analytics {
     }
 
     /**
-     * Get demo visits chart data.
+     * Get vendor visits chart data.
      *
+     * @param int $vendor_id Vendor post ID
+     * @param array $args Date range and other filters
      * @return array
      */
-    public static function get_demo_visits_chart_data() {
-        $data = array();
-        $days = 30;
-        $date = new DateTime();
-        $date->modify('-' . ($days - 1) . ' days');
-        
-        for ($i = 0; $i < $days; $i++) {
-            $current_date = $date->format('Y-m-d');
-            $views = rand(20, 200);
-            
-            $data[] = array(
-                'date' => $current_date,
-                'views' => $views,
-            );
-            
-            $date->modify('+1 day');
-        }
-        
-        return $data;
+    public static function get_vendor_visits_chart_data($vendor_id, $args = array()) {
+        // For now, return empty array as HivePress doesn't track daily views by default
+        // This could be extended with Google Analytics integration or custom tracking
+        return array();
     }
 
     /**
@@ -168,45 +155,77 @@ class VDP_Analytics {
     }
 
     /**
-     * Get demo conversion rate data.
+     * Get vendor conversion rate data.
      *
+     * @param int $vendor_id Vendor post ID
+     * @param array $args Date range and other filters
      * @return array
      */
-    public static function get_demo_conversion_rate_data() {
-        $data = array();
-        $days = 30;
-        $date = new DateTime();
-        $date->modify('-' . ($days - 1) . ' days');
+    public static function get_vendor_conversion_rate_data($vendor_id, $args = array()) {
+        // Basic conversion rate calculation based on orders vs total views
+        $summary = self::get_vendor_summary_data($vendor_id, $args);
         
-        for ($i = 0; $i < $days; $i++) {
-            $current_date = $date->format('Y-m-d');
-            $rate = rand(3, 8) + (rand(0, 100) / 100);
-            
-            $data[] = array(
-                'date' => $current_date,
-                'rate' => $rate,
-            );
-            
-            $date->modify('+1 day');
-        }
-        
-        return $data;
-    }
-
-    /**
-     * Get demo performance metrics.
-     *
-     * @return array
-     */
-    public static function get_demo_performance_metrics() {
         return array(
-            'response_time' => rand(1, 24),
-            'response_rate' => rand(80, 100),
-            'order_fulfillment_time' => rand(1, 5),
-            'customer_satisfaction' => rand(80, 100),
-            'repeat_customer_rate' => rand(20, 50),
-            'return_rate' => rand(1, 10),
+            'current_rate' => $summary['conversion_rate'],
+            'data' => array() // Could be extended with daily breakdown
         );
+    }
+    
+    /**
+     * Get vendor performance metrics.
+     *
+     * @param int $vendor_id Vendor post ID
+     * @param array $args Date range and other filters
+     * @return array
+     */
+    public static function get_vendor_performance_metrics($vendor_id, $args = array()) {
+        // Get basic metrics from vendor and orders data
+        $vendor_orders = wc_get_orders(array(
+            'status' => array('wc-processing', 'wc-completed', 'wc-refunded'),
+            'date_created' => $args['date_from'] . '...' . $args['date_to'],
+            'meta_key' => 'hp_vendor',
+            'meta_value' => $vendor_id,
+            'limit' => -1,
+        ));
+        
+        $completed_orders = array_filter($vendor_orders, function($order) {
+            return $order->get_status() === 'completed';
+        });
+        
+        $refunded_orders = array_filter($vendor_orders, function($order) {
+            return $order->get_status() === 'refunded';
+        });
+        
+        $total_orders = count($vendor_orders);
+        $completion_rate = $total_orders > 0 ? round((count($completed_orders) / $total_orders) * 100, 1) : 0;
+        $return_rate = $total_orders > 0 ? round((count($refunded_orders) / $total_orders) * 100, 1) : 0;
+        
+        return array(
+            'response_time' => 24, // Could be calculated from order processing times
+            'response_rate' => 95, // Could be calculated from messages/inquiries
+            'order_fulfillment_time' => 2, // Could be calculated from order dates
+            'customer_satisfaction' => 90, // Would need review/rating integration
+            'completion_rate' => $completion_rate,
+            'return_rate' => $return_rate,
+        );
+    }
+    
+    /**
+     * Get vendor listings IDs.
+     *
+     * @param int $vendor_id Vendor post ID
+     * @return array
+     */
+    public static function get_vendor_listings($vendor_id) {
+        $listings = get_posts(array(
+            'post_type' => 'hp_listing',
+            'post_parent' => $vendor_id,
+            'post_status' => array('publish', 'draft', 'pending'),
+            'numberposts' => -1,
+            'fields' => 'ids',
+        ));
+        
+        return $listings;
     }
 
     /**

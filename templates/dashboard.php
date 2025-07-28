@@ -35,6 +35,8 @@ $page_titles = array(
     'dashboard' => __('Dashboard', 'vendor-dashboard-pro'),
     'products' => __('Listings', 'vendor-dashboard-pro'),
     'orders' => __('Orders', 'vendor-dashboard-pro'),
+    'leads' => __('Leads', 'vendor-dashboard-pro'),
+    'bookings' => __('Reservaciones', 'vendor-dashboard-pro'),
     'messages' => __('Messages', 'vendor-dashboard-pro'),
     'analytics' => __('Analytics', 'vendor-dashboard-pro'),
     'settings' => __('Settings', 'vendor-dashboard-pro'),
@@ -153,6 +155,12 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('leads')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="leads">
                                 <i class="fas fa-user-plus"></i>
                                 <span><?php esc_html_e('Leads', 'vendor-dashboard-pro'); ?></span>
+                            </a>
+                        </li>
+                        <li class="vdp-nav-item <?php echo $active_action === 'bookings' ? 'vdp-active' : ''; ?>" id="vdp-nav-bookings">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('bookings')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="bookings">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span><?php esc_html_e('Reservaciones', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
                         <li class="vdp-nav-item <?php echo $active_action === 'messages' ? 'vdp-active' : ''; ?>" id="vdp-nav-messages">

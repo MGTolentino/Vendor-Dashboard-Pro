@@ -459,6 +459,7 @@ class VDP_Router {
             'products' => __('Listings', 'vendor-dashboard-pro'),
             'orders' => __('Orders', 'vendor-dashboard-pro'),
             'leads' => __('Leads', 'vendor-dashboard-pro'),
+            'bookings' => __('Reservaciones', 'vendor-dashboard-pro'),
             'messages' => __('Messages', 'vendor-dashboard-pro'),
             'analytics' => __('Analytics', 'vendor-dashboard-pro'),
             'settings' => __('Settings', 'vendor-dashboard-pro'),
