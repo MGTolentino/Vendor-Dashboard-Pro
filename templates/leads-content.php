@@ -1090,5 +1090,8 @@ jQuery(document).ready(function($) {
     // Asegurar que los contenedores ocultos permanezcan ocultos al cargar
     $('#table_custom_date_range').hide().css('display', 'none');
     $('#table_specific_month_range').hide().css('display', 'none');
+    
+    // Trigger initial change to set correct visibility
+    $('#table_period_filter').trigger('change');
 });
 </script>

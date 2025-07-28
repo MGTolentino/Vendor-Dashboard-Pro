@@ -74,6 +74,9 @@
                 }
             });
             
+            // Trigger initial change to set correct visibility
+            $('#vdp_period_filter').trigger('change');
+            
             // Eventos para filtros de mes/año específico
             $(document).on('change', '#vdp_mes_evento_basic, #vdp_anio_evento', function() {
                 self.applyFilters();
