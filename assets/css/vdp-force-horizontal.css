@@ -106,17 +106,28 @@
 }
 
 /* Override cualquier CSS que pueda interferir */
-.vdp-pipeline-toolbar > *,
-.vdp-inline-filters > *,
-.vdp-table-filters > *,
-.vdp-section-actions > *,
-div.vdp-pipeline-toolbar > *,
-div.vdp-inline-filters > *,
-div.vdp-table-filters > *,
-div.vdp-section-actions > * {
+/* Excluir contenedores de fecha que deben poder ocultarse */
+.vdp-pipeline-toolbar > *:not(.vdp-date-range-container):not(.vdp-month-year-container),
+.vdp-inline-filters > *:not(.vdp-date-range-container):not(.vdp-month-year-container),
+.vdp-table-filters > *:not(.vdp-date-range-container):not(.vdp-month-year-container),
+.vdp-section-actions > *:not(.vdp-date-range-container):not(.vdp-month-year-container),
+div.vdp-pipeline-toolbar > *:not(.vdp-date-range-container):not(.vdp-month-year-container),
+div.vdp-inline-filters > *:not(.vdp-date-range-container):not(.vdp-month-year-container),
+div.vdp-table-filters > *:not(.vdp-date-range-container):not(.vdp-month-year-container),
+div.vdp-section-actions > *:not(.vdp-date-range-container):not(.vdp-month-year-container) {
     display: inline-flex !important;
     flex-shrink: 0 !important;
     flex-direction: row !important;
+}
+
+/* Contenedores de fecha - solo mostrar cuando NO tengan display:none */
+.vdp-date-range-container:not([style*="display:none"]):not([style*="display: none"]),
+.vdp-month-year-container:not([style*="display:none"]):not([style*="display: none"]) {
+    display: inline-flex !important;
+    flex-shrink: 0 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
 }
 
 /* Anular cualquier estilo que pueda forzar columnas */

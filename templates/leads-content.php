@@ -1060,6 +1060,11 @@ jQuery(document).ready(function($) {
             $('#table_custom_date_range').show().css('display', 'block');
         } else if (selectedValue === 'specific_month') {
             $('#table_specific_month_range').show().css('display', 'block');
+        } else {
+            // Para cualquier otro valor (incluido vacío), limpiar valores
+            $('#table_date_range').val('');
+            $('#table_mes_evento_basic').val('');
+            $('#table_anio_evento').val('');
         }
     });
     

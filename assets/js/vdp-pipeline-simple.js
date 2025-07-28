@@ -65,12 +65,14 @@
                     $('#vdp_custom_date_range').show().css('display', 'block');
                 } else if (selectedValue === 'specific_month') {
                     $('#vdp_specific_month_range').show().css('display', 'block');
-                } else if (selectedValue) {
-                    // Limpiar valores y aplicar filtros automáticamente
+                } else {
+                    // Para cualquier otro valor (incluido vacío), limpiar valores
                     $('#vdp_date_range').val('');
                     $('#vdp_mes_evento_basic').val('');
                     $('#vdp_anio_evento').val('');
-                    self.applyFilters();
+                    if (selectedValue) {
+                        self.applyFilters();
+                    }
                 }
             });
             
