@@ -676,34 +676,37 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-/* Summary Cards - Much smaller */
-.vdp-summary-card {
-    padding: 12px;
-    min-height: auto;
-    border-radius: 6px;
+/* Summary Cards - Much smaller - Override existing styles */
+.vdp-bookings-wrapper .vdp-summary-card {
+    padding: 8px !important;
+    min-height: auto !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
 }
 
-.vdp-summary-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-    border-radius: 4px;
+.vdp-bookings-wrapper .vdp-summary-icon {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 12px !important;
+    border-radius: 3px !important;
+    margin-right: 8px !important;
 }
 
-.vdp-summary-content h3 {
-    font-size: 18px;
-    margin-bottom: 2px;
-    line-height: 1.2;
+.vdp-bookings-wrapper .vdp-summary-content h3 {
+    font-size: 14px !important;
+    margin-bottom: 1px !important;
+    line-height: 1.2 !important;
 }
 
-.vdp-summary-content p {
-    font-size: 11px;
-    margin: 0;
-    opacity: 0.8;
+.vdp-bookings-wrapper .vdp-summary-content p {
+    font-size: 10px !important;
+    margin: 0 !important;
+    opacity: 0.8 !important;
 }
 
-.vdp-summary-grid {
-    gap: 12px;
+.vdp-bookings-wrapper .vdp-summary-grid {
+    gap: 8px !important;
+    grid-template-columns: repeat(3, 1fr) !important;
 }
 
 /* Booking table improvements */

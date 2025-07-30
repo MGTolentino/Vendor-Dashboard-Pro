@@ -75,13 +75,6 @@ class VDP_Calendar {
             'post_parent' => $vendor_id,
             'post_status' => array('publish', 'draft'),
             'numberposts' => -1,
-            'meta_query' => array(
-                array(
-                    'key' => 'hp_booking_enabled',
-                    'value' => '1',
-                    'compare' => '='
-                )
-            )
         ));
         
         $listings_data = array();
@@ -137,6 +130,13 @@ class VDP_Calendar {
                     'status' => $booking['status'],
                     'customer' => $booking['customer_name'],
                     'amount' => $booking['amount'],
+                    'extendedProps' => array(
+                        'listing_id' => $listing['id'],
+                        'listing_title' => $listing['title'],
+                        'status' => $booking['status'],
+                        'customer' => $booking['customer_name'],
+                        'amount' => $booking['amount'],
+                    ),
                 );
             }
             
@@ -170,7 +170,7 @@ class VDP_Calendar {
     public static function get_listing_bookings($listing_id, $args = array()) {
         $bookings_query = array(
             'post_type' => 'hp_booking',
-            'post_status' => array('publish', 'pending', 'draft', 'private'),
+            'post_status' => array('publish', 'private'),
             'numberposts' => -1,
             'post_parent' => $listing_id,
             'date_query' => array(

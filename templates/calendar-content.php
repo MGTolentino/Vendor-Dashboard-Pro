@@ -167,6 +167,10 @@ jQuery(document).ready(function($) {
     const calendarData = <?php echo json_encode($calendar_data); ?>;
     const isSpanish = <?php echo json_encode($is_spanish); ?>;
     
+    // Debug calendar data
+    console.log('Calendar Data:', calendarData);
+    console.log('Calendar Events Count:', calendarData.events ? calendarData.events.length : 0);
+    
     // Debug: Log calendar data to console
     console.log('Main Calendar Data:', calendarData);
     console.log('Main Calendar Events Count:', calendarData && calendarData.events ? calendarData.events.length : 0);
@@ -433,42 +437,47 @@ jQuery(document).ready(function($) {
 
 <style>
 .vdp-calendar-wrapper {
-    margin: 20px 0;
+    margin: 15px 0;
 }
 
 .vdp-calendar-tools {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding: 15px;
+    margin-bottom: 15px;
+    padding: 10px;
     background: #f8f9fa;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #e1e1e1;
 }
 
 .vdp-calendar-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+}
+
+.vdp-calendar-actions .vdp-btn {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
 }
 
 .vdp-calendar-legend {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     align-items: center;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 12px;
+    gap: 4px;
+    font-size: 11px;
     color: #666;
 }
 
 .legend-color {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 2px;
 }
 
@@ -490,22 +499,23 @@ jQuery(document).ready(function($) {
 
 .vdp-calendar-container {
     background: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    border-radius: 6px;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
 }
 
 .vdp-fullcalendar {
     max-width: 100%;
+    font-size: 13px;
 }
 
 .vdp-selected-dates {
     background: #e3f2fd;
     border: 1px solid #2196f3;
-    border-radius: 8px;
-    padding: 15px;
-    margin-top: 20px;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 15px;
 }
 
 .selected-dates-header {
@@ -622,19 +632,22 @@ jQuery(document).ready(function($) {
     border-top: 1px solid #e1e1e1;
 }
 
-/* FullCalendar custom styling */
+/* FullCalendar custom styling - Smaller */
 .fc-event {
-    border-radius: 4px !important;
+    border-radius: 3px !important;
     border: none !important;
-    font-size: 12px !important;
+    font-size: 10px !important;
+    padding: 1px 3px !important;
 }
 
 .fc-daygrid-event {
-    margin-bottom: 2px !important;
+    margin-bottom: 1px !important;
 }
 
 .fc-button {
-    border-radius: 4px !important;
+    border-radius: 3px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
 }
 
 .fc-button-primary {
@@ -649,6 +662,14 @@ jQuery(document).ready(function($) {
 
 .fc-today-button:disabled {
     opacity: 0.6;
+}
+
+.fc-col-header-cell {
+    font-size: 11px !important;
+}
+
+.fc-daygrid-day-number {
+    font-size: 12px !important;
 }
 
 @media (max-width: 768px) {
