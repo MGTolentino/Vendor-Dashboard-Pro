@@ -27,7 +27,6 @@ $labels = $is_spanish ? array(
     'total_bookings' => 'Total Reservaciones',
     'confirmed' => 'Confirmadas',
     'pending' => 'Pendientes',
-    'total_revenue' => 'Ingresos Totales',
     'list_view' => 'Lista',
     'calendar_view' => 'Calendario',
     'all_statuses' => 'Todos los estados',
@@ -41,7 +40,7 @@ $labels = $is_spanish ? array(
     'customer' => 'Cliente',
     'dates' => 'Fechas',
     'status' => 'Estado',
-    'price' => 'Precio',
+    'extras' => 'Extras',
     'actions' => 'Acciones',
     'confirm' => 'Confirmar',
     'cancel' => 'Cancelar',
@@ -54,7 +53,6 @@ $labels = $is_spanish ? array(
     'total_bookings' => 'Total Bookings',
     'confirmed' => 'Confirmed',
     'pending' => 'Pending',
-    'total_revenue' => 'Total Revenue',
     'list_view' => 'List',
     'calendar_view' => 'Calendar',
     'all_statuses' => 'All statuses',
@@ -68,7 +66,7 @@ $labels = $is_spanish ? array(
     'customer' => 'Customer',
     'dates' => 'Dates',
     'status' => 'Status',
-    'price' => 'Price',
+    'extras' => 'Extras',
     'actions' => 'Actions',
     'confirm' => 'Confirm',
     'cancel' => 'Cancel',
@@ -123,15 +121,6 @@ $labels = $is_spanish ? array(
                 </div>
             </div>
             
-            <div class="vdp-summary-card">
-                <div class="vdp-summary-icon">
-                    <i class="fas fa-dollar-sign"></i>
-                </div>
-                <div class="vdp-summary-content">
-                    <h3><?php echo wc_price($summary['total_revenue']); ?></h3>
-                    <p><?php echo esc_html($labels['total_revenue']); ?></p>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -195,13 +184,18 @@ $labels = $is_spanish ? array(
                         <th><?php echo esc_html($labels['customer']); ?></th>
                         <th><?php echo esc_html($labels['dates']); ?></th>
                         <th><?php echo esc_html($labels['status']); ?></th>
-                        <th><?php echo esc_html($labels['price']); ?></th>
+                        <th><?php echo esc_html($labels['extras']); ?></th>
                         <th><?php echo esc_html($labels['actions']); ?></th>
                     </tr>
                 </thead>
                 <tbody id="bookings-table-body">
-                    <?php if (!empty($bookings)) : ?>
-                        <?php foreach ($bookings as $booking) : ?>
+                    <?php 
+                    // Separate regular bookings from draft bookings
+                    $regular_bookings = array_filter($bookings, function($b) { return $b['status'] !== 'draft'; });
+                    $draft_bookings = array_filter($bookings, function($b) { return $b['status'] === 'draft'; });
+                    ?>
+                    <?php if (!empty($regular_bookings)) : ?>
+                        <?php foreach ($regular_bookings as $booking) : ?>
                             <tr data-booking-id="<?php echo esc_attr($booking['id']); ?>">
                                 <td>
                                     <div class="booking-listing">
@@ -216,8 +210,12 @@ $labels = $is_spanish ? array(
                                 </td>
                                 <td>
                                     <div class="booking-dates">
-                                        <div class="date-from"><?php echo date('d/m/Y H:i', $booking['start_time']); ?></div>
-                                        <div class="date-to"><?php echo date('d/m/Y H:i', $booking['end_time']); ?></div>
+                                        <?php if (!empty($booking['start_time']) && !empty($booking['end_time'])) : ?>
+                                            <div class="date-from"><?php echo date('d/m/Y H:i', $booking['start_time']); ?></div>
+                                            <div class="date-to"><?php echo date('d/m/Y H:i', $booking['end_time']); ?></div>
+                                        <?php else : ?>
+                                            <div class="date-only"><?php echo date('d/m/Y', strtotime($booking['start_date'])); ?> - <?php echo date('d/m/Y', strtotime($booking['end_date'])); ?></div>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td>
@@ -241,8 +239,17 @@ $labels = $is_spanish ? array(
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="booking-price">
-                                        <?php echo $booking['price'] ? wc_price($booking['price']) : '-'; ?>
+                                    <div class="booking-extras">
+                                        <?php if (!empty($booking['variable_quantity_extras']) || !empty($booking['price_extras'])) : ?>
+                                            <?php if (!empty($booking['variable_quantity_extras'])) : ?>
+                                                <div class="extras-quantity"><?php echo esc_html($booking['variable_quantity_extras']); ?></div>
+                                            <?php endif; ?>
+                                            <?php if (!empty($booking['price_extras'])) : ?>
+                                                <div class="extras-price"><?php echo wc_price($booking['price_extras']); ?></div>
+                                            <?php endif; ?>
+                                        <?php else : ?>
+                                            <span class="no-extras">-</span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td>
@@ -283,6 +290,60 @@ $labels = $is_spanish ? array(
                 </tbody>
             </table>
         </div>
+        
+        <?php if (!empty($draft_bookings)) : ?>
+        <!-- Draft Bookings Section -->
+        <div class="vdp-draft-bookings">
+            <h3><?php echo $is_spanish ? 'Reservaciones Sin Pagar' : 'Unpaid Bookings'; ?></h3>
+            <table class="vdp-bookings-table">
+                <thead>
+                    <tr>
+                        <th><?php echo esc_html($labels['listing']); ?></th>
+                        <th><?php echo esc_html($labels['customer']); ?></th>
+                        <th><?php echo esc_html($labels['dates']); ?></th>
+                        <th><?php echo esc_html($labels['actions']); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($draft_bookings as $booking) : ?>
+                        <tr data-booking-id="<?php echo esc_attr($booking['id']); ?>">
+                            <td>
+                                <div class="booking-listing">
+                                    <strong><?php echo esc_html($booking['listing_title']); ?></strong>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="booking-customer">
+                                    <strong><?php echo esc_html($booking['customer_name']); ?></strong>
+                                    <div class="customer-email"><?php echo esc_html($booking['customer_email']); ?></div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="booking-dates">
+                                    <?php if (!empty($booking['start_time']) && !empty($booking['end_time'])) : ?>
+                                        <div class="date-from"><?php echo date('d/m/Y H:i', $booking['start_time']); ?></div>
+                                        <div class="date-to"><?php echo date('d/m/Y H:i', $booking['end_time']); ?></div>
+                                    <?php else : ?>
+                                        <div class="date-only"><?php echo date('d/m/Y', strtotime($booking['start_date'])); ?> - <?php echo date('d/m/Y', strtotime($booking['end_date'])); ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="booking-actions">
+                                    <?php if (isset($booking['order_id'])) : ?>
+                                        <a href="<?php echo esc_url(admin_url('post.php?post=' . $booking['order_id'] . '&action=edit')); ?>" 
+                                           class="vdp-btn vdp-btn-sm vdp-btn-secondary" target="_blank">
+                                            <?php echo esc_html($labels['view_order']); ?>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Calendar View -->
@@ -580,6 +641,153 @@ jQuery(document).ready(function($) {
     }
 });
 </script>
+
+<style>
+/* Summary Cards - Reduced size */
+.vdp-summary-card {
+    padding: 15px;
+    min-height: auto;
+}
+
+.vdp-summary-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+}
+
+.vdp-summary-content h3 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.vdp-summary-content p {
+    font-size: 13px;
+}
+
+/* Booking table improvements */
+.booking-listing strong {
+    color: #333;
+    font-size: 14px;
+}
+
+.booking-customer {
+    line-height: 1.4;
+}
+
+.customer-email {
+    font-size: 12px;
+    color: #666;
+}
+
+.booking-dates {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.date-only {
+    color: #555;
+}
+
+/* Status badges */
+.booking-status {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.booking-status-publish {
+    background: #d4edda;
+    color: #155724;
+}
+
+.booking-status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.booking-status-draft {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.booking-status-private {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.booking-status-trash {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+/* Extras styling */
+.booking-extras {
+    font-size: 13px;
+}
+
+.extras-quantity {
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.extras-price {
+    color: #007cba;
+    font-weight: 500;
+}
+
+.no-extras {
+    color: #999;
+}
+
+/* Draft bookings section */
+.vdp-draft-bookings {
+    margin-top: 30px;
+    padding: 20px;
+    background: #fff5f5;
+    border: 1px solid #ffdddd;
+    border-radius: 8px;
+}
+
+.vdp-draft-bookings h3 {
+    margin: 0 0 15px 0;
+    color: #721c24;
+    font-size: 16px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .vdp-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .vdp-summary-card {
+        padding: 12px;
+    }
+    
+    .vdp-summary-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+    
+    .vdp-summary-content h3 {
+        font-size: 20px;
+    }
+    
+    .vdp-summary-content p {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .vdp-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 
 <style>
 .vdp-bookings-wrapper {

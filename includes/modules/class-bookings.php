@@ -100,7 +100,6 @@ class VDP_Bookings {
                 'confirmed_bookings' => 0,
                 'pending_bookings' => 0,
                 'cancelled_bookings' => 0,
-                'total_revenue' => 0,
             );
         }
         
@@ -154,11 +153,6 @@ class VDP_Bookings {
                     break;
             }
             
-            // Calculate revenue from related WooCommerce orders
-            $booking_price = get_post_meta($booking->ID, 'hp_price', true);
-            if ($booking_price && $booking->post_status !== 'trash') {
-                $summary['total_revenue'] += (float) $booking_price;
-            }
         }
         
         return $summary;
@@ -255,11 +249,14 @@ class VDP_Bookings {
                     'id' => $booking_id,
                     'start_time' => get_post_meta($booking_id, 'hp_start_time', true),
                     'end_time' => get_post_meta($booking_id, 'hp_end_time', true),
+                    'start_date' => get_post_meta($booking_id, 'hp_start_date', true),
+                    'end_date' => get_post_meta($booking_id, 'hp_end_date', true),
                     'status' => get_post_status($booking_id),
                     'notes' => get_the_content(),
                     'customer_id' => get_post_field('post_author', $booking_id),
-                    'listing_id' => get_post_meta($booking_id, 'hp_listing', true),
-                    'price' => get_post_meta($booking_id, 'hp_price', true),
+                    'listing_id' => wp_get_post_parent_id($booking_id),
+                    'variable_quantity_extras' => get_post_meta($booking_id, 'hp_variable_quantity_extras', true),
+                    'price_extras' => get_post_meta($booking_id, 'hp_price_extras', true),
                     'created_date' => get_the_date('c', $booking_id),
                 );
                 
@@ -272,6 +269,11 @@ class VDP_Bookings {
                 
                 // Get listing info
                 if ($booking_data['listing_id']) {
+                    $listing = get_post($booking_data['listing_id']);
+                    $booking_data['listing_title'] = $listing ? $listing->post_title : '';
+                } else {
+                    // Fallback: If no listing_id in meta, use post_parent
+                    $booking_data['listing_id'] = wp_get_post_parent_id($booking_id);
                     $listing = get_post($booking_data['listing_id']);
                     $booking_data['listing_title'] = $listing ? $listing->post_title : '';
                 }
@@ -313,7 +315,7 @@ class VDP_Bookings {
         // Get bookings for calendar display
         $calendar_query = array(
             'post_type' => 'hp_booking',
-            'post_status' => array('publish', 'pending', 'draft'),
+            'post_status' => array('publish', 'private'),
             'posts_per_page' => -1,
             'post_parent__in' => $listing_ids,
         );
@@ -324,22 +326,34 @@ class VDP_Bookings {
         foreach ($bookings as $booking) {
             $start_time = get_post_meta($booking->ID, 'hp_start_time', true);
             $end_time = get_post_meta($booking->ID, 'hp_end_time', true);
-            $listing_id = get_post_meta($booking->ID, 'hp_listing', true);
+            $start_date = get_post_meta($booking->ID, 'hp_start_date', true);
+            $end_date = get_post_meta($booking->ID, 'hp_end_date', true);
+            $listing_id = wp_get_post_parent_id($booking->ID);
             
+            // Use times if available, otherwise use dates
             if ($start_time && $end_time) {
-                $listing = get_post($listing_id);
-                $customer = get_userdata($booking->post_author);
-                
-                $calendar_events[] = array(
-                    'id' => $booking->ID,
-                    'title' => $listing ? $listing->post_title : 'Booking',
-                    'start' => date('c', $start_time),
-                    'end' => date('c', $end_time),
-                    'status' => $booking->post_status,
-                    'customer' => $customer ? $customer->display_name : '',
-                    'listing_title' => $listing ? $listing->post_title : '',
-                );
+                $start = date('c', $start_time);
+                $end = date('c', $end_time);
+            } elseif ($start_date && $end_date) {
+                $start = $start_date . 'T00:00:00';
+                $end = $end_date . 'T23:59:59';
+            } else {
+                continue; // Skip if no valid dates
             }
+            
+            $listing = get_post($listing_id);
+            $customer = get_userdata($booking->post_author);
+            
+            $calendar_events[] = array(
+                'id' => $booking->ID,
+                'title' => $listing ? $listing->post_title : 'Booking',
+                'start' => $start,
+                'end' => $end,
+                'status' => $booking->post_status,
+                'customer' => $customer ? $customer->display_name : '',
+                'listing_title' => $listing ? $listing->post_title : '',
+                'amount' => get_post_meta($booking->ID, 'hp_price_extras', true),
+            );
         }
         
         return $calendar_events;

@@ -192,15 +192,17 @@ class VDP_Calendar {
             $end_time = get_post_meta($booking->ID, 'hp_end_time', true);
             
             // Format dates
-            if ($start_time) {
-                $start_datetime = $start_date . ' ' . $start_time;
-                $end_datetime = $end_date . ' ' . $end_time;
+            if ($start_time && $end_time) {
+                $start_datetime = date('c', $start_time);
+                $end_datetime = date('c', $end_time);
+            } elseif ($start_date && $end_date) {
+                $start_datetime = $start_date . 'T00:00:00';
+                $end_datetime = $end_date . 'T23:59:59';
             } else {
-                $start_datetime = $start_date;
-                $end_datetime = $end_date;
+                continue; // Skip if no valid dates
             }
             
-            $customer_id = get_post_meta($booking->ID, 'hp_user', true);
+            $customer_id = $booking->post_author;
             $customer = get_userdata($customer_id);
             
             $bookings_data[] = array(
