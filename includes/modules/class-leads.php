@@ -52,9 +52,13 @@ class VDP_Leads {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
         
         add_action('wp_ajax_vdp_update_lead_status', array($this, 'ajax_update_lead_status'));
+        add_action('wp_ajax_nopriv_vdp_update_lead_status', array($this, 'ajax_update_lead_status'));
         add_action('wp_ajax_vdp_get_pipeline_leads', array($this, 'ajax_get_pipeline_leads'));
+        add_action('wp_ajax_nopriv_vdp_get_pipeline_leads', array($this, 'ajax_get_pipeline_leads'));
         add_action('wp_ajax_vdp_add_pipeline_lead', array($this, 'ajax_add_pipeline_lead'));
+        add_action('wp_ajax_nopriv_vdp_add_pipeline_lead', array($this, 'ajax_add_pipeline_lead'));
         add_action('wp_ajax_vdp_update_pipeline_status', array($this, 'ajax_update_pipeline_status'));
+        add_action('wp_ajax_nopriv_vdp_update_pipeline_status', array($this, 'ajax_update_pipeline_status'));
     }
 
     /**
@@ -79,90 +83,36 @@ class VDP_Leads {
             VDP_VERSION
         );
 
-        // Enhanced pipeline CSS
-        wp_enqueue_style(
-            'vdp-pipeline-enhanced',
-            VDP_PLUGIN_URL . 'assets/css/vdp-pipeline-enhanced.css',
-            array(),
-            VDP_VERSION
-        );
-
-        wp_enqueue_style(
-            'vdp-filters-enhanced',
-            VDP_PLUGIN_URL . 'assets/css/vdp-filters-enhanced.css',
-            array('vdp-pipeline-enhanced'),
-            VDP_VERSION
-        );
-
-        // Select2 for enhanced filters
-        wp_enqueue_style(
-            'select2',
-            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
-            array(),
-            VDP_VERSION
-        );
-
-        // DateRangePicker CSS
+        // DateRangePicker for date filters
         wp_enqueue_style(
             'daterangepicker',
-            'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css',
+            'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css',
             array(),
-            VDP_VERSION
+            '3.1.0'
         );
-
-        // Enhanced JavaScript
-        wp_enqueue_script('jquery');
         
-        // Select2 JS
-        wp_enqueue_script(
-            'select2',
-            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
-            array('jquery'),
-            VDP_VERSION,
-            true
-        );
-
-        // Moment.js for date handling
         wp_enqueue_script(
             'moment',
-            'https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js',
+            'https://cdn.jsdelivr.net/momentjs/latest/moment.min.js',
             array(),
-            VDP_VERSION,
+            'latest',
             true
         );
-
-        // DateRangePicker JS
+        
         wp_enqueue_script(
             'daterangepicker',
-            'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js',
+            'https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js',
             array('jquery', 'moment'),
-            VDP_VERSION,
+            '3.1.0',
             true
         );
 
-        // Enhanced filters JavaScript
-        wp_enqueue_script(
-            'vdp-filters-advanced',
-            VDP_PLUGIN_URL . 'assets/js/vdp-filters-advanced.js',
-            array('jquery', 'select2', 'daterangepicker'),
-            VDP_VERSION,
-            true
-        );
-
-        // Drag & drop JavaScript
-        wp_enqueue_script(
-            'vdp-drag-drop',
-            VDP_PLUGIN_URL . 'assets/js/vdp-drag-drop.js',
-            array('jquery'),
-            VDP_VERSION,
-            true
-        );
-
-        // Legacy scripts for compatibility
+        wp_enqueue_script('jquery-ui-datepicker');
+        
         wp_enqueue_script(
             'vdp-leads-pipeline',
             VDP_PLUGIN_URL . 'assets/js/leads-pipeline.js',
-            array('jquery'),
+            array('jquery', 'jquery-ui-datepicker'),
             VDP_VERSION,
             true
         );
@@ -170,13 +120,12 @@ class VDP_Leads {
         wp_enqueue_script(
             'vdp-pipeline-simple',
             VDP_PLUGIN_URL . 'assets/js/vdp-pipeline-simple.js',
-            array('jquery'),
+            array('jquery', 'jquery-ui-datepicker'),
             VDP_VERSION,
             true
         );
 
-        // Localize scripts with AJAX data
-        wp_localize_script('vdp-filters-advanced', 'vdp_ajax', array(
+        wp_localize_script('vdp-leads-pipeline', 'vdpLeads', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('vdp-ajax-nonce'),
             'site_url' => site_url(),
@@ -184,7 +133,7 @@ class VDP_Leads {
             'statusOptions' => $this->get_status_options()
         ));
 
-        wp_localize_script('vdp-drag-drop', 'vdp_ajax', array(
+        wp_localize_script('vdp-pipeline-simple', 'vdpLeads', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('vdp-ajax-nonce'),
             'site_url' => site_url(),
@@ -761,7 +710,7 @@ class VDP_Leads {
      */
     public function ajax_get_pipeline_leads() {
         // Verify request
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'vdp-ajax-nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
         }
         
@@ -795,7 +744,7 @@ class VDP_Leads {
      */
     public function ajax_add_pipeline_lead() {
         // Verify request
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'vdp-ajax-nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
         }
         
@@ -854,7 +803,7 @@ class VDP_Leads {
      */
     public function ajax_update_pipeline_status() {
         // Verify request
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'vdp-ajax-nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
         }
         

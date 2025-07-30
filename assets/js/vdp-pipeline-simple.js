@@ -139,11 +139,11 @@
             const self = this;
             
             $.ajax({
-                url: vdp_vars.ajax_url,
+                url: vdpLeads.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'vdp_get_pipeline_leads',
-                    nonce: vdp_vars.nonce,
+                    nonce: vdpLeads.nonce,
                     filters: this.currentFilters
                 },
                 beforeSend: function() {
@@ -180,7 +180,7 @@
             // Renderizar cada columna
             Object.keys(leadsByStatus).forEach(status => {
                 const leads = leadsByStatus[status];
-                const $column = $('#vdp-' + status + '-cards');
+                const $column = $('#vdp-' + status.replace(/-/g, '-') + '-cards');
                 
                 if (leads.length === 0) {
                     $column.html('<div class=\"vdp-empty-column\"><i class=\"fas fa-inbox\"></i>No leads in this stage</div>');
@@ -201,12 +201,10 @@
         groupLeadsByStatus: function() {
             const groups = {
                 'nuevo': [],
-                'contactado': [],
-                'cita-agendada': [],
-                'propuesta-enviada': [],
-                'negociacion': [],
-                'cerrado-ganado': [],
-                'cerrado-perdido': []
+                'con-presupuesto': [],
+                'por-cerrar': [],
+                'con-contrato': [],
+                'perdido': []
             };
             
             this.allLeads.forEach(lead => {
@@ -275,12 +273,12 @@
             
             const formData = new FormData(e.target);
             formData.append('action', 'vdp_add_pipeline_lead');
-            formData.append('nonce', vdp_vars.nonce);
+            formData.append('nonce', vdpLeads.nonce);
             
             const self = this;
             
             $.ajax({
-                url: vdp_vars.ajax_url,
+                url: vdpLeads.ajax_url,
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -308,12 +306,12 @@
             
             const formData = new FormData(e.target);
             formData.append('action', 'vdp_update_pipeline_status');
-            formData.append('nonce', vdp_vars.nonce);
+            formData.append('nonce', vdpLeads.nonce);
             
             const self = this;
             
             $.ajax({
-                url: vdp_vars.ajax_url,
+                url: vdpLeads.ajax_url,
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -400,11 +398,11 @@
             const self = this;
             
             $.ajax({
-                url: vdp_vars.ajax_url,
+                url: vdpLeads.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'vdp_update_pipeline_status',
-                    nonce: vdp_vars.nonce,
+                    nonce: vdpLeads.nonce,
                     lead_id: leadId,
                     new_status: newStatus
                 },
@@ -495,7 +493,7 @@
             const leadId = $(e.currentTarget).data('lead-id');
             
             // Redirigir a la vista detallada de leads
-            const url = vdp_vars.dashboard_url + '?vdp-action=leads&vdp-item=' + leadId;
+            const url = vdpLeads.dashboard_url + '?vdp-action=leads&vdp-item=' + leadId;
             window.location.href = url;
         },
         

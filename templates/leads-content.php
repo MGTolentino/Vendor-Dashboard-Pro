@@ -492,7 +492,7 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
 
     <!-- Pipeline View Container -->
     <div id="vdp-pipeline-view-container" style="display: none;">
-        <?php include VDP_PLUGIN_DIR . 'templates/vdp-pipeline-enhanced.php'; ?>
+        <?php include VDP_PLUGIN_DIR . 'templates/vdp-pipeline-simple.php'; ?>
     </div>
 </div>
 
