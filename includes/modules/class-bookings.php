@@ -255,8 +255,8 @@ class VDP_Bookings {
                     'notes' => get_the_content(),
                     'customer_id' => get_post_field('post_author', $booking_id),
                     'listing_id' => wp_get_post_parent_id($booking_id),
-                    'variable_quantity_extras' => get_post_meta($booking_id, 'hp_variable_quantity_extras', true),
-                    'price_extras' => get_post_meta($booking_id, 'hp_price_extras', true),
+                    'variable_quantity_extras' => self::process_extras(get_post_meta($booking_id, 'hp_variable_quantity_extras', true)),
+                    'price_extras' => self::process_extras(get_post_meta($booking_id, 'hp_price_extras', true)),
                     'created_date' => get_the_date('c', $booking_id),
                 );
                 
@@ -315,7 +315,7 @@ class VDP_Bookings {
         // Get bookings for calendar display
         $calendar_query = array(
             'post_type' => 'hp_booking',
-            'post_status' => array('publish', 'private'),
+            'post_status' => array('publish', 'pending', 'draft', 'private'),
             'posts_per_page' => -1,
             'post_parent__in' => $listing_ids,
         );
@@ -330,29 +330,74 @@ class VDP_Bookings {
             $end_date = get_post_meta($booking->ID, 'hp_end_date', true);
             $listing_id = wp_get_post_parent_id($booking->ID);
             
-            // Use times if available, otherwise use dates
+            // Determine start and end dates with fallbacks
+            $start = null;
+            $end = null;
+            
+            // Priority 1: Use timestamp metadata
             if ($start_time && $end_time) {
                 $start = date('c', $start_time);
                 $end = date('c', $end_time);
-            } elseif ($start_date && $end_date) {
+            } 
+            // Priority 2: Use date strings
+            elseif ($start_date && $end_date) {
                 $start = $start_date . 'T00:00:00';
                 $end = $end_date . 'T23:59:59';
-            } else {
-                continue; // Skip if no valid dates
+            }
+            // Priority 3: Use single date if only one is available
+            elseif ($start_date) {
+                $start = $start_date . 'T00:00:00';
+                $end = $start_date . 'T23:59:59';
+            }
+            // Priority 4: Fallback to post date
+            else {
+                $post_date = get_post_time('Y-m-d', false, $booking->ID);
+                if ($post_date) {
+                    $start = $post_date . 'T00:00:00';
+                    $end = $post_date . 'T23:59:59';
+                } else {
+                    continue; // Skip if no valid dates at all
+                }
             }
             
             $listing = get_post($listing_id);
             $customer = get_userdata($booking->post_author);
             
+            // Get more comprehensive booking info
+            $booking_title = $listing ? $listing->post_title : 'Booking';
+            $customer_name = $customer ? $customer->display_name : 'Unknown Customer';
+            
+            // Add status indicator to title
+            $status_indicator = '';
+            switch ($booking->post_status) {
+                case 'pending':
+                    $status_indicator = ' (Pendiente)';
+                    break;
+                case 'draft':
+                    $status_indicator = ' (Sin pagar)';
+                    break;
+                case 'private':
+                    $status_indicator = ' (Privada)';
+                    break;
+            }
+            
             $calendar_events[] = array(
                 'id' => $booking->ID,
-                'title' => $listing ? $listing->post_title : 'Booking',
+                'title' => $booking_title . $status_indicator,
                 'start' => $start,
                 'end' => $end,
                 'status' => $booking->post_status,
-                'customer' => $customer ? $customer->display_name : '',
-                'listing_title' => $listing ? $listing->post_title : '',
+                'customer' => $customer_name,
+                'listing_title' => $booking_title,
+                'listing_id' => $listing_id,
                 'amount' => get_post_meta($booking->ID, 'hp_price_extras', true),
+                'extendedProps' => array(
+                    'status' => $booking->post_status,
+                    'customer' => $customer_name,
+                    'listing_title' => $booking_title,
+                    'listing_id' => $listing_id,
+                    'amount' => get_post_meta($booking->ID, 'hp_price_extras', true),
+                )
             );
         }
         
@@ -485,6 +530,33 @@ class VDP_Bookings {
         } else {
             wp_send_json_error(array('message' => 'Invalid status.'));
         }
+    }
+
+    /**
+     * Process extras data from serialized format.
+     *
+     * @param mixed $extras_data Serialized extras data
+     * @return array Processed extras with name and price
+     */
+    public static function process_extras($extras_data) {
+        if (empty($extras_data)) {
+            return array();
+        }
+        
+        // If it's already an array, return as is
+        if (is_array($extras_data)) {
+            return $extras_data;
+        }
+        
+        // Try to unserialize if it's a string
+        if (is_string($extras_data)) {
+            $unserialized = maybe_unserialize($extras_data);
+            if (is_array($unserialized)) {
+                return $unserialized;
+            }
+        }
+        
+        return array();
     }
 }
 

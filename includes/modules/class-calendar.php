@@ -191,15 +191,34 @@ class VDP_Calendar {
             $start_time = get_post_meta($booking->ID, 'hp_start_time', true);
             $end_time = get_post_meta($booking->ID, 'hp_end_time', true);
             
-            // Format dates
+            // Determine start and end dates with improved fallbacks
+            $start_datetime = null;
+            $end_datetime = null;
+            
+            // Priority 1: Use timestamp metadata
             if ($start_time && $end_time) {
                 $start_datetime = date('c', $start_time);
                 $end_datetime = date('c', $end_time);
-            } elseif ($start_date && $end_date) {
+            } 
+            // Priority 2: Use date strings
+            elseif ($start_date && $end_date) {
                 $start_datetime = $start_date . 'T00:00:00';
                 $end_datetime = $end_date . 'T23:59:59';
-            } else {
-                continue; // Skip if no valid dates
+            }
+            // Priority 3: Use single date if only one is available
+            elseif ($start_date) {
+                $start_datetime = $start_date . 'T00:00:00';
+                $end_datetime = $start_date . 'T23:59:59';
+            }
+            // Priority 4: Fallback to post date
+            else {
+                $post_date = get_post_time('Y-m-d', false, $booking->ID);
+                if ($post_date) {
+                    $start_datetime = $post_date . 'T00:00:00';
+                    $end_datetime = $post_date . 'T23:59:59';
+                } else {
+                    continue; // Skip if no valid dates at all
+                }
             }
             
             $customer_id = $booking->post_author;
@@ -212,7 +231,7 @@ class VDP_Calendar {
                 'status' => $booking->post_status,
                 'customer_name' => $customer ? $customer->display_name : __('Guest', 'vendor-dashboard-pro'),
                 'customer_email' => $customer ? $customer->user_email : '',
-                'amount' => get_post_meta($booking->ID, 'hp_total', true) ?: 0,
+                'amount' => get_post_meta($booking->ID, 'hp_total', true) ?: get_post_meta($booking->ID, 'hp_price_extras', true) ?: 0,
                 'quantity' => get_post_meta($booking->ID, 'hp_quantity', true) ?: 1,
             );
         }

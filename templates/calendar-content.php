@@ -167,6 +167,10 @@ jQuery(document).ready(function($) {
     const calendarData = <?php echo json_encode($calendar_data); ?>;
     const isSpanish = <?php echo json_encode($is_spanish); ?>;
     
+    // Debug: Log calendar data to console
+    console.log('Main Calendar Data:', calendarData);
+    console.log('Main Calendar Events Count:', calendarData && calendarData.events ? calendarData.events.length : 0);
+    
     // Initialize FullCalendar
     function initCalendar() {
         const calendarEl = document.getElementById('vendor-calendar');
@@ -182,7 +186,7 @@ jQuery(document).ready(function($) {
             selectMirror: true,
             weekNumbers: true,
             dayMaxEvents: true,
-            events: calendarData.events,
+            events: calendarData.events || [],
             
             // Date selection
             select: function(info) {

@@ -77,15 +77,12 @@ $labels = $is_spanish ? array(
 ?>
 
 <div class="vdp-bookings-wrapper">
-    <!-- Bookings Header -->
-    <div class="vdp-section-header">
-        <h2 class="vdp-section-title"><?php echo esc_html($labels['title']); ?></h2>
-        <div class="vdp-section-actions">
-            <button type="button" class="vdp-btn vdp-btn-secondary" id="vdp_export_bookings">
-                <i class="fas fa-download"></i>
-                <?php echo esc_html($labels['export']); ?>
-            </button>
-        </div>
+    <!-- Export Actions -->
+    <div class="vdp-section-actions-only">
+        <button type="button" class="vdp-btn vdp-btn-secondary" id="vdp_export_bookings">
+            <i class="fas fa-download"></i>
+            <?php echo esc_html($labels['export']); ?>
+        </button>
     </div>
 
     <!-- Summary Cards -->
@@ -161,8 +158,15 @@ $labels = $is_spanish ? array(
                 ?>
             </select>
             
-            <input type="date" id="booking_date_from" class="vdp-filter-input" placeholder="<?php echo esc_attr($labels['date_from']); ?>">
-            <input type="date" id="booking_date_to" class="vdp-filter-input" placeholder="<?php echo esc_attr($labels['date_to']); ?>">
+            <div class="vdp-date-filter-group">
+                <label for="booking_date_from"><?php echo esc_html($labels['date_from']); ?></label>
+                <input type="date" id="booking_date_from" class="vdp-filter-input">
+            </div>
+            
+            <div class="vdp-date-filter-group">
+                <label for="booking_date_to"><?php echo esc_html($labels['date_to']); ?></label>
+                <input type="date" id="booking_date_to" class="vdp-filter-input">
+            </div>
             
             <button type="button" class="vdp-btn vdp-btn-primary" id="apply_booking_filters">
                 <?php echo esc_html($labels['filter']); ?>
@@ -240,16 +244,41 @@ $labels = $is_spanish ? array(
                                 </td>
                                 <td>
                                     <div class="booking-extras">
-                                        <?php if (!empty($booking['variable_quantity_extras']) || !empty($booking['price_extras'])) : ?>
-                                            <?php if (!empty($booking['variable_quantity_extras'])) : ?>
-                                                <div class="extras-quantity"><?php echo esc_html($booking['variable_quantity_extras']); ?></div>
-                                            <?php endif; ?>
-                                            <?php if (!empty($booking['price_extras'])) : ?>
-                                                <div class="extras-price"><?php echo wc_price($booking['price_extras']); ?></div>
-                                            <?php endif; ?>
-                                        <?php else : ?>
-                                            <span class="no-extras">-</span>
-                                        <?php endif; ?>
+                                        <?php 
+                                        $has_extras = false;
+                                        if (!empty($booking['variable_quantity_extras']) && is_array($booking['variable_quantity_extras'])) {
+                                            foreach ($booking['variable_quantity_extras'] as $extra) {
+                                                if (isset($extra['name'])) {
+                                                    $has_extras = true;
+                                                    echo '<div class="extra-item">';
+                                                    echo '<span class="extra-name">' . esc_html($extra['name']) . '</span>';
+                                                    if (isset($extra['quantity'])) {
+                                                        echo ' <span class="extra-qty">(' . $extra['quantity'] . ')</span>';
+                                                    }
+                                                    if (isset($extra['price'])) {
+                                                        echo ' <span class="extra-price">' . wc_price($extra['price']) . '</span>';
+                                                    }
+                                                    echo '</div>';
+                                                }
+                                            }
+                                        }
+                                        if (!empty($booking['price_extras']) && is_array($booking['price_extras'])) {
+                                            foreach ($booking['price_extras'] as $extra) {
+                                                if (isset($extra['name'])) {
+                                                    $has_extras = true;
+                                                    echo '<div class="extra-item">';
+                                                    echo '<span class="extra-name">' . esc_html($extra['name']) . '</span>';
+                                                    if (isset($extra['price'])) {
+                                                        echo ' <span class="extra-price">' . wc_price($extra['price']) . '</span>';
+                                                    }
+                                                    echo '</div>';
+                                                }
+                                            }
+                                        }
+                                        if (!$has_extras) {
+                                            echo '<span class="no-extras">-</span>';
+                                        }
+                                        ?>
                                     </div>
                                 </td>
                                 <td>
@@ -377,6 +406,10 @@ jQuery(document).ready(function($) {
     const isSpanish = <?php echo json_encode($is_spanish); ?>;
     const labels = <?php echo json_encode($labels); ?>;
     
+    // Debug: Log calendar data to console
+    console.log('Calendar Data:', calendarData);
+    console.log('Calendar Events Count:', calendarData ? calendarData.length : 0);
+    
     // Initialize Bookings Calendar
     function initBookingsCalendar() {
         if (bookingsCalendar) {
@@ -398,7 +431,7 @@ jQuery(document).ready(function($) {
             height: 'auto',
             weekNumbers: false,
             dayMaxEvents: 3,
-            events: calendarData.events || [],
+            events: calendarData || [],
             
             // Event click handler
             eventClick: function(info) {
@@ -643,25 +676,34 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-/* Summary Cards - Reduced size */
+/* Summary Cards - Much smaller */
 .vdp-summary-card {
-    padding: 15px;
+    padding: 12px;
     min-height: auto;
+    border-radius: 6px;
 }
 
 .vdp-summary-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    border-radius: 4px;
 }
 
 .vdp-summary-content h3 {
-    font-size: 24px;
-    margin-bottom: 5px;
+    font-size: 18px;
+    margin-bottom: 2px;
+    line-height: 1.2;
 }
 
 .vdp-summary-content p {
-    font-size: 13px;
+    font-size: 11px;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.vdp-summary-grid {
+    gap: 12px;
 }
 
 /* Booking table improvements */
@@ -741,6 +783,48 @@ jQuery(document).ready(function($) {
     color: #999;
 }
 
+/* Export actions styling */
+.vdp-section-actions-only {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+/* Date filter groups */
+.vdp-date-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vdp-date-filter-group label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Extras styling improvements */
+.extra-item {
+    margin-bottom: 4px;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.extra-name {
+    color: #333;
+    font-weight: 500;
+}
+
+.extra-qty {
+    color: #666;
+    font-size: 11px;
+}
+
+.extra-price {
+    color: #007cba;
+    font-weight: 600;
+}
+
 /* Draft bookings section */
 .vdp-draft-bookings {
     margin-top: 30px;
@@ -760,25 +844,34 @@ jQuery(document).ready(function($) {
 @media (max-width: 768px) {
     .vdp-summary-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        gap: 8px;
     }
     
     .vdp-summary-card {
-        padding: 12px;
+        padding: 10px;
     }
     
     .vdp-summary-icon {
-        width: 35px;
-        height: 35px;
-        font-size: 16px;
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
     }
     
     .vdp-summary-content h3 {
-        font-size: 20px;
+        font-size: 16px;
     }
     
     .vdp-summary-content p {
-        font-size: 12px;
+        font-size: 10px;
+    }
+    
+    .vdp-filters {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .vdp-date-filter-group {
+        width: 100%;
     }
 }
 
