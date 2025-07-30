@@ -170,7 +170,7 @@ class VDP_Calendar {
     public static function get_listing_bookings($listing_id, $args = array()) {
         $bookings_query = array(
             'post_type' => 'hp_booking',
-            'post_status' => array('publish', 'draft', 'private'),
+            'post_status' => array('publish', 'pending', 'draft', 'private'),
             'numberposts' => -1,
             'post_parent' => $listing_id,
             'date_query' => array(

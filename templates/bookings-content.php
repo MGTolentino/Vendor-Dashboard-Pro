@@ -104,7 +104,7 @@ $labels = $is_spanish ? array(
             </div>
             
             <div class="vdp-summary-card">
-                <div class="vdp-summary-icon confirmed">
+                <div class="vdp-summary-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="vdp-summary-content">
@@ -114,7 +114,7 @@ $labels = $is_spanish ? array(
             </div>
             
             <div class="vdp-summary-card">
-                <div class="vdp-summary-icon pending">
+                <div class="vdp-summary-icon">
                     <i class="fas fa-clock"></i>
                 </div>
                 <div class="vdp-summary-content">
@@ -124,7 +124,7 @@ $labels = $is_spanish ? array(
             </div>
             
             <div class="vdp-summary-card">
-                <div class="vdp-summary-icon revenue">
+                <div class="vdp-summary-icon">
                     <i class="fas fa-dollar-sign"></i>
                 </div>
                 <div class="vdp-summary-content">
@@ -583,127 +583,282 @@ jQuery(document).ready(function($) {
 
 <style>
 .vdp-bookings-wrapper {
-    margin: 20px 0;
+    margin: 0;
+    padding: 0;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.vdp-section-header {
+    background: #fff;
+    padding: 24px 32px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.vdp-section-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
+
+.vdp-section-actions {
+    display: flex;
+    gap: 12px;
 }
 
 .vdp-bookings-summary {
-    margin-bottom: 30px;
+    padding: 0 32px;
+    margin-bottom: 32px;
 }
 
 .vdp-summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
 }
 
 .vdp-summary-card {
     background: #fff;
-    border: 1px solid #e1e1e1;
-    border-radius: 8px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.vdp-summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: currentColor;
+}
+
+.vdp-summary-card:nth-child(1)::before {
+    background: #6366f1;
+}
+
+.vdp-summary-card:nth-child(2)::before {
+    background: #10b981;
+}
+
+.vdp-summary-card:nth-child(3)::before {
+    background: #f59e0b;
+}
+
+.vdp-summary-card:nth-child(4)::before {
+    background: #3b82f6;
+}
+
+.vdp-summary-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
 }
 
 .vdp-summary-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    color: #fff;
-    background: #666;
+    font-size: 24px;
+    margin-bottom: 16px;
+    background: #f1f5f9;
 }
 
-.vdp-summary-icon.confirmed {
-    background: #28a745;
+.vdp-summary-card:nth-child(1) .vdp-summary-icon {
+    background: #e0e7ff;
+    color: #6366f1;
 }
 
-.vdp-summary-icon.pending {
-    background: #ffc107;
+.vdp-summary-card:nth-child(2) .vdp-summary-icon {
+    background: #d1fae5;
+    color: #10b981;
 }
 
-.vdp-summary-icon.revenue {
-    background: #17a2b8;
+.vdp-summary-card:nth-child(3) .vdp-summary-icon {
+    background: #fed7aa;
+    color: #f59e0b;
+}
+
+.vdp-summary-card:nth-child(4) .vdp-summary-icon {
+    background: #dbeafe;
+    color: #3b82f6;
 }
 
 .vdp-summary-content h3 {
-    margin: 0 0 5px 0;
-    font-size: 28px;
-    font-weight: bold;
-    color: #333;
+    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.2;
 }
 
 .vdp-summary-content p {
     margin: 0;
-    color: #666;
+    color: #6b7280;
     font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .vdp-view-toggle {
-    margin-bottom: 20px;
+    padding: 0 32px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 8px;
+    background: #fff;
+    padding: 12px 32px;
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .vdp-toggle-buttons {
-    display: flex;
-    gap: 10px;
+    display: inline-flex;
+    background: #e9ecef;
+    padding: 4px;
+    border-radius: 8px;
+    gap: 4px;
 }
 
 .vdp-toggle-btn {
-    padding: 10px 20px;
-    border: 1px solid #ddd;
-    background: #fff;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 500;
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+
+.vdp-toggle-btn:hover {
+    color: #374151;
 }
 
 .vdp-toggle-btn.active {
-    background: #007cba;
-    color: #fff;
-    border-color: #007cba;
+    background: #fff;
+    color: #1f2937;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .vdp-bookings-filters {
-    margin-bottom: 20px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 8px;
+    background: #fff;
+    padding: 24px 32px;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 32px;
 }
 
 .vdp-filters {
     display: flex;
-    gap: 10px;
+    gap: 16px;
     flex-wrap: wrap;
     align-items: center;
 }
 
+.vdp-filters select,
+.vdp-filters input[type="date"] {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+    background: #fff;
+    transition: border-color 0.15s ease;
+}
+
+.vdp-filters select:focus,
+.vdp-filters input[type="date"]:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.vdp-filters .vdp-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.vdp-filters .vdp-btn-primary {
+    background: #6366f1;
+    color: #fff;
+    border: 1px solid #6366f1;
+}
+
+.vdp-filters .vdp-btn-primary:hover {
+    background: #4f46e5;
+    border-color: #4f46e5;
+}
+
+.vdp-filters .vdp-btn-secondary {
+    background: #fff;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+}
+
+.vdp-filters .vdp-btn-secondary:hover {
+    background: #f9fafb;
+    color: #374151;
+}
+
 .vdp-bookings-table-wrapper {
-    overflow-x: auto;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin: 0 32px;
 }
 
 .vdp-bookings-table {
     width: 100%;
     border-collapse: collapse;
-    background: #fff;
 }
 
 .vdp-bookings-table th,
 .vdp-bookings-table td {
-    padding: 12px;
+    padding: 16px 24px;
     text-align: left;
-    border-bottom: 1px solid #e1e1e1;
 }
 
 .vdp-bookings-table th {
-    background: #f8f9fa;
+    background: #f9fafb;
     font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.vdp-bookings-table td {
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    color: #374151;
+}
+
+.vdp-bookings-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.vdp-bookings-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .booking-customer .customer-email {
@@ -716,42 +871,123 @@ jQuery(document).ready(function($) {
     color: #666;
 }
 
-.booking-status {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+.booking-listing strong {
+    font-size: 14px;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.booking-customer strong {
+    font-size: 14px;
+    color: #1f2937;
     font-weight: 500;
 }
 
+.booking-customer .customer-email {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.booking-dates {
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.booking-dates .date-to {
+    margin-top: 2px;
+    color: #6b7280;
+}
+
+.booking-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.booking-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .booking-status-publish {
-    background: #d4edda;
-    color: #155724;
+    background: #d1fae5;
+    color: #065f46;
 }
 
 .booking-status-pending {
-    background: #fff3cd;
-    color: #856404;
+    background: #fef3c7;
+    color: #92400e;
 }
 
 .booking-status-draft {
-    background: #f8d7da;
-    color: #721c24;
+    background: #fee2e2;
+    color: #991b1b;
 }
 
 .booking-status-trash {
-    background: #f1f3f4;
-    color: #5f6368;
+    background: #f3f4f6;
+    color: #4b5563;
 }
 
 .booking-actions {
     display: flex;
-    gap: 5px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
+.vdp-btn {
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .vdp-btn-sm {
-    padding: 4px 8px;
-    font-size: 12px;
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+.vdp-btn-success {
+    background: #10b981;
+    color: #fff;
+}
+
+.vdp-btn-success:hover {
+    background: #059669;
+}
+
+.vdp-btn-danger {
+    background: #ef4444;
+    color: #fff;
+}
+
+.vdp-btn-danger:hover {
+    background: #dc2626;
+}
+
+.vdp-btn-secondary {
+    background: #6b7280;
+    color: #fff;
+}
+
+.vdp-btn-secondary:hover {
+    background: #4b5563;
+}
+
+.vdp-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .no-bookings {
@@ -762,10 +998,10 @@ jQuery(document).ready(function($) {
 
 .vdp-calendar-integrated {
     background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e1e1e1;
-    padding: 20px;
-    margin-top: 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    padding: 32px;
+    margin: 0 32px 32px;
 }
 
 #bookings-calendar {
