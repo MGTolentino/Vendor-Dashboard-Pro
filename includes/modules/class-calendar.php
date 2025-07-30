@@ -183,13 +183,6 @@ class VDP_Calendar {
             'post_status' => array('publish', 'pending', 'draft', 'private'),
             'numberposts' => -1,
             'post_parent' => $listing_id,
-            'date_query' => array(
-                array(
-                    'after' => $args['start_date'],
-                    'before' => $args['end_date'],
-                    'inclusive' => true,
-                )
-            )
         );
         
         $bookings = get_posts($bookings_query);

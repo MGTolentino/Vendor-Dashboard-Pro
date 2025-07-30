@@ -79,47 +79,90 @@ class VDP_Leads {
             VDP_VERSION
         );
 
+        // Enhanced pipeline CSS
         wp_enqueue_style(
-            'vdp-pipeline-simple',
-            VDP_PLUGIN_URL . 'assets/css/vdp-pipeline-simple.css',
+            'vdp-pipeline-enhanced',
+            VDP_PLUGIN_URL . 'assets/css/vdp-pipeline-enhanced.css',
             array(),
             VDP_VERSION
         );
 
         wp_enqueue_style(
-            'vdp-pipeline-filters',
-            VDP_PLUGIN_URL . 'assets/css/vdp-pipeline-filters.css',
-            array('vdp-pipeline-simple'),
+            'vdp-filters-enhanced',
+            VDP_PLUGIN_URL . 'assets/css/vdp-filters-enhanced.css',
+            array('vdp-pipeline-enhanced'),
             VDP_VERSION
         );
 
+        // Select2 for enhanced filters
         wp_enqueue_style(
-            'vdp-table-filters',
-            VDP_PLUGIN_URL . 'assets/css/vdp-table-filters.css',
-            array('vdp-pipeline-filters'),
-            VDP_VERSION
-        );
-
-        wp_enqueue_style(
-            'vdp-force-horizontal',
-            VDP_PLUGIN_URL . 'assets/css/vdp-force-horizontal.css',
-            array('vdp-table-filters'),
-            VDP_VERSION
-        );
-
-        wp_enqueue_style(
-            'jquery-ui-style',
-            'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css',
+            'select2',
+            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
             array(),
-            '1.13.2'
+            VDP_VERSION
         );
 
-        wp_enqueue_script('jquery-ui-datepicker');
+        // DateRangePicker CSS
+        wp_enqueue_style(
+            'daterangepicker',
+            'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css',
+            array(),
+            VDP_VERSION
+        );
+
+        // Enhanced JavaScript
+        wp_enqueue_script('jquery');
         
+        // Select2 JS
+        wp_enqueue_script(
+            'select2',
+            'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+            array('jquery'),
+            VDP_VERSION,
+            true
+        );
+
+        // Moment.js for date handling
+        wp_enqueue_script(
+            'moment',
+            'https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js',
+            array(),
+            VDP_VERSION,
+            true
+        );
+
+        // DateRangePicker JS
+        wp_enqueue_script(
+            'daterangepicker',
+            'https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js',
+            array('jquery', 'moment'),
+            VDP_VERSION,
+            true
+        );
+
+        // Enhanced filters JavaScript
+        wp_enqueue_script(
+            'vdp-filters-advanced',
+            VDP_PLUGIN_URL . 'assets/js/vdp-filters-advanced.js',
+            array('jquery', 'select2', 'daterangepicker'),
+            VDP_VERSION,
+            true
+        );
+
+        // Drag & drop JavaScript
+        wp_enqueue_script(
+            'vdp-drag-drop',
+            VDP_PLUGIN_URL . 'assets/js/vdp-drag-drop.js',
+            array('jquery'),
+            VDP_VERSION,
+            true
+        );
+
+        // Legacy scripts for compatibility
         wp_enqueue_script(
             'vdp-leads-pipeline',
             VDP_PLUGIN_URL . 'assets/js/leads-pipeline.js',
-            array('jquery', 'jquery-ui-datepicker'),
+            array('jquery'),
             VDP_VERSION,
             true
         );
@@ -127,12 +170,21 @@ class VDP_Leads {
         wp_enqueue_script(
             'vdp-pipeline-simple',
             VDP_PLUGIN_URL . 'assets/js/vdp-pipeline-simple.js',
-            array('jquery', 'jquery-ui-datepicker'),
+            array('jquery'),
             VDP_VERSION,
             true
         );
 
-        wp_localize_script('vdp-leads-pipeline', 'vdpLeads', array(
+        // Localize scripts with AJAX data
+        wp_localize_script('vdp-filters-advanced', 'vdp_ajax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('vdp-ajax-nonce'),
+            'site_url' => site_url(),
+            'vendor_id' => $this->get_current_vendor_id(),
+            'statusOptions' => $this->get_status_options()
+        ));
+
+        wp_localize_script('vdp-drag-drop', 'vdp_ajax', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('vdp-ajax-nonce'),
             'site_url' => site_url(),
