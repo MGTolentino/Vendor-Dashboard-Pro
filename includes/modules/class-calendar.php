@@ -58,7 +58,8 @@ class VDP_Calendar {
         
         // Get vendor listings
         $listings = self::get_vendor_listings($vendor->get_id());
-        $calendar_data = self::get_calendar_data($vendor->get_id());
+        $calendar_full_data = self::get_calendar_data($vendor->get_id());
+        $calendar_data = $calendar_full_data; // Pass full structure to template
         
         include VDP_PLUGIN_DIR . 'templates/calendar-content.php';
     }
@@ -110,6 +111,10 @@ class VDP_Calendar {
         $events = array();
         $price_ranges = array();
         
+        // Debug: Log listings count
+        error_log('VDP Calendar Debug - Listings count: ' . count($listings));
+        error_log('VDP Calendar Debug - Args: ' . print_r($args, true));
+        
         foreach ($listings as $listing) {
             if ($args['listing_id'] && $listing['id'] != $args['listing_id']) {
                 continue;
@@ -117,6 +122,8 @@ class VDP_Calendar {
             
             // Get bookings for this listing
             $bookings = self::get_listing_bookings($listing['id'], $args);
+            error_log('VDP Calendar Debug - Listing ' . $listing['id'] . ' (' . $listing['title'] . ') has ' . count($bookings) . ' bookings');
+            
             foreach ($bookings as $booking) {
                 $events[] = array(
                     'id' => $booking['id'],
@@ -153,6 +160,9 @@ class VDP_Calendar {
             }
         }
         
+        // Debug: Log final events count
+        error_log('VDP Calendar Debug - Total events generated: ' . count($events));
+        
         return array(
             'events' => $events,
             'price_ranges' => $price_ranges,
@@ -170,7 +180,7 @@ class VDP_Calendar {
     public static function get_listing_bookings($listing_id, $args = array()) {
         $bookings_query = array(
             'post_type' => 'hp_booking',
-            'post_status' => array('publish', 'private'),
+            'post_status' => array('publish', 'pending', 'draft', 'private'),
             'numberposts' => -1,
             'post_parent' => $listing_id,
             'date_query' => array(
@@ -184,6 +194,10 @@ class VDP_Calendar {
         
         $bookings = get_posts($bookings_query);
         $bookings_data = array();
+        
+        // Debug: Log booking query results
+        error_log('VDP Calendar Debug - get_listing_bookings for listing ' . $listing_id . ' found ' . count($bookings) . ' raw bookings');
+        error_log('VDP Calendar Debug - Query: ' . print_r($bookings_query, true));
         
         foreach ($bookings as $booking) {
             $start_date = get_post_meta($booking->ID, 'hp_start_date', true);

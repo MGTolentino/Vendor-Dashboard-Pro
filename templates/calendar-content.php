@@ -173,7 +173,17 @@ jQuery(document).ready(function($) {
     
     // Debug: Log calendar data to console
     console.log('Main Calendar Data:', calendarData);
+    console.log('Main Calendar Data Type:', typeof calendarData);
+    console.log('Main Calendar Events Property:', calendarData ? calendarData.events : 'calendarData is null');
     console.log('Main Calendar Events Count:', calendarData && calendarData.events ? calendarData.events.length : 0);
+    
+    // Debug structure comparison
+    if (calendarData) {
+        console.log('Calendar Data Keys:', Object.keys(calendarData));
+        if (calendarData.events) {
+            console.log('First Event Sample:', calendarData.events[0]);
+        }
+    }
     
     // Initialize FullCalendar
     function initCalendar() {
@@ -190,7 +200,7 @@ jQuery(document).ready(function($) {
             selectMirror: true,
             weekNumbers: true,
             dayMaxEvents: true,
-            events: calendarData.events || [],
+            events: (calendarData && calendarData.events) ? calendarData.events : [],
             
             // Date selection
             select: function(info) {
