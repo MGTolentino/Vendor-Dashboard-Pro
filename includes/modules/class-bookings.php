@@ -123,13 +123,7 @@ class VDP_Bookings {
         $bookings_query = array(
             'post_type' => 'hp_booking',
             'post_status' => array('publish', 'pending', 'draft', 'trash'),
-            'meta_query' => array(
-                array(
-                    'key' => 'hp_listing',
-                    'value' => $listing_ids,
-                    'compare' => 'IN',
-                ),
-            ),
+            'post_parent__in' => $listing_ids,
             'posts_per_page' => -1,
         );
         
@@ -190,13 +184,7 @@ class VDP_Bookings {
             'post_type' => 'hp_booking',
             'posts_per_page' => $args['per_page'],
             'paged' => $args['page'],
-            'meta_query' => array(
-                array(
-                    'key' => 'hp_listing',
-                    'value' => $listing_ids,
-                    'compare' => 'IN',
-                ),
-            ),
+            'post_parent__in' => $listing_ids,
             'meta_key' => 'hp_start_time',
             'orderby' => 'meta_value_num',
             'order' => 'DESC',
@@ -252,11 +240,7 @@ class VDP_Bookings {
         
         // Listing filter
         if (!empty($args['listing_id'])) {
-            $query_args['meta_query'][] = array(
-                'key' => 'hp_listing',
-                'value' => $args['listing_id'],
-                'compare' => '=',
-            );
+            $query_args['post_parent'] = $args['listing_id'];
         }
         
         $bookings_query = new WP_Query($query_args);
@@ -331,13 +315,7 @@ class VDP_Bookings {
             'post_type' => 'hp_booking',
             'post_status' => array('publish', 'pending', 'draft'),
             'posts_per_page' => -1,
-            'meta_query' => array(
-                array(
-                    'key' => 'hp_listing',
-                    'value' => $listing_ids,
-                    'compare' => 'IN',
-                ),
-            ),
+            'post_parent__in' => $listing_ids,
         );
         
         $bookings = get_posts($calendar_query);

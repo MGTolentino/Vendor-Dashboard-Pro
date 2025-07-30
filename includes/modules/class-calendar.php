@@ -172,13 +172,7 @@ class VDP_Calendar {
             'post_type' => 'hp_booking',
             'post_status' => array('publish', 'draft', 'private'),
             'numberposts' => -1,
-            'meta_query' => array(
-                array(
-                    'key' => 'hp_listing',
-                    'value' => $listing_id,
-                    'compare' => '='
-                )
-            ),
+            'post_parent' => $listing_id,
             'date_query' => array(
                 array(
                     'after' => $args['start_date'],
