@@ -57,12 +57,15 @@ class VDP_Bookings {
 
         wp_enqueue_script('jquery');
         
-        // Localize script with AJAX data
-        wp_localize_script('jquery', 'vdp_ajax', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('vdp-ajax-nonce'),
-            'site_url' => site_url()
-        ));
+        // Add inline script to define vdp_ajax variable
+        wp_add_inline_script('jquery', sprintf(
+            'window.vdp_ajax = %s;',
+            wp_json_encode(array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('vdp-ajax-nonce'),
+                'site_url' => site_url()
+            ))
+        ), 'before');
     }
 
     /**
