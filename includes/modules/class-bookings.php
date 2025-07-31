@@ -38,8 +38,31 @@ class VDP_Bookings {
      */
     public function __construct() {
         add_action('vdp_bookings_content', array($this, 'render_bookings'), 10);
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
+        
+        // AJAX handlers
         add_action('wp_ajax_vdp_filter_bookings', array($this, 'ajax_filter_bookings'));
+        add_action('wp_ajax_nopriv_vdp_filter_bookings', array($this, 'ajax_filter_bookings'));
         add_action('wp_ajax_vdp_update_booking_status', array($this, 'ajax_update_booking_status'));
+        add_action('wp_ajax_nopriv_vdp_update_booking_status', array($this, 'ajax_update_booking_status'));
+    }
+
+    /**
+     * Enqueue bookings assets when on bookings page.
+     */
+    public function enqueue_assets() {
+        if (!vdp_is_dashboard_page() || vdp_get_current_action() !== 'bookings') {
+            return;
+        }
+
+        wp_enqueue_script('jquery');
+        
+        // Localize script with AJAX data
+        wp_localize_script('jquery', 'vdp_ajax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('vdp-ajax-nonce'),
+            'site_url' => site_url()
+        ));
     }
 
     /**
@@ -465,13 +488,13 @@ class VDP_Bookings {
      */
     public function ajax_filter_bookings() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'vdp_bookings_nonce')) {
-            wp_die('Security check failed.');
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
+            wp_send_json_error(array('message' => 'Security check failed.'));
         }
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
-            wp_die('Access denied.');
+            wp_send_json_error(array('message' => 'Access denied.'));
         }
         
         $args = array(
@@ -493,13 +516,13 @@ class VDP_Bookings {
      */
     public function ajax_update_booking_status() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'vdp_bookings_nonce')) {
-            wp_die('Security check failed.');
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
+            wp_send_json_error(array('message' => 'Security check failed.'));
         }
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
-            wp_die('Access denied.');
+            wp_send_json_error(array('message' => 'Access denied.'));
         }
         
         $booking_id = absint($_POST['booking_id']);
@@ -510,7 +533,7 @@ class VDP_Bookings {
         $listing = get_post($listing_id);
         
         if (!$listing || $listing->post_parent != $vendor->get_id()) {
-            wp_die('Access denied.');
+            wp_send_json_error(array('message' => 'Access denied.'));
         }
         
         // Update booking status
