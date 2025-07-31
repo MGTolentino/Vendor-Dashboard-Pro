@@ -577,9 +577,14 @@ jQuery(document).ready(function($) {
                 $('#bookings-table-body').html('<tr><td colspan="6">Cargando...</td></tr>');
             },
             success: function(response) {
+                console.log('AJAX Response:', response);
                 if (response.success) {
+                    console.log('Bookings data:', response.data.bookings);
+                    console.log('Summary data:', response.data.summary);
                     updateBookingsTable(response.data.bookings);
                     updateBookingsSummary(response.data.summary);
+                } else {
+                    $('#bookings-table-body').html('<tr><td colspan="6">Error: ' + (response.data.message || 'Unknown error') + '</td></tr>');
                 }
             },
             error: function() {
@@ -599,11 +604,19 @@ jQuery(document).ready(function($) {
                 var statusClass = booking.status;
                 
                 html += '<tr data-booking-id="' + booking.id + '">';
-                html += '<td><div class="booking-listing"><strong>' + booking.listing_title + '</strong></div></td>';
-                html += '<td><div class="booking-customer"><strong>' + booking.customer_name + '</strong><div class="customer-email">' + booking.customer_email + '</div></div></td>';
-                html += '<td><div class="booking-dates"><div class="date-from">' + formatDate(booking.start_time) + '</div><div class="date-to">' + formatDate(booking.end_time) + '</div></div></td>';
+                html += '<td><div class="booking-listing"><strong>' + (booking.listing_title || 'N/A') + '</strong></div></td>';
+                html += '<td><div class="booking-customer"><strong>' + (booking.customer_name || 'N/A') + '</strong><div class="customer-email">' + (booking.customer_email || '') + '</div></div></td>';
+                html += '<td><div class="booking-dates">';
+                if (booking.start_time && booking.end_time) {
+                    html += '<div class="date-from">' + formatDate(booking.start_time) + '</div><div class="date-to">' + formatDate(booking.end_time) + '</div>';
+                } else if (booking.start_date && booking.end_date) {
+                    html += '<div class="date-only">' + formatDate(booking.start_date) + ' - ' + formatDate(booking.end_date) + '</div>';
+                } else {
+                    html += '<div class="no-date">N/A</div>';
+                }
+                html += '</div></td>';
                 html += '<td><span class="booking-status booking-status-' + statusClass + '">' + statusText + '</span></td>';
-                html += '<td><div class="booking-price">' + (booking.price ? formatPrice(booking.price) : '-') + '</div></td>';
+                html += '<td><div class="booking-price">' + formatPrice(booking.order_total) + '</div></td>';
                 html += '<td><div class="booking-actions">';
                 
                 if (booking.status === 'pending') {
@@ -627,23 +640,27 @@ jQuery(document).ready(function($) {
     }
     
     function updateBookingsSummary(summary) {
+        if (!summary) return;
+        
         $('.vdp-summary-grid .vdp-summary-card').each(function(index) {
             var $card = $(this);
             var value;
             
             switch(index) {
                 case 0:
-                    value = summary.total_bookings.toLocaleString();
+                    value = (summary.total_bookings || 0).toLocaleString();
                     break;
                 case 1:
-                    value = summary.confirmed_bookings.toLocaleString();
+                    value = (summary.confirmed_bookings || 0).toLocaleString();
                     break;
                 case 2:
-                    value = summary.pending_bookings.toLocaleString();
+                    value = (summary.pending_bookings || 0).toLocaleString();
                     break;
                 case 3:
-                    value = formatPrice(summary.total_revenue);
+                    value = formatPrice(summary.total_revenue || 0);
                     break;
+                default:
+                    value = '0';
             }
             
             $card.find('h3').text(value);
@@ -662,11 +679,27 @@ jQuery(document).ready(function($) {
     }
     
     function formatDate(timestamp) {
-        var date = new Date(timestamp * 1000);
+        if (!timestamp) return '-';
+        
+        var date;
+        if (typeof timestamp === 'string') {
+            // If it's a string, try to parse it
+            date = new Date(timestamp);
+        } else {
+            // If it's a timestamp, multiply by 1000
+            date = new Date(timestamp * 1000);
+        }
+        
+        if (isNaN(date.getTime())) {
+            return '-';
+        }
+        
         return date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
     }
     
     function formatPrice(amount) {
+        if (!amount || isNaN(amount)) return '-';
+        
         return new Intl.NumberFormat('es-ES', {
             style: 'currency',
             currency: 'EUR' // Adjust currency as needed
