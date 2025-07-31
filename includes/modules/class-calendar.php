@@ -575,62 +575,6 @@ class VDP_Calendar {
         );
     }
 
-    /**
-     * Get calendar configuration.
-     *
-     * @return array
-     */
-    public static function get_calendar_config() {
-        $locale = self::get_calendar_locale();
-        $is_spanish = strpos($locale, 'es') === 0;
-        
-        return array(
-            'locale' => $locale,
-            'firstDay' => 1, // Monday
-            'buttonText' => $is_spanish ? array(
-                'today' => 'Hoy',
-                'month' => 'Mes',
-                'week' => 'Semana',
-                'day' => 'Día',
-                'list' => 'Lista'
-            ) : array(
-                'today' => 'Today',
-                'month' => 'Month',
-                'week' => 'Week',
-                'day' => 'Day',
-                'list' => 'List'
-            )
-        );
-    }
-
-    /**
-     * Get calendar locale.
-     *
-     * @return string
-     */
-    public static function get_calendar_locale() {
-        $locale = get_locale();
-        
-        // Map WordPress locales to FullCalendar locales
-        $locale_map = array(
-            'es_ES' => 'es',
-            'es_MX' => 'es',
-            'es_AR' => 'es',
-            'es_CL' => 'es',
-            'es_CO' => 'es',
-            'es_PE' => 'es',
-            'es_VE' => 'es',
-            'en_US' => 'en',
-            'en_GB' => 'en-gb',
-            'fr_FR' => 'fr',
-            'de_DE' => 'de',
-            'it_IT' => 'it',
-            'pt_BR' => 'pt-br',
-            'pt_PT' => 'pt'
-        );
-        
-        return isset($locale_map[$locale]) ? $locale_map[$locale] : 'en';
-    }
 }
 
 VDP_Calendar::instance();
