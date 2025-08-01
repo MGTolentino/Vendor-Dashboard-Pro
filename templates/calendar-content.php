@@ -323,8 +323,12 @@ jQuery(document).ready(function($) {
     
     // Block dates
     function blockDates() {
-        if (!selectedDates.start || !selectedDates.listing_id) {
-            alert(isSpanish ? 'Selecciona fechas y listing primero' : 'Select dates and listing first');
+        if (!selectedDates.start) {
+            alert(isSpanish ? 'Selecciona fechas primero' : 'Select dates first');
+            return;
+        }
+        if (!selectedDates.listing_id || selectedDates.listing_id === '') {
+            alert(isSpanish ? 'Selecciona un listing específico primero' : 'Select a specific listing first');
             return;
         }
         
@@ -352,8 +356,12 @@ jQuery(document).ready(function($) {
     
     // Unblock dates
     function unblockDates() {
-        if (!selectedDates.start || !selectedDates.listing_id) {
-            alert(isSpanish ? 'Selecciona fechas y listing primero' : 'Select dates and listing first');
+        if (!selectedDates.start) {
+            alert(isSpanish ? 'Selecciona fechas primero' : 'Select dates first');
+            return;
+        }
+        if (!selectedDates.listing_id || selectedDates.listing_id === '') {
+            alert(isSpanish ? 'Selecciona un listing específico primero' : 'Select a specific listing first');
             return;
         }
         
@@ -381,6 +389,15 @@ jQuery(document).ready(function($) {
     
     // Show price range modal
     function showPriceModal() {
+        if (!selectedDates.start) {
+            alert(isSpanish ? 'Selecciona fechas primero' : 'Select dates first');
+            return;
+        }
+        if (!selectedDates.listing_id || selectedDates.listing_id === '') {
+            alert(isSpanish ? 'Selecciona un listing específico primero' : 'Select a specific listing first');
+            return;
+        }
+        
         if (selectedDates.start && selectedDates.end) {
             $('#range_start_date').val(selectedDates.start);
             $('#range_end_date').val(selectedDates.end);
