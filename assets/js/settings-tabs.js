@@ -7,8 +7,13 @@
 jQuery(document).ready(function($) {
     'use strict';
 
-    // Settings tabs functionality
-    $(document).on('click', '.vdp-tab-btn', function(e) {
+    // Initialize settings tabs when content loads
+    function initSettingsTabs() {
+        // Remove any existing event listeners to prevent duplicates
+        $(document).off('click.settings-tabs', '.vdp-tab-btn');
+        
+        // Add event listener with namespace
+        $(document).on('click.settings-tabs', '.vdp-tab-btn', function(e) {
         e.preventDefault();
         
         var $clickedTab = $(this);
@@ -29,8 +34,19 @@ jQuery(document).ready(function($) {
         // Show corresponding content
         $('#' + targetTab + '-tab').addClass('vdp-active');
         
-        // Trigger custom event for other scripts that might need to know about tab changes
-        $(document).trigger('vdp_settings_tab_changed', [targetTab]);
+            // Trigger custom event for other scripts that might need to know about tab changes
+            $(document).trigger('vdp_settings_tab_changed', [targetTab]);
+        });
+    }
+
+    // Initialize on page load
+    initSettingsTabs();
+
+    // Re-initialize when settings content is loaded (for AJAX)
+    $(document).on('vdp_content_loaded', function(e, action) {
+        if (action === 'settings') {
+            initSettingsTabs();
+        }
     });
 
     // File upload handling for images

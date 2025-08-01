@@ -196,6 +196,8 @@
                         VDP.initMessages();
                     } else if (action === 'settings') {
                         VDP.initSettings();
+                        // Trigger event for settings tabs
+                        $(document).trigger('vdp_content_loaded', [action]);
                     } else if (action === 'leads') {
                         VDP.initLeads();
                     }
