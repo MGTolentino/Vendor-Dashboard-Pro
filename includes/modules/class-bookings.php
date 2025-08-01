@@ -339,13 +339,68 @@ class VDP_Bookings {
             return array();
         }
         
-        // Get bookings for calendar display
+        // Get bookings for calendar display with filters
         $calendar_query = array(
             'post_type' => 'hp_booking',
-            'post_status' => array('publish', 'pending', 'draft', 'private'),
             'posts_per_page' => -1,
             'post_parent__in' => $listing_ids,
+            'meta_key' => 'hp_start_time',
+            'orderby' => 'meta_value_num',
+            'order' => 'DESC',
         );
+        
+        // Apply status filter
+        if (!empty($args['status']) && $args['status'] !== 'all') {
+            switch ($args['status']) {
+                case 'confirmed':
+                    $calendar_query['post_status'] = 'publish';
+                    break;
+                case 'pending':
+                    $calendar_query['post_status'] = 'pending';
+                    break;
+                case 'cancelled':
+                    $calendar_query['post_status'] = 'trash';
+                    break;
+                default:
+                    $calendar_query['post_status'] = array('publish', 'pending', 'draft', 'private');
+            }
+        } else {
+            $calendar_query['post_status'] = array('publish', 'pending', 'draft', 'private');
+        }
+        
+        // Apply date filters
+        if (!empty($args['date_from']) || !empty($args['date_to'])) {
+            $meta_query = array();
+            
+            if (!empty($args['date_from'])) {
+                $meta_query[] = array(
+                    'key' => 'hp_start_time',
+                    'value' => strtotime($args['date_from']),
+                    'compare' => '>=',
+                    'type' => 'NUMERIC'
+                );
+            }
+            
+            if (!empty($args['date_to'])) {
+                $meta_query[] = array(
+                    'key' => 'hp_start_time',
+                    'value' => strtotime($args['date_to'] . ' 23:59:59'),
+                    'compare' => '<=',
+                    'type' => 'NUMERIC'
+                );
+            }
+            
+            if (count($meta_query) > 1) {
+                $meta_query['relation'] = 'AND';
+            }
+            
+            $calendar_query['meta_query'] = $meta_query;
+        }
+        
+        // Apply listing filter
+        if (!empty($args['listing_id'])) {
+            $calendar_query['post_parent'] = $args['listing_id'];
+        }
         
         $bookings = get_posts($calendar_query);
         $calendar_events = array();

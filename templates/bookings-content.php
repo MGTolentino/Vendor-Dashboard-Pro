@@ -466,18 +466,32 @@ jQuery(document).ready(function($) {
     
     // Update calendar events with filtered data
     function updateCalendarEvents(newEvents) {
-        if (!bookingsCalendar) return;
+        console.log('updateCalendarEvents called with:', newEvents);
         
-        // Remove all existing events
-        bookingsCalendar.removeAllEvents();
-        
-        // Add new filtered events
-        if (newEvents && newEvents.length > 0) {
-            bookingsCalendar.addEventSource(newEvents);
+        if (!bookingsCalendar) {
+            console.error('Calendar not initialized');
+            return;
         }
         
-        // Refresh the calendar view
-        bookingsCalendar.refetchEvents();
+        // Get all current event sources
+        const eventSources = bookingsCalendar.getEventSources();
+        console.log('Current event sources:', eventSources.length);
+        
+        // Remove all event sources
+        eventSources.forEach(source => {
+            source.remove();
+        });
+        
+        // Add new filtered events if any
+        if (newEvents && newEvents.length > 0) {
+            console.log('Adding', newEvents.length, 'new events');
+            bookingsCalendar.addEventSource(newEvents);
+        } else {
+            console.log('No events to add - calendar should be empty');
+        }
+        
+        // Force calendar to re-render
+        bookingsCalendar.render();
     }
     
     // Show booking details modal
