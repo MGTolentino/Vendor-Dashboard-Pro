@@ -641,29 +641,33 @@ jQuery(document).ready(function($) {
 .vdp-calendar-tools {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 12px;
-    padding: 20px;
+    padding: 16px;
     margin-bottom: 20px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     border: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .vdp-calendar-actions {
     display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 10px;
     flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 .vdp-calendar-actions .vdp-btn {
-    padding: 12px 20px !important;
-    font-size: 14px !important;
-    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
     font-weight: 500 !important;
     transition: all 0.3s ease !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
     border: none !important;
     position: relative;
     overflow: hidden;
+    flex: 0 0 auto;
 }
 
 .vdp-calendar-actions .vdp-btn::before {
@@ -711,43 +715,54 @@ jQuery(document).ready(function($) {
     color: #212529 !important;
 }
 
-/* Legend improvements */
+/* Legend improvements - Compact */
 .vdp-calendar-legend {
     display: flex;
-    gap: 20px;
+    gap: 12px;
     align-items: center;
-    justify-content: center;
-    padding: 15px;
-    background: rgba(255,255,255,0.8);
-    border-radius: 8px;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 6px;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.vdp-calendar-legend::-webkit-scrollbar {
+    display: none;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
+    gap: 6px;
+    font-size: 12px;
     color: #495057;
     font-weight: 500;
-    padding: 8px 12px;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.6);
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.7);
     transition: all 0.3s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .legend-item:hover {
-    background: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,1);
     transform: translateY(-1px);
 }
 
 .legend-color {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 2px solid rgba(255,255,255,0.8);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.8);
+    flex-shrink: 0;
 }
 
 .legend-color.confirmed {
@@ -941,21 +956,55 @@ jQuery(document).ready(function($) {
     font-size: 12px !important;
 }
 
+/* Responsive improvements */
+@media (max-width: 1200px) {
+    .vdp-calendar-legend {
+        gap: 8px;
+    }
+    
+    .legend-item {
+        padding: 3px 6px;
+        font-size: 11px;
+    }
+    
+    .legend-color {
+        width: 10px;
+        height: 10px;
+    }
+}
+
 @media (max-width: 768px) {
     .vdp-calendar-tools {
         flex-direction: column;
-        gap: 15px;
+        gap: 12px;
+        padding: 12px;
     }
     
     .vdp-calendar-actions {
-        flex-wrap: wrap;
         justify-content: center;
+        gap: 8px;
+    }
+    
+    .vdp-calendar-actions .vdp-btn {
+        padding: 6px 12px !important;
+        font-size: 12px !important;
     }
     
     .vdp-calendar-legend {
-        flex-wrap: wrap;
         justify-content: center;
-        gap: 10px;
+        gap: 6px;
+        padding: 8px;
+    }
+    
+    .legend-item {
+        padding: 2px 4px;
+        font-size: 10px;
+        gap: 4px;
+    }
+    
+    .legend-color {
+        width: 8px;
+        height: 8px;
     }
     
     .vdp-modal-content {
