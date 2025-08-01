@@ -70,14 +70,14 @@ class VDP_Settings {
             'profile' => array(
                 'name' => $vendor->get_name(),
                 'description' => $vendor->get_description(),
-                'image_id' => $vendor->get_image_id(),
-                'image_url' => $vendor->get_image_url('thumbnail'),
+                'image_id' => get_post_thumbnail_id($vendor->get_id()),
+                'image_url' => $vendor->get_image__url('thumbnail'),
                 'email' => $vendor->get_user__email(),
                 'phone' => get_user_meta($vendor->get_user__id(), 'phone', true),
             ),
             'store' => array(
                 'store_name' => $vendor->get_name(),
-                'store_logo' => $vendor->get_image__id(),
+                'store_logo' => get_post_thumbnail_id($vendor->get_id()),
                 'store_banner' => get_post_meta($vendor->get_id(), 'banner_image', true),
                 'store_tagline' => get_post_meta($vendor->get_id(), 'tagline', true),
             ),
