@@ -231,31 +231,18 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                         $vendor_slug = ($vendor->get_slug)();
                     }
                     
-                    // Determine vendor profile URL
+                    // Determine vendor profile URL - redirect to external sites
                     $profile_url = '#';
-                    if (class_exists('\HivePress\Models\Vendor') && function_exists('hivepress') && $vendor_id) {
-                        // Try using HivePress URL
-                        try {
-                            $profile_url = hivepress()->router->get_url('vendor_view_page', ['id' => $vendor_id]);
-                        } catch (Exception $e) {
-                            $profile_url = get_permalink($vendor_id);
-                        }
-                    } elseif ($vendor_id) {
-                        // Fallback to post permalink
-                        $profile_url = get_permalink($vendor_id);
-                    } elseif (!empty($vendor_slug)) {
-                        // Try to construct URL from slug - check both Spanish and English patterns
-                        $base_url = home_url('/');
-                        $possible_urls = array(
-                            $base_url . 'official-store-for/' . $vendor_slug . '/',
-                            $base_url . 'tienda-oficial-de/' . $vendor_slug . '/',
-                        );
+                    
+                    if (!empty($vendor_slug)) {
+                        // Detect language and use appropriate external URL
+                        $locale = get_locale();
+                        $is_spanish = strpos($locale, 'es') === 0;
                         
-                        // Check which URL exists by making a quick HEAD request or checking pages
-                        foreach ($possible_urls as $test_url) {
-                            // For now, we'll use the first one as default
-                            $profile_url = $test_url;
-                            break;
+                        if ($is_spanish) {
+                            $profile_url = 'https://reservas.events/tienda-oficial-de/' . $vendor_slug . '/';
+                        } else {
+                            $profile_url = 'https://bookit.events/official-store-for/' . $vendor_slug . '/';
                         }
                     }
                     ?>

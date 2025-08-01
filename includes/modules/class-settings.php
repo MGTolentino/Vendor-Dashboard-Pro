@@ -70,8 +70,8 @@ class VDP_Settings {
             'profile' => array(
                 'name' => $vendor->get_name(),
                 'description' => $vendor->get_description(),
-                'image_id' => $vendor->get_image__id(),
-                'image_url' => $vendor->get_image__url('thumbnail'),
+                'image_id' => $vendor->get_image_id(),
+                'image_url' => $vendor->get_image_url('thumbnail'),
                 'email' => $vendor->get_user__email(),
                 'phone' => get_user_meta($vendor->get_user__id(), 'phone', true),
             ),
