@@ -648,12 +648,12 @@ jQuery(document).ready(function($) {
                 html += '<td><div class="booking-dates">';
                 if (booking.start_time && booking.end_time) {
                     html += '<div class="date-range-fancy">';
-                    html += '<div class="date-from">' + formatDate(booking.start_time) + '</div>';
+                    html += '<div class="date-from"><i class="far fa-calendar"></i> ' + formatDateSimple(booking.start_time) + '</div>';
                     html += '<div class="date-separator"><i class="fas fa-arrow-right"></i></div>';
-                    html += '<div class="date-to">' + formatDate(booking.end_time) + '</div>';
+                    html += '<div class="date-to"><i class="far fa-calendar-check"></i> ' + formatDateSimple(booking.end_time) + '</div>';
                     html += '</div>';
                 } else if (booking.start_date && booking.end_date) {
-                    html += '<div class="date-only">' + formatDate(booking.start_date) + ' - ' + formatDate(booking.end_date) + '</div>';
+                    html += '<div class="date-only"><i class="far fa-calendar"></i> ' + formatDateSimple(booking.start_date) + ' - ' + formatDateSimple(booking.end_date) + '</div>';
                 } else {
                     html += '<div class="no-date"><i class="far fa-calendar-times"></i> N/A</div>';
                 }
@@ -754,6 +754,40 @@ jQuery(document).ready(function($) {
         };
         
         return '<i class="far fa-calendar"></i> ' + date.toLocaleDateString('es-ES', options);
+    }
+    
+    function formatDateSimple(timestamp) {
+        if (!timestamp) return '-';
+        
+        var date;
+        if (typeof timestamp === 'string') {
+            // Check if it's a numeric string (Unix timestamp)
+            if (/^\d+$/.test(timestamp)) {
+                date = new Date(parseInt(timestamp) * 1000);
+            } else {
+                // If it's a date string, try to parse it
+                date = new Date(timestamp);
+            }
+        } else if (typeof timestamp === 'number') {
+            // If it's a number, assume it's a Unix timestamp
+            date = new Date(timestamp * 1000);
+        } else {
+            return '-';
+        }
+        
+        if (isNaN(date.getTime())) {
+            return '-';
+        }
+        
+        // Simple format for table
+        var options = { 
+            day: '2-digit', 
+            month: 'short', 
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        
+        return date.toLocaleDateString('es-ES', options);
     }
     
     function formatModalDate(dateObj) {
