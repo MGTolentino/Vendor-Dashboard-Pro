@@ -72,8 +72,8 @@ class VDP_Settings {
                 'description' => $vendor->get_description(),
                 'image_id' => get_post_thumbnail_id($vendor->get_id()),
                 'image_url' => $vendor->get_image__url('thumbnail'),
-                'email' => $vendor->get_user__email(),
-                'phone' => get_user_meta($vendor->get_user__id(), 'phone', true),
+                'email' => ($user_data = get_userdata($vendor->get_user_id())) ? $user_data->user_email : '',
+                'phone' => get_user_meta($vendor->get_user_id(), 'phone', true),
             ),
             'store' => array(
                 'store_name' => $vendor->get_name(),
@@ -91,10 +91,10 @@ class VDP_Settings {
                 'return_policy' => get_post_meta($vendor->get_id(), 'return_policy', true),
             ),
             'notifications' => array(
-                'email_notifications' => get_user_meta($vendor->get_user__id(), 'email_notifications', true) !== 'no',
-                'order_notifications' => get_user_meta($vendor->get_user__id(), 'order_notifications', true) !== 'no',
-                'message_notifications' => get_user_meta($vendor->get_user__id(), 'message_notifications', true) !== 'no',
-                'review_notifications' => get_user_meta($vendor->get_user__id(), 'review_notifications', true) !== 'no',
+                'email_notifications' => get_user_meta($vendor->get_user_id(), 'email_notifications', true) !== 'no',
+                'order_notifications' => get_user_meta($vendor->get_user_id(), 'order_notifications', true) !== 'no',
+                'message_notifications' => get_user_meta($vendor->get_user_id(), 'message_notifications', true) !== 'no',
+                'review_notifications' => get_user_meta($vendor->get_user_id(), 'review_notifications', true) !== 'no',
             ),
         );
     }
