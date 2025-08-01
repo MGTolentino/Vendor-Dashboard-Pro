@@ -535,7 +535,7 @@ jQuery(document).ready(function($) {
                     action: 'vdp_update_booking_status',
                     booking_id: bookingId,
                     status: status,
-                    nonce: vdp_ajax.nonce
+                    nonce: vdp_vars.nonce  // Using vdp_vars.nonce instead of vdp_ajax.nonce
                 },
                 beforeSend: function() {
                     $button.prop('disabled', true).text('Procesando...');
@@ -558,15 +558,6 @@ jQuery(document).ready(function($) {
     });
     
     function filterBookings() {
-        // Debug: Check if vdp_ajax exists
-        if (typeof vdp_ajax === 'undefined') {
-            console.error('vdp_ajax is not defined');
-            alert('Error: La variable vdp_ajax no está definida. Por favor recarga la página.');
-            return;
-        }
-        
-        console.log('vdp_ajax:', vdp_ajax);
-        
         var filters = {
             status: $('#booking_status_filter').val(),
             listing_id: $('#booking_listing_filter').val(),
@@ -580,7 +571,7 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'vdp_filter_bookings',
                 ...filters,
-                nonce: vdp_ajax.nonce
+                nonce: vdp_vars.nonce  // Using vdp_vars.nonce instead of vdp_ajax.nonce
             },
             beforeSend: function() {
                 $('#bookings-table-body').html('<tr><td colspan="6">Cargando...</td></tr>');
