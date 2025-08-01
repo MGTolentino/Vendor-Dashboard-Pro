@@ -160,7 +160,7 @@ $is_spanish = strpos($locale, 'es') === 0;
 jQuery(document).ready(function($) {
     let calendar;
     let selectedDates = [];
-    let selectedListing = '';
+    let selectedListing = $('#calendar_listing_filter').val() || '';
     
     // Calendar configuration
     const calendarConfig = <?php echo json_encode($calendar_config); ?>;
@@ -294,7 +294,7 @@ jQuery(document).ready(function($) {
     // Clear selection
     function clearSelection() {
         selectedDates = [];
-        selectedListing = '';
+        // Don't clear selectedListing - keep the selected listing from dropdown
         calendar.unselect();
         $('#selected-dates-info').hide();
         disableActionButtons();
