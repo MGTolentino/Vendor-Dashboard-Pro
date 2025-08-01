@@ -125,9 +125,15 @@ class VDP_Calendar {
             error_log('VDP Calendar Debug - Listing ' . $listing['id'] . ' (' . $listing['title'] . ') has ' . count($bookings) . ' bookings');
             
             foreach ($bookings as $booking) {
+                // Set title based on booking type
+                $title = $listing['title'] . ' #' . $booking['id'];
+                if (!empty($booking['is_blocked'])) {
+                    $title = '🚫 ' . $listing['title'] . ' (Bloqueado)';
+                }
+                
                 $events[] = array(
                     'id' => $booking['id'],
-                    'title' => $listing['title'] . ' #' . $booking['id'],
+                    'title' => $title,
                     'start' => $booking['start_date'],
                     'end' => $booking['end_date'],
                     'allDay' => !$listing['time_booking'],
@@ -143,6 +149,7 @@ class VDP_Calendar {
                         'status' => $booking['status'],
                         'customer' => $booking['customer_name'],
                         'amount' => $booking['amount'],
+                        'is_blocked' => !empty($booking['is_blocked']),
                     ),
                 );
             }
@@ -230,16 +237,24 @@ class VDP_Calendar {
             
             $customer_id = $booking->post_author;
             $customer = get_userdata($customer_id);
+            $is_blocked = get_post_meta($booking->ID, 'hp_blocked', true);
+            
+            // Set customer name based on booking type
+            $customer_name = $customer ? $customer->display_name : __('Guest', 'vendor-dashboard-pro');
+            if ($is_blocked || $booking->post_status === 'private') {
+                $customer_name = __('Blocked Dates', 'vendor-dashboard-pro');
+            }
             
             $bookings_data[] = array(
                 'id' => $booking->ID,
                 'start_date' => $start_datetime,
                 'end_date' => $end_datetime,
                 'status' => $booking->post_status,
-                'customer_name' => $customer ? $customer->display_name : __('Guest', 'vendor-dashboard-pro'),
+                'customer_name' => $customer_name,
                 'customer_email' => $customer ? $customer->user_email : '',
                 'amount' => get_post_meta($booking->ID, 'hp_total', true) ?: get_post_meta($booking->ID, 'hp_price_extras', true) ?: 0,
                 'quantity' => get_post_meta($booking->ID, 'hp_quantity', true) ?: 1,
+                'is_blocked' => $is_blocked || $booking->post_status === 'private',
             );
         }
         
@@ -355,10 +370,11 @@ class VDP_Calendar {
             'post_status' => 'private',
             'post_title' => 'Blocked dates',
             'post_author' => get_current_user_id(),
+            'post_parent' => $listing_id,  // Associate with listing via post_parent
         ));
         
         if ($booking_id) {
-            update_post_meta($booking_id, 'hp_listing', $listing_id);
+            update_post_meta($booking_id, 'hp_listing', $listing_id);  // Keep for compatibility
             update_post_meta($booking_id, 'hp_start_date', $start_date);
             update_post_meta($booking_id, 'hp_end_date', $end_date);
             update_post_meta($booking_id, 'hp_blocked', true);
