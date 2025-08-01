@@ -558,6 +558,15 @@ jQuery(document).ready(function($) {
     });
     
     function filterBookings() {
+        // Debug: Check if vdp_ajax exists
+        if (typeof vdp_ajax === 'undefined') {
+            console.error('vdp_ajax is not defined');
+            alert('Error: La variable vdp_ajax no está definida. Por favor recarga la página.');
+            return;
+        }
+        
+        console.log('vdp_ajax:', vdp_ajax);
+        
         var filters = {
             status: $('#booking_status_filter').val(),
             listing_id: $('#booking_listing_filter').val(),
