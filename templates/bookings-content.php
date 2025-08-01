@@ -215,10 +215,13 @@ $labels = $is_spanish ? array(
                                 <td>
                                     <div class="booking-dates">
                                         <?php if (!empty($booking['start_time']) && !empty($booking['end_time'])) : ?>
-                                            <div class="date-from"><?php echo date('d/m/Y H:i', $booking['start_time']); ?></div>
-                                            <div class="date-to"><?php echo date('d/m/Y H:i', $booking['end_time']); ?></div>
+                                            <div class="date-range-fancy">
+                                                <div class="date-from"><i class="far fa-calendar"></i> <?php echo date('d M, H:i', $booking['start_time']); ?></div>
+                                                <div class="date-separator"><i class="fas fa-arrow-right"></i></div>
+                                                <div class="date-to"><i class="far fa-calendar-check"></i> <?php echo date('d M, H:i', $booking['end_time']); ?></div>
+                                            </div>
                                         <?php else : ?>
-                                            <div class="date-only"><?php echo date('d/m/Y', strtotime($booking['start_date'])); ?> - <?php echo date('d/m/Y', strtotime($booking['end_date'])); ?></div>
+                                            <div class="date-only"><i class="far fa-calendar"></i> <?php echo date('d M Y', strtotime($booking['start_date'])); ?> - <?php echo date('d M Y', strtotime($booking['end_date'])); ?></div>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -350,10 +353,13 @@ $labels = $is_spanish ? array(
                             <td>
                                 <div class="booking-dates">
                                     <?php if (!empty($booking['start_time']) && !empty($booking['end_time'])) : ?>
-                                        <div class="date-from"><?php echo date('d/m/Y H:i', $booking['start_time']); ?></div>
-                                        <div class="date-to"><?php echo date('d/m/Y H:i', $booking['end_time']); ?></div>
+                                        <div class="date-range-fancy">
+                                            <div class="date-from"><i class="far fa-calendar"></i> <?php echo date('d M, H:i', $booking['start_time']); ?></div>
+                                            <div class="date-separator"><i class="fas fa-arrow-right"></i></div>
+                                            <div class="date-to"><i class="far fa-calendar-check"></i> <?php echo date('d M, H:i', $booking['end_time']); ?></div>
+                                        </div>
                                     <?php else : ?>
-                                        <div class="date-only"><?php echo date('d/m/Y', strtotime($booking['start_date'])); ?> - <?php echo date('d/m/Y', strtotime($booking['end_date'])); ?></div>
+                                        <div class="date-only"><i class="far fa-calendar"></i> <?php echo date('d M Y', strtotime($booking['start_date'])); ?> - <?php echo date('d M Y', strtotime($booking['end_date'])); ?></div>
                                     <?php endif; ?>
                                 </div>
                             </td>
