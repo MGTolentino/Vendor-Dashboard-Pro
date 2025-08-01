@@ -310,7 +310,7 @@ jQuery(document).ready(function($) {
                 listing_id: listingId,
                 start: calendar.view.activeStart.toISOString().split('T')[0],
                 end: calendar.view.activeEnd.toISOString().split('T')[0],
-                nonce: vdp_ajax.nonce
+                nonce: vdp_ajax.calendar_nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -336,7 +336,7 @@ jQuery(document).ready(function($) {
                 listing_id: selectedDates.listing_id,
                 start_date: selectedDates.start,
                 end_date: selectedDates.end,
-                nonce: vdp_ajax.nonce
+                nonce: vdp_ajax.calendar_nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -365,7 +365,7 @@ jQuery(document).ready(function($) {
                 listing_id: selectedDates.listing_id,
                 start_date: selectedDates.start,
                 end_date: selectedDates.end,
-                nonce: vdp_ajax.nonce
+                nonce: vdp_ajax.calendar_nonce
             },
             success: function(response) {
                 if (response.success) {
