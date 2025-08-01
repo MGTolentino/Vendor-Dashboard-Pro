@@ -505,7 +505,11 @@ jQuery(document).ready(function($) {
                 <strong>${labels.customer}:</strong> ${extendedProps.customer}
             </div>
             <div class="booking-detail-item">
-                <strong>${labels.dates}:</strong> ${event.startStr} - ${event.endStr}
+                <strong>${labels.dates}:</strong> 
+                <div class="booking-dates-fancy">
+                    <i class="far fa-calendar-check"></i>
+                    ${formatModalDate(event.start)} - ${formatModalDate(event.end)}
+                </div>
             </div>
             <div class="booking-detail-item">
                 <strong>${labels.status}:</strong> 
@@ -718,18 +722,49 @@ jQuery(document).ready(function($) {
         
         var date;
         if (typeof timestamp === 'string') {
-            // If it's a string, try to parse it
-            date = new Date(timestamp);
-        } else {
-            // If it's a timestamp, multiply by 1000
+            // Check if it's a numeric string (Unix timestamp)
+            if (/^\d+$/.test(timestamp)) {
+                date = new Date(parseInt(timestamp) * 1000);
+            } else {
+                // If it's a date string, try to parse it
+                date = new Date(timestamp);
+            }
+        } else if (typeof timestamp === 'number') {
+            // If it's a number, assume it's a Unix timestamp
             date = new Date(timestamp * 1000);
+        } else {
+            return '-';
         }
         
         if (isNaN(date.getTime())) {
             return '-';
         }
         
-        return date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+        // Format date more fancy with icons
+        var options = { 
+            day: '2-digit', 
+            month: 'short', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        
+        return '<i class="far fa-calendar"></i> ' + date.toLocaleDateString('es-ES', options);
+    }
+    
+    function formatModalDate(dateObj) {
+        if (!dateObj) return '-';
+        
+        var options = { 
+            weekday: 'short',
+            day: '2-digit', 
+            month: 'short', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        
+        return dateObj.toLocaleDateString('es-ES', options);
     }
     
     function formatPrice(amount) {
@@ -740,6 +775,25 @@ jQuery(document).ready(function($) {
             currency: 'EUR' // Adjust currency as needed
         }).format(amount);
     }
+    
+    // Modal close functionality
+    $(document).on('click', '.vdp-modal-close', function() {
+        $('#booking-details-modal').hide();
+    });
+    
+    // Close modal when clicking outside
+    $(document).on('click', '.vdp-modal', function(e) {
+        if (e.target === this) {
+            $(this).hide();
+        }
+    });
+    
+    // Close modal with ESC key
+    $(document).keydown(function(e) {
+        if (e.key === 'Escape') {
+            $('.vdp-modal').hide();
+        }
+    });
 });
 </script>
 
@@ -770,6 +824,31 @@ jQuery(document).ready(function($) {
     font-size: 10px !important;
     margin: 0 !important;
     opacity: 0.8 !important;
+}
+
+/* Fancy date formatting */
+.booking-dates {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.booking-dates .far.fa-calendar {
+    color: #007cba;
+    margin-right: 5px;
+}
+
+.booking-dates-fancy {
+    margin-top: 5px;
+    padding: 5px 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+}
+
+.booking-dates-fancy .far.fa-calendar-check {
+    color: #28a745;
+    margin-right: 8px;
 }
 
 .vdp-bookings-wrapper .vdp-summary-grid {
