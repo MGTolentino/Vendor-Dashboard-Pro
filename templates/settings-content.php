@@ -64,19 +64,19 @@ if (!defined('ABSPATH')) {
                         
                         <div class="vdp-form-group">
                             <label for="store_email" class="vdp-form-label"><?php esc_html_e('Store Email', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
-                            <input type="email" id="store_email" name="store_email" class="vdp-form-control" value="<?php echo esc_attr($vendor->get_email()); ?>" required>
+                            <input type="email" id="store_email" name="store_email" class="vdp-form-control" value="<?php echo esc_attr(($user_data = get_userdata($vendor->get_user_id())) ? $user_data->user_email : ''); ?>" required>
                             <div class="vdp-form-help"><?php esc_html_e('This email will be used for order notifications.', 'vendor-dashboard-pro'); ?></div>
                         </div>
                         
                         <div class="vdp-form-grid">
                             <div class="vdp-form-group">
                                 <label for="store_phone" class="vdp-form-label"><?php esc_html_e('Phone Number', 'vendor-dashboard-pro'); ?></label>
-                                <input type="tel" id="store_phone" name="store_phone" class="vdp-form-control" value="<?php echo esc_attr($vendor->get_phone()); ?>">
+                                <input type="tel" id="store_phone" name="store_phone" class="vdp-form-control" value="<?php echo esc_attr(get_user_meta($vendor->get_user_id(), 'phone', true)); ?>">
                             </div>
                             
                             <div class="vdp-form-group">
                                 <label for="store_website" class="vdp-form-label"><?php esc_html_e('Website', 'vendor-dashboard-pro'); ?></label>
-                                <input type="url" id="store_website" name="store_website" class="vdp-form-control" value="<?php echo esc_attr($vendor->get_website()); ?>">
+                                <input type="url" id="store_website" name="store_website" class="vdp-form-control" value="<?php echo esc_attr(get_post_meta($vendor->get_id(), 'website', true)); ?>">
                             </div>
                         </div>
                     </div>
@@ -123,8 +123,11 @@ if (!defined('ABSPATH')) {
                                 <label class="vdp-form-label"><?php esc_html_e('Store Banner', 'vendor-dashboard-pro'); ?></label>
                                 <div class="vdp-image-uploader vdp-banner-uploader">
                                     <div class="vdp-current-image vdp-banner-image">
-                                        <?php if ($vendor->get_banner__url()) : ?>
-                                            <img src="<?php echo esc_url($vendor->get_banner__url()); ?>" alt="<?php esc_attr_e('Store Banner', 'vendor-dashboard-pro'); ?>">
+                                        <?php 
+                                        $banner_id = get_post_meta($vendor->get_id(), 'banner_image', true);
+                                        $banner_url = $banner_id ? wp_get_attachment_image_url($banner_id, 'full') : false;
+                                        if ($banner_url) : ?>
+                                            <img src="<?php echo esc_url($banner_url); ?>" alt="<?php esc_attr_e('Store Banner', 'vendor-dashboard-pro'); ?>">
                                         <?php else : ?>
                                             <div class="vdp-image-placeholder">
                                                 <i class="fas fa-image"></i>
@@ -138,7 +141,7 @@ if (!defined('ABSPATH')) {
                                         <button type="button" class="vdp-btn vdp-btn-outline vdp-file-btn">
                                             <i class="fas fa-upload"></i> <?php esc_html_e('Upload Banner', 'vendor-dashboard-pro'); ?>
                                         </button>
-                                        <?php if ($vendor->get_banner__url()) : ?>
+                                        <?php if ($banner_url) : ?>
                                             <button type="button" class="vdp-btn vdp-btn-danger vdp-btn-sm vdp-remove-image-btn">
                                                 <i class="fas fa-trash-alt"></i> <?php esc_html_e('Remove', 'vendor-dashboard-pro'); ?>
                                             </button>
@@ -161,22 +164,22 @@ if (!defined('ABSPATH')) {
                         <div class="vdp-form-grid">
                             <div class="vdp-form-group">
                                 <label for="social_facebook" class="vdp-form-label"><i class="fab fa-facebook"></i> <?php esc_html_e('Facebook', 'vendor-dashboard-pro'); ?></label>
-                                <input type="url" id="social_facebook" name="social_facebook" class="vdp-form-control" value="<?php echo esc_attr($vendor->get_social('facebook')); ?>" placeholder="https://facebook.com/yourstorepage">
+                                <input type="url" id="social_facebook" name="social_facebook" class="vdp-form-control" value="<?php echo esc_attr(get_post_meta($vendor->get_id(), 'social_facebook', true)); ?>" placeholder="https://facebook.com/yourstorepage">
                             </div>
                             
                             <div class="vdp-form-group">
                                 <label for="social_instagram" class="vdp-form-label"><i class="fab fa-instagram"></i> <?php esc_html_e('Instagram', 'vendor-dashboard-pro'); ?></label>
-                                <input type="url" id="social_instagram" name="social_instagram" class="vdp-form-control" value="<?php echo esc_attr($vendor->get_social('instagram')); ?>" placeholder="https://instagram.com/yourstorepage">
+                                <input type="url" id="social_instagram" name="social_instagram" class="vdp-form-control" value="<?php echo esc_attr(get_post_meta($vendor->get_id(), 'social_instagram', true)); ?>" placeholder="https://instagram.com/yourstorepage">
                             </div>
                             
                             <div class="vdp-form-group">
                                 <label for="social_twitter" class="vdp-form-label"><i class="fab fa-twitter"></i> <?php esc_html_e('Twitter', 'vendor-dashboard-pro'); ?></label>
-                                <input type="url" id="social_twitter" name="social_twitter" class="vdp-form-control" value="<?php echo esc_attr($vendor->get_social('twitter')); ?>" placeholder="https://twitter.com/yourstorepage">
+                                <input type="url" id="social_twitter" name="social_twitter" class="vdp-form-control" value="<?php echo esc_attr(get_post_meta($vendor->get_id(), 'social_twitter', true)); ?>" placeholder="https://twitter.com/yourstorepage">
                             </div>
                             
                             <div class="vdp-form-group">
                                 <label for="social_youtube" class="vdp-form-label"><i class="fab fa-youtube"></i> <?php esc_html_e('YouTube', 'vendor-dashboard-pro'); ?></label>
-                                <input type="url" id="social_youtube" name="social_youtube" class="vdp-form-control" value="<?php echo esc_attr($vendor->get_social('youtube')); ?>" placeholder="https://youtube.com/channel/your-channel">
+                                <input type="url" id="social_youtube" name="social_youtube" class="vdp-form-control" value="<?php echo esc_attr(get_post_meta($vendor->get_id(), 'social_youtube', true)); ?>" placeholder="https://youtube.com/channel/your-channel">
                             </div>
                         </div>
                     </div>
