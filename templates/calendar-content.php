@@ -156,6 +156,24 @@ $is_spanish = strpos($locale, 'es') === 0;
     </div>
 </div>
 
+<!-- Event Details Modal -->
+<div id="event-details-modal" class="vdp-modal vdp-event-modal" style="display: none;">
+    <div class="vdp-modal-content">
+        <div class="vdp-modal-header">
+            <h3 id="event-modal-title"><?php echo $is_spanish ? 'Detalles del Evento' : 'Event Details'; ?></h3>
+            <button type="button" class="vdp-modal-close">&times;</button>
+        </div>
+        <div class="vdp-modal-body">
+            <div id="event-details-content">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+        <div class="vdp-modal-footer" id="event-modal-actions">
+            <!-- Action buttons will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
 <script>
 jQuery(document).ready(function($) {
     let calendar;
@@ -198,7 +216,7 @@ jQuery(document).ready(function($) {
             height: 'auto',
             selectable: true,
             selectMirror: true,
-            weekNumbers: true,
+            weekNumbers: false,
             dayMaxEvents: true,
             events: (calendarData && calendarData.events) ? calendarData.events : [],
             
@@ -249,14 +267,150 @@ jQuery(document).ready(function($) {
     // Handle event click
     function handleEventClick(info) {
         const event = info.event;
-        const details = `${event.title}\n` +
-            `${isSpanish ? 'Estado' : 'Status'}: ${event.extendedProps.status}\n` +
-            `${isSpanish ? 'Cliente' : 'Customer'}: ${event.extendedProps.customer}\n` +
-            `${isSpanish ? 'Fecha' : 'Date'}: ${event.startStr} - ${event.endStr}`;
+        const props = event.extendedProps;
+        const isBlocked = props.is_blocked || event.extendedProps.status === 'private';
         
-        if (confirm(details + '\n\n' + (isSpanish ? '¿Ver detalles?' : 'View details?'))) {
-            // Would open booking details modal or redirect
+        // Set modal title
+        $('#event-modal-title').text(isBlocked ? 
+            (isSpanish ? 'Fechas Bloqueadas' : 'Blocked Dates') : 
+            (isSpanish ? 'Detalles de Reservación' : 'Booking Details')
+        );
+        
+        // Build content based on event type
+        let content = '';
+        if (isBlocked) {
+            content = `
+                <div class="event-detail-item">
+                    <div class="detail-icon blocked"><i class="fas fa-lock"></i></div>
+                    <div class="detail-content">
+                        <strong>${isSpanish ? 'Listing' : 'Listing'}:</strong>
+                        <span>${props.listing_title}</span>
+                    </div>
+                </div>
+                <div class="event-detail-item">
+                    <div class="detail-icon"><i class="far fa-calendar"></i></div>
+                    <div class="detail-content">
+                        <strong>${isSpanish ? 'Fechas' : 'Dates'}:</strong>
+                        <span>${event.startStr} - ${event.endStr}</span>
+                    </div>
+                </div>
+                <div class="event-detail-item">
+                    <div class="detail-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="detail-content">
+                        <strong>${isSpanish ? 'Estado' : 'Status'}:</strong>
+                        <span class="status-blocked">${isSpanish ? 'Bloqueado' : 'Blocked'}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            content = `
+                <div class="event-detail-item">
+                    <div class="detail-icon booking"><i class="fas fa-calendar-check"></i></div>
+                    <div class="detail-content">
+                        <strong>${isSpanish ? 'Listing' : 'Listing'}:</strong>
+                        <span>${props.listing_title}</span>
+                    </div>
+                </div>
+                <div class="event-detail-item">
+                    <div class="detail-icon"><i class="fas fa-user"></i></div>
+                    <div class="detail-content">
+                        <strong>${isSpanish ? 'Cliente' : 'Customer'}:</strong>
+                        <span>${props.customer}</span>
+                    </div>
+                </div>
+                <div class="event-detail-item">
+                    <div class="detail-icon"><i class="far fa-calendar"></i></div>
+                    <div class="detail-content">
+                        <strong>${isSpanish ? 'Fechas' : 'Dates'}:</strong>
+                        <span>${event.startStr} - ${event.endStr}</span>
+                    </div>
+                </div>
+                <div class="event-detail-item">
+                    <div class="detail-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="detail-content">
+                        <strong>${isSpanish ? 'Estado' : 'Status'}:</strong>
+                        <span class="status-${props.status}">${getStatusText(props.status)}</span>
+                    </div>
+                </div>
+                ${props.amount ? `
+                <div class="event-detail-item">
+                    <div class="detail-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="detail-content">
+                        <strong>${isSpanish ? 'Precio' : 'Amount'}:</strong>
+                        <span>${formatPrice(props.amount)}</span>
+                    </div>
+                </div>
+                ` : ''}
+            `;
         }
+        
+        $('#event-details-content').html(content);
+        
+        // Build action buttons
+        let actions = '';
+        if (isBlocked) {
+            actions = `
+                <button type="button" class="vdp-btn vdp-btn-success" onclick="unblockSpecificEvent('${event.id}')">
+                    <i class="fas fa-unlock"></i> ${isSpanish ? 'Desbloquear' : 'Unblock'}
+                </button>
+                <button type="button" class="vdp-btn vdp-btn-warning" onclick="setPriceForBlocked('${event.id}')">
+                    <i class="fas fa-dollar-sign"></i> ${isSpanish ? 'Precio Especial' : 'Special Price'}
+                </button>
+            `;
+        } else {
+            actions = `
+                <button type="button" class="vdp-btn vdp-btn-primary" onclick="viewFullBooking('${event.id}')">
+                    <i class="fas fa-eye"></i> ${isSpanish ? 'Ver Completo' : 'View Full'}
+                </button>
+                <button type="button" class="vdp-btn vdp-btn-secondary" onclick="editBooking('${event.id}')">
+                    <i class="fas fa-edit"></i> ${isSpanish ? 'Editar' : 'Edit'}
+                </button>
+            `;
+        }
+        
+        actions += `
+            <button type="button" class="vdp-btn vdp-btn-secondary vdp-modal-close">
+                ${isSpanish ? 'Cerrar' : 'Close'}
+            </button>
+        `;
+        
+        $('#event-modal-actions').html(actions);
+        $('#event-details-modal').show();
+    }
+    
+    // Helper functions for modal actions
+    function unblockSpecificEvent(eventId) {
+        if (confirm(isSpanish ? '¿Desbloquear estas fechas?' : 'Unblock these dates?')) {
+            // Implementation for unblocking specific event
+            console.log('Unblock event:', eventId);
+            $('#event-details-modal').hide();
+        }
+    }
+    
+    function setPriceForBlocked(eventId) {
+        $('#event-details-modal').hide();
+        $('#price-range-modal').show();
+    }
+    
+    function viewFullBooking(eventId) {
+        // Redirect or show full booking details
+        console.log('View full booking:', eventId);
+    }
+    
+    function editBooking(eventId) {
+        // Redirect to booking edit page
+        console.log('Edit booking:', eventId);
+    }
+    
+    function getStatusText(status) {
+        const statusMap = {
+            'publish': isSpanish ? 'Confirmada' : 'Confirmed',
+            'pending': isSpanish ? 'Pendiente' : 'Pending',
+            'draft': isSpanish ? 'Borrador' : 'Draft',
+            'private': isSpanish ? 'Bloqueada' : 'Blocked',
+            'trash': isSpanish ? 'Cancelada' : 'Cancelled'
+        };
+        return statusMap[status] || status;
     }
     
     // Update selected dates info
@@ -483,45 +637,133 @@ jQuery(document).ready(function($) {
     gap: 8px;
 }
 
-.vdp-calendar-actions .vdp-btn {
-    padding: 6px 12px !important;
-    font-size: 12px !important;
+/* Calendar Tools Improvements */
+.vdp-calendar-tools {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #dee2e6;
 }
 
-.vdp-calendar-legend {
+.vdp-calendar-actions {
     display: flex;
     gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.vdp-calendar-actions .vdp-btn {
+    padding: 12px 20px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+    border: none !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.vdp-calendar-actions .vdp-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.vdp-calendar-actions .vdp-btn:hover::before {
+    left: 100%;
+}
+
+.vdp-calendar-actions .vdp-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2) !important;
+}
+
+.vdp-calendar-actions .vdp-btn:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+.vdp-calendar-actions .vdp-btn i {
+    margin-right: 8px;
+}
+
+/* Specific button styles */
+.vdp-calendar-actions .vdp-btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+}
+
+.vdp-calendar-actions .vdp-btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+}
+
+.vdp-calendar-actions .vdp-btn-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%) !important;
+    color: #212529 !important;
+}
+
+/* Legend improvements */
+.vdp-calendar-legend {
+    display: flex;
+    gap: 20px;
     align-items: center;
+    justify-content: center;
+    padding: 15px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: #666;
+    gap: 8px;
+    font-size: 13px;
+    color: #495057;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.6);
+    transition: all 0.3s ease;
+}
+
+.legend-item:hover {
+    background: rgba(255,255,255,0.9);
+    transform: translateY(-1px);
 }
 
 .legend-color {
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 2px solid rgba(255,255,255,0.8);
 }
 
 .legend-color.confirmed {
-    background: #28a745;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
 .legend-color.pending {
-    background: #ffc107;
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
 }
 
 .legend-color.blocked {
-    background: #dc3545;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
 }
 
 .legend-color.special-price {
-    background: #6f42c1;
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
 }
 
 .vdp-calendar-container {
@@ -745,5 +987,111 @@ jQuery(document).ready(function($) {
         display: flex !important;
         justify-content: center !important;
     }
+}
+
+/* Event Details Modal Styles */
+.vdp-event-modal .vdp-modal-content {
+    max-width: 500px;
+    width: 90%;
+}
+
+.event-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid #f1f3f4;
+    transition: all 0.3s ease;
+}
+
+.event-detail-item:last-child {
+    border-bottom: none;
+}
+
+.event-detail-item:hover {
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.detail-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.detail-icon.blocked {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.detail-icon.booking {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.detail-icon:not(.blocked):not(.booking) {
+    background: linear-gradient(135deg, #007cba 0%, #0056b3 100%);
+}
+
+.detail-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-content strong {
+    color: #495057;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.detail-content span {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.status-blocked {
+    color: #dc3545 !important;
+    font-weight: 600 !important;
+}
+
+.status-publish {
+    color: #28a745 !important;
+    font-weight: 600 !important;
+}
+
+.status-pending {
+    color: #ffc107 !important;
+    font-weight: 600 !important;
+}
+
+.status-private {
+    color: #dc3545 !important;
+    font-weight: 600 !important;
+}
+
+.status-trash {
+    color: #6c757d !important;
+    font-weight: 600 !important;
+}
+
+/* Modal Action Buttons */
+#event-modal-actions .vdp-btn {
+    margin: 0 5px 5px 0;
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+#event-modal-actions .vdp-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 </style>
