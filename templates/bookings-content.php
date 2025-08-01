@@ -647,11 +647,15 @@ jQuery(document).ready(function($) {
                 html += '<td><div class="booking-customer"><strong>' + (booking.customer_name || 'N/A') + '</strong><div class="customer-email">' + (booking.customer_email || '') + '</div></div></td>';
                 html += '<td><div class="booking-dates">';
                 if (booking.start_time && booking.end_time) {
-                    html += '<div class="date-from">' + formatDate(booking.start_time) + '</div><div class="date-to">' + formatDate(booking.end_time) + '</div>';
+                    html += '<div class="date-range-fancy">';
+                    html += '<div class="date-from">' + formatDate(booking.start_time) + '</div>';
+                    html += '<div class="date-separator"><i class="fas fa-arrow-right"></i></div>';
+                    html += '<div class="date-to">' + formatDate(booking.end_time) + '</div>';
+                    html += '</div>';
                 } else if (booking.start_date && booking.end_date) {
                     html += '<div class="date-only">' + formatDate(booking.start_date) + ' - ' + formatDate(booking.end_date) + '</div>';
                 } else {
-                    html += '<div class="no-date">N/A</div>';
+                    html += '<div class="no-date"><i class="far fa-calendar-times"></i> N/A</div>';
                 }
                 html += '</div></td>';
                 html += '<td><span class="booking-status booking-status-' + statusClass + '">' + statusText + '</span></td>';
@@ -828,13 +832,52 @@ jQuery(document).ready(function($) {
 
 /* Fancy date formatting */
 .booking-dates {
-    font-size: 13px;
-    line-height: 1.4;
+    font-size: 12px;
+    line-height: 1.3;
 }
 
 .booking-dates .far.fa-calendar {
     color: #007cba;
     margin-right: 5px;
+}
+
+.date-range-fancy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.date-range-fancy .date-from,
+.date-range-fancy .date-to {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+.date-range-fancy .date-from {
+    background: #e8f5e8;
+    color: #2d5a2d;
+}
+
+.date-range-fancy .date-to {
+    background: #fff3e0;
+    color: #8a4e00;
+}
+
+.date-separator {
+    text-align: center;
+    color: #666;
+    font-size: 10px;
+    margin: 1px 0;
+}
+
+.date-separator .fas.fa-arrow-right {
+    font-size: 8px;
+}
+
+.no-date {
+    color: #999;
+    font-style: italic;
 }
 
 .booking-dates-fancy {

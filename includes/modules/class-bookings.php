@@ -588,11 +588,16 @@ class VDP_Bookings {
         $new_status = sanitize_text_field($_POST['status']);
         
         // Verify this booking belongs to the vendor
-        $listing_id = get_post_meta($booking_id, 'hp_listing', true);
+        $listing_id = wp_get_post_parent_id($booking_id);
+        if (!$listing_id) {
+            // Fallback: try to get from meta
+            $listing_id = get_post_meta($booking_id, 'hp_listing', true);
+        }
+        
         $listing = get_post($listing_id);
         
         if (!$listing || $listing->post_parent != $vendor->get_id()) {
-            wp_send_json_error(array('message' => 'Access denied.'));
+            wp_send_json_error(array('message' => 'Access denied. Booking ID: ' . $booking_id . ', Listing ID: ' . $listing_id . ', Vendor ID: ' . $vendor->get_id()));
         }
         
         // Update booking status
