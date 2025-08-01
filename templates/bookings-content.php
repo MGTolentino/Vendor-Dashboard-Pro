@@ -464,6 +464,22 @@ jQuery(document).ready(function($) {
         bookingsCalendar.render();
     }
     
+    // Update calendar events with filtered data
+    function updateCalendarEvents(newEvents) {
+        if (!bookingsCalendar) return;
+        
+        // Remove all existing events
+        bookingsCalendar.removeAllEvents();
+        
+        // Add new filtered events
+        if (newEvents && newEvents.length > 0) {
+            bookingsCalendar.addEventSource(newEvents);
+        }
+        
+        // Refresh the calendar view
+        bookingsCalendar.refetchEvents();
+    }
+    
     // Show booking details modal
     function showBookingDetails(event) {
         const extendedProps = event.extendedProps;
@@ -581,8 +597,13 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     console.log('Bookings data:', response.data.bookings);
                     console.log('Summary data:', response.data.summary);
+                    console.log('Calendar data:', response.data.calendar_data);
                     updateBookingsTable(response.data.bookings);
                     updateBookingsSummary(response.data.summary);
+                    // Update calendar if it exists and has calendar data
+                    if (bookingsCalendar && response.data.calendar_data) {
+                        updateCalendarEvents(response.data.calendar_data);
+                    }
                 } else {
                     $('#bookings-table-body').html('<tr><td colspan="6">Error: ' + (response.data.message || 'Unknown error') + '</td></tr>');
                 }
