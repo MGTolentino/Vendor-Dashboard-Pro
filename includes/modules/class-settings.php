@@ -39,6 +39,7 @@ class VDP_Settings {
     public function __construct() {
         // Initialize hooks
         add_action('vdp_settings_content', array($this, 'render_settings'), 10);
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
     }
 
     /**
@@ -57,6 +58,24 @@ class VDP_Settings {
         
         // Include settings template
         include VDP_PLUGIN_DIR . 'templates/settings-content.php';
+    }
+
+    /**
+     * Enqueue settings assets.
+     */
+    public function enqueue_assets() {
+        // Only enqueue on dashboard pages
+        if (!vdp_is_dashboard_page()) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'vdp-settings-tabs',
+            VDP_PLUGIN_URL . 'assets/js/settings-tabs.js',
+            array('jquery'),
+            VDP_VERSION,
+            true
+        );
     }
 
     /**

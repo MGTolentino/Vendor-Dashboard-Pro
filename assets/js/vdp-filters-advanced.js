@@ -435,7 +435,6 @@ jQuery(function($) {
     // Función para mostrar notificaciones
     function showNotification(message, type = 'success') {
         // Implementar sistema de notificaciones
-        console.log(`${type.toUpperCase()}: ${message}`);
     }
     
     // Función para guardar filtros

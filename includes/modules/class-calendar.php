@@ -111,9 +111,6 @@ class VDP_Calendar {
         $events = array();
         $price_ranges = array();
         
-        // Debug: Log listings count
-        error_log('VDP Calendar Debug - Listings count: ' . count($listings));
-        error_log('VDP Calendar Debug - Args: ' . print_r($args, true));
         
         foreach ($listings as $listing) {
             if ($args['listing_id'] && $listing['id'] != $args['listing_id']) {
@@ -122,7 +119,6 @@ class VDP_Calendar {
             
             // Get bookings for this listing
             $bookings = self::get_listing_bookings($listing['id'], $args);
-            error_log('VDP Calendar Debug - Listing ' . $listing['id'] . ' (' . $listing['title'] . ') has ' . count($bookings) . ' bookings');
             
             foreach ($bookings as $booking) {
                 // Set title based on booking type

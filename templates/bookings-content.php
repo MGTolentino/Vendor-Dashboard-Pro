@@ -412,9 +412,6 @@ jQuery(document).ready(function($) {
     const isSpanish = <?php echo json_encode($is_spanish); ?>;
     const labels = <?php echo json_encode($labels); ?>;
     
-    // Debug: Log calendar data to console
-    console.log('Calendar Data:', calendarData);
-    console.log('Calendar Events Count:', calendarData ? calendarData.length : 0);
     
     // Initialize Bookings Calendar
     function initBookingsCalendar() {
@@ -462,7 +459,6 @@ jQuery(document).ready(function($) {
             
             // Date click for new bookings (optional)
             dateClick: function(info) {
-                console.log('Date clicked:', info.dateStr);
                 // Could open a "new booking" modal here
             }
         });
@@ -472,16 +468,13 @@ jQuery(document).ready(function($) {
     
     // Update calendar events with filtered data
     function updateCalendarEvents(newEvents) {
-        console.log('updateCalendarEvents called with:', newEvents);
         
         if (!bookingsCalendar) {
-            console.error('Calendar not initialized');
             return;
         }
         
         // Get all current event sources
         const eventSources = bookingsCalendar.getEventSources();
-        console.log('Current event sources:', eventSources.length);
         
         // Remove all event sources
         eventSources.forEach(source => {
@@ -490,10 +483,8 @@ jQuery(document).ready(function($) {
         
         // Add new filtered events if any
         if (newEvents && newEvents.length > 0) {
-            console.log('Adding', newEvents.length, 'new events');
             bookingsCalendar.addEventSource(newEvents);
         } else {
-            console.log('No events to add - calendar should be empty');
         }
         
         // Force calendar to re-render
@@ -617,11 +608,7 @@ jQuery(document).ready(function($) {
                 $('#bookings-table-body').html('<tr><td colspan="6">Cargando...</td></tr>');
             },
             success: function(response) {
-                console.log('AJAX Response:', response);
                 if (response.success) {
-                    console.log('Bookings data:', response.data.bookings);
-                    console.log('Summary data:', response.data.summary);
-                    console.log('Calendar data:', response.data.calendar_data);
                     updateBookingsTable(response.data.bookings);
                     updateBookingsSummary(response.data.summary);
                     // Update calendar if it exists and has calendar data

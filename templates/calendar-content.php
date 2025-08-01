@@ -185,23 +185,7 @@ jQuery(document).ready(function($) {
     const calendarData = <?php echo json_encode($calendar_data); ?>;
     const isSpanish = <?php echo json_encode($is_spanish); ?>;
     
-    // Debug calendar data
-    console.log('Calendar Data:', calendarData);
-    console.log('Calendar Events Count:', calendarData.events ? calendarData.events.length : 0);
     
-    // Debug: Log calendar data to console
-    console.log('Main Calendar Data:', calendarData);
-    console.log('Main Calendar Data Type:', typeof calendarData);
-    console.log('Main Calendar Events Property:', calendarData ? calendarData.events : 'calendarData is null');
-    console.log('Main Calendar Events Count:', calendarData && calendarData.events ? calendarData.events.length : 0);
-    
-    // Debug structure comparison
-    if (calendarData) {
-        console.log('Calendar Data Keys:', Object.keys(calendarData));
-        if (calendarData.events) {
-            console.log('First Event Sample:', calendarData.events[0]);
-        }
-    }
     
     // Initialize FullCalendar
     function initCalendar() {
@@ -382,7 +366,6 @@ jQuery(document).ready(function($) {
     function unblockSpecificEvent(eventId) {
         if (confirm(isSpanish ? '¿Desbloquear estas fechas?' : 'Unblock these dates?')) {
             // Implementation for unblocking specific event
-            console.log('Unblock event:', eventId);
             $('#event-details-modal').hide();
         }
     }
@@ -394,12 +377,10 @@ jQuery(document).ready(function($) {
     
     function viewFullBooking(eventId) {
         // Redirect or show full booking details
-        console.log('View full booking:', eventId);
     }
     
     function editBooking(eventId) {
         // Redirect to booking edit page
-        console.log('Edit booking:', eventId);
     }
     
     function getStatusText(status) {
