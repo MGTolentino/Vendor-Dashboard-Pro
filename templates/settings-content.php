@@ -903,6 +903,34 @@ if (!defined('ABSPATH')) {
                         </div>
                     </div>
                     
+                    <!-- Message Templates Section - Integrates with Event Quote Cart Plugin -->
+                    <div class="vdp-form-section">
+                        <div class="vdp-section-header">
+                            <h3 class="vdp-section-title"><?php esc_html_e('Message Templates', 'vendor-dashboard-pro'); ?></h3>
+                            <p class="vdp-section-subtitle"><?php esc_html_e('Customize messages for Event Quote Cart sharing', 'vendor-dashboard-pro'); ?></p>
+                        </div>
+                        
+                        <div class="vdp-form-group">
+                            <label for="whatsapp_message_template" class="vdp-form-label">
+                                <i class="fab fa-whatsapp"></i> <?php esc_html_e('WhatsApp Message Template', 'vendor-dashboard-pro'); ?>
+                            </label>
+                            <textarea id="whatsapp_message_template" name="whatsapp_message_template" class="vdp-form-control" rows="4" placeholder="Hola {customer_name}, tu cotización #{quote_number} está lista..."><?php echo esc_textarea(get_post_meta($vendor->get_id(), 'whatsapp_message_template', true)); ?></textarea>
+                            <div class="vdp-form-help">
+                                <?php esc_html_e('Available placeholders: {customer_name}, {quote_number}, {total_amount}, {event_date}, {vendor_name}', 'vendor-dashboard-pro'); ?>
+                            </div>
+                        </div>
+                        
+                        <div class="vdp-form-group">
+                            <label for="email_message_template" class="vdp-form-label">
+                                <i class="fas fa-envelope"></i> <?php esc_html_e('Email Message Template', 'vendor-dashboard-pro'); ?>
+                            </label>
+                            <textarea id="email_message_template" name="email_message_template" class="vdp-form-control" rows="6" placeholder="Estimado/a {customer_name}, Su cotización #{quote_number} ha sido preparada..."><?php echo esc_textarea(get_post_meta($vendor->get_id(), 'email_message_template', true)); ?></textarea>
+                            <div class="vdp-form-help">
+                                <?php esc_html_e('Available placeholders: {customer_name}, {quote_number}, {total_amount}, {event_date}, {vendor_name}', 'vendor-dashboard-pro'); ?>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="vdp-form-actions">
                         <button type="submit" class="vdp-btn vdp-btn-primary vdp-btn-lg">
                             <i class="fas fa-save"></i> <?php esc_html_e('Save Notification Settings', 'vendor-dashboard-pro'); ?>

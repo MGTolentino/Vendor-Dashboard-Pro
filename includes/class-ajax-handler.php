@@ -889,6 +889,15 @@ class VDP_Ajax_Handler {
             }
         }
         
+        // Handle Event Quote Cart message templates - Connected to Event Quote Cart Plugin
+        if (isset($_POST['whatsapp_message_template'])) {
+            update_post_meta($vendor->get_id(), 'whatsapp_message_template', wp_kses_post($_POST['whatsapp_message_template']));
+        }
+        
+        if (isset($_POST['email_message_template'])) {
+            update_post_meta($vendor->get_id(), 'email_message_template', wp_kses_post($_POST['email_message_template']));
+        }
+        
         // Handle file uploads
         if (!empty($_FILES)) {
             foreach ($_FILES as $field_name => $file) {
