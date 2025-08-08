@@ -156,6 +156,44 @@ if (!defined('ABSPATH')) {
                         </div>
                     </div>
                     
+                    <!-- PDF Header Image Section - For Event Quote Cart Plugin -->
+                    <div class="vdp-form-section">
+                        <div class="vdp-section-header">
+                            <h3 class="vdp-section-title"><?php esc_html_e('PDF Branding', 'vendor-dashboard-pro'); ?></h3>
+                            <p class="vdp-section-subtitle"><?php esc_html_e('Customize your PDF quotes (Event Quote Cart Plugin)', 'vendor-dashboard-pro'); ?></p>
+                        </div>
+                        
+                        <div class="vdp-form-group">
+                            <label class="vdp-form-label"><?php esc_html_e('PDF Header Image (Optional)', 'vendor-dashboard-pro'); ?></label>
+                            <div class="vdp-image-uploader vdp-pdf-header-uploader">
+                                <?php 
+                                $pdf_header_id = get_post_meta($vendor->get_id(), 'pdf_header_image_id', true);
+                                $pdf_header_url = $pdf_header_id ? wp_get_attachment_image_url($pdf_header_id, 'full') : false;
+                                if ($pdf_header_url) : ?>
+                                    <div class="vdp-current-image">
+                                        <img src="<?php echo esc_url($pdf_header_url); ?>" alt="<?php esc_attr_e('PDF Header Image', 'vendor-dashboard-pro'); ?>">
+                                        <button type="button" class="vdp-pdf-header-remove-btn vdp-btn vdp-btn-secondary vdp-btn-small">
+                                            <i class="fas fa-times"></i> <?php esc_html_e('Remove', 'vendor-dashboard-pro'); ?>
+                                        </button>
+                                    </div>
+                                <?php else : ?>
+                                    <div class="vdp-image-placeholder">
+                                        <i class="fas fa-image"></i>
+                                        <span><?php esc_html_e('No header image uploaded', 'vendor-dashboard-pro'); ?></span>
+                                    </div>
+                                    <input type="file" id="pdf-header-file-input" accept="image/*" style="display: none;">
+                                    <button type="button" class="vdp-pdf-header-upload-btn vdp-btn vdp-btn-primary">
+                                        <i class="fas fa-upload"></i> <?php esc_html_e('Upload Image', 'vendor-dashboard-pro'); ?>
+                                    </button>
+                                <?php endif; ?>
+                                
+                                <div class="vdp-form-help">
+                                    <?php esc_html_e('Custom header image for PDF quotes. Recommended size: 800x150 pixels. Maximum file size: 2MB.', 'vendor-dashboard-pro'); ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="vdp-form-section">
                         <div class="vdp-section-header">
                             <h3 class="vdp-section-title"><?php esc_html_e('Social Media', 'vendor-dashboard-pro'); ?></h3>

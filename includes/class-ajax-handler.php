@@ -29,6 +29,8 @@ class VDP_Ajax_Handler {
         add_action('wp_ajax_vdp_mark_message_read', array(__CLASS__, 'mark_message_read'));
         add_action('wp_ajax_vdp_archive_message', array(__CLASS__, 'archive_message'));
         add_action('wp_ajax_vdp_send_reply', array(__CLASS__, 'send_reply'));
+        add_action('wp_ajax_vdp_upload_pdf_header', array(__CLASS__, 'upload_pdf_header'));
+        add_action('wp_ajax_vdp_remove_pdf_header', array(__CLASS__, 'remove_pdf_header'));
     }
 
     /**
@@ -686,6 +688,134 @@ class VDP_Ajax_Handler {
             'reply_id' => $reply_id,
             'message' => __('Your reply has been sent!', 'vendor-dashboard-pro'),
             'date' => current_time('mysql'),
+        ));
+    }
+
+    /**
+     * Upload PDF header image Ajax handler.
+     */
+    public static function upload_pdf_header() {
+        // Verify request
+        if (!self::verify_ajax_request()) {
+            return;
+        }
+
+        // Check if file was uploaded
+        if (!isset($_FILES['pdf_header_image']) || $_FILES['pdf_header_image']['error'] !== UPLOAD_ERR_OK) {
+            wp_send_json_error(array('message' => __('No file uploaded or upload failed.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        $file = $_FILES['pdf_header_image'];
+
+        // Validate file type
+        $allowed_types = array('image/jpeg', 'image/png', 'image/jpg');
+        if (!in_array($file['type'], $allowed_types)) {
+            wp_send_json_error(array('message' => __('Only JPG, JPEG, and PNG files are allowed.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Validate file size (max 2MB)
+        if ($file['size'] > 2 * 1024 * 1024) {
+            wp_send_json_error(array('message' => __('File size must not exceed 2MB.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Include WordPress file functions
+        if (!function_exists('wp_handle_upload')) {
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+        }
+
+        // Set upload overrides
+        $upload_overrides = array(
+            'test_form' => false,
+            'unique_filename_callback' => function($dir, $name, $ext) use ($vendor) {
+                return 'pdf-header-vendor-' . $vendor->get_id() . '-' . time() . $ext;
+            }
+        );
+
+        // Upload file
+        $movefile = wp_handle_upload($file, $upload_overrides);
+
+        if ($movefile && !isset($movefile['error'])) {
+            // Create attachment
+            $attachment = array(
+                'post_mime_type' => $movefile['type'],
+                'post_title'     => sanitize_file_name($file['name']),
+                'post_content'   => '',
+                'post_status'    => 'inherit'
+            );
+
+            $attach_id = wp_insert_attachment($attachment, $movefile['file']);
+
+            if (!is_wp_error($attach_id)) {
+                // Generate metadata
+                if (!function_exists('wp_generate_attachment_metadata')) {
+                    require_once(ABSPATH . 'wp-admin/includes/image.php');
+                }
+                $attach_data = wp_generate_attachment_metadata($attach_id, $movefile['file']);
+                wp_update_attachment_metadata($attach_id, $attach_data);
+
+                // Remove old PDF header if exists
+                $old_header_id = get_post_meta($vendor->get_id(), 'pdf_header_image_id', true);
+                if ($old_header_id) {
+                    wp_delete_attachment($old_header_id, true);
+                }
+
+                // Save attachment ID to vendor meta
+                update_post_meta($vendor->get_id(), 'pdf_header_image_id', $attach_id);
+                update_post_meta($vendor->get_id(), 'pdf_header_image_url', $movefile['url']);
+
+                wp_send_json_success(array(
+                    'message' => __('PDF header image uploaded successfully.', 'vendor-dashboard-pro'),
+                    'image_id' => $attach_id,
+                    'image_url' => $movefile['url'],
+                ));
+            } else {
+                wp_send_json_error(array('message' => __('Failed to create attachment.', 'vendor-dashboard-pro')));
+            }
+        } else {
+            wp_send_json_error(array('message' => $movefile['error']));
+        }
+    }
+
+    /**
+     * Remove PDF header image Ajax handler.
+     */
+    public static function remove_pdf_header() {
+        // Verify request
+        if (!self::verify_ajax_request()) {
+            return;
+        }
+
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+            return;
+        }
+
+        // Get current PDF header image
+        $header_id = get_post_meta($vendor->get_id(), 'pdf_header_image_id', true);
+        
+        if ($header_id) {
+            // Delete attachment
+            wp_delete_attachment($header_id, true);
+            
+            // Remove meta data
+            delete_post_meta($vendor->get_id(), 'pdf_header_image_id');
+            delete_post_meta($vendor->get_id(), 'pdf_header_image_url');
+        }
+
+        wp_send_json_success(array(
+            'message' => __('PDF header image removed successfully.', 'vendor-dashboard-pro'),
         ));
     }
 }

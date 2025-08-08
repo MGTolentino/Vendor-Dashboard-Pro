@@ -145,6 +145,127 @@ jQuery(document).ready(function($) {
         });
     });
 
+    // PDF Header Image Upload
+    $(document).on('click', '.vdp-pdf-header-upload-btn', function(e) {
+        e.preventDefault();
+        $('#pdf-header-file-input').trigger('click');
+    });
+
+    $(document).on('change', '#pdf-header-file-input', function(e) {
+        var file = e.target.files[0];
+        if (file) {
+            uploadPdfHeader(file);
+        }
+    });
+
+    $(document).on('click', '.vdp-pdf-header-remove-btn', function(e) {
+        e.preventDefault();
+        removePdfHeader();
+    });
+
+    function uploadPdfHeader(file) {
+        if (!file) return;
+
+        // Validate file type
+        var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (allowedTypes.indexOf(file.type) === -1) {
+            showNotification('Only JPG, JPEG, and PNG files are allowed.', 'error');
+            return;
+        }
+
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            showNotification('File size must not exceed 2MB.', 'error');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('action', 'vdp_upload_pdf_header');
+        formData.append('nonce', vdp_vars.nonce);
+        formData.append('pdf_header_image', file);
+
+        $.ajax({
+            url: vdp_vars.ajax_url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: function() {
+                $('.vdp-pdf-header-upload-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showNotification(response.data.message, 'success');
+                    
+                    // Update UI
+                    var previewHtml = '<div class="vdp-current-image">' +
+                        '<img src="' + response.data.image_url + '" alt="PDF Header Image">' +
+                        '<button type="button" class="vdp-pdf-header-remove-btn vdp-btn vdp-btn-secondary vdp-btn-small">' +
+                            '<i class="fas fa-times"></i> Remove' +
+                        '</button>' +
+                    '</div>';
+                    
+                    $('.vdp-pdf-header-uploader').html(previewHtml);
+                    
+                } else {
+                    showNotification(response.data.message, 'error');
+                }
+            },
+            error: function() {
+                showNotification('Upload failed. Please try again.', 'error');
+            },
+            complete: function() {
+                $('.vdp-pdf-header-upload-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Image');
+                // Clear file input
+                $('#pdf-header-file-input').val('');
+            }
+        });
+    }
+
+    function removePdfHeader() {
+        if (!confirm('Are you sure you want to remove this image?')) {
+            return;
+        }
+
+        $.ajax({
+            url: vdp_vars.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'vdp_remove_pdf_header',
+                nonce: vdp_vars.nonce
+            },
+            beforeSend: function() {
+                $('.vdp-pdf-header-remove-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Removing...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showNotification(response.data.message, 'success');
+                    
+                    // Update UI
+                    var placeholderHtml = '<div class="vdp-image-placeholder">' +
+                        '<i class="fas fa-image"></i>' +
+                        '<span>No header image uploaded</span>' +
+                    '</div>' +
+                    '<input type="file" id="pdf-header-file-input" accept="image/*" style="display: none;">' +
+                    '<button type="button" class="vdp-pdf-header-upload-btn vdp-btn vdp-btn-primary">' +
+                        '<i class="fas fa-upload"></i> Upload Image' +
+                    '</button>';
+                    
+                    $('.vdp-pdf-header-uploader').html(placeholderHtml);
+                    
+                } else {
+                    showNotification(response.data.message, 'error');
+                }
+            },
+            error: function() {
+                showNotification('Remove failed. Please try again.', 'error');
+            },
+            complete: function() {
+                $('.vdp-pdf-header-remove-btn').prop('disabled', false).html('<i class="fas fa-times"></i> Remove');
+            }
+        });
+    }
+
     // Helper function to show notifications
     function showNotification(message, type) {
         var $notification = $('<div class="vdp-notification vdp-notification-' + type + '">' + message + '</div>');
