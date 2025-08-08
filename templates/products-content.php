@@ -215,7 +215,7 @@ if (!isset($listings) || !is_array($listings)) {
                         </div>
                         
                         <div class="vdp-listing-actions">
-                            <a href="<?php echo esc_url($listing['edit_url']); ?>" class="vdp-btn vdp-btn-secondary vdp-btn-sm">
+                            <a href="<?php echo esc_url($listing['edit_url']); ?>" class="vdp-btn vdp-btn-secondary vdp-btn-sm" target="_blank">
                                 <i class="fas fa-edit"></i>
                                 <?php esc_html_e('Edit', 'vendor-dashboard-pro'); ?>
                             </a>

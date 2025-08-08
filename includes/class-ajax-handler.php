@@ -896,6 +896,16 @@ class VDP_Ajax_Handler {
                     $upload = wp_handle_upload($file, array('test_form' => false));
                     
                     if (!isset($upload['error'])) {
+                        // Resize image for PDF headers to match Event Quote Cart dimensions (2463x525)
+                        $resized_file = $upload['file'];
+                        if ($field_name === 'store_banner' || strpos($field_name, 'pdf') !== false || strpos($field_name, 'banner') !== false) {
+                            $resized_file = self::resize_image_for_pdf($upload['file'], 2463, 525);
+                            if ($resized_file) {
+                                $upload['file'] = $resized_file;
+                                $upload['url'] = str_replace(basename($upload['url']), basename($resized_file), $upload['url']);
+                            }
+                        }
+                        
                         $attachment_id = wp_insert_attachment(array(
                             'post_mime_type' => $upload['type'],
                             'post_title' => sanitize_file_name($file['name']),
@@ -918,5 +928,100 @@ class VDP_Ajax_Handler {
         wp_send_json_success(array(
             'message' => __('Settings saved successfully.', 'vendor-dashboard-pro')
         ));
+    }
+    
+    /**
+     * Resize image for PDF headers to match Event Quote Cart dimensions.
+     *
+     * @param string $file_path Path to the uploaded file.
+     * @param int    $width     Target width.
+     * @param int    $height    Target height.
+     * @return string|false Path to resized file or false on failure.
+     */
+    private static function resize_image_for_pdf($file_path, $width, $height) {
+        if (!file_exists($file_path)) {
+            return false;
+        }
+        
+        // Get image info
+        $image_info = getimagesize($file_path);
+        if (!$image_info) {
+            return false;
+        }
+        
+        $mime_type = $image_info['mime'];
+        
+        // Create image resource from file
+        switch ($mime_type) {
+            case 'image/jpeg':
+                $source = imagecreatefromjpeg($file_path);
+                break;
+            case 'image/png':
+                $source = imagecreatefrompng($file_path);
+                break;
+            case 'image/gif':
+                $source = imagecreatefromgif($file_path);
+                break;
+            default:
+                return false;
+        }
+        
+        if (!$source) {
+            return false;
+        }
+        
+        // Get current dimensions
+        $current_width = imagesx($source);
+        $current_height = imagesy($source);
+        
+        // Skip if already the right dimensions
+        if ($current_width == $width && $current_height == $height) {
+            imagedestroy($source);
+            return $file_path;
+        }
+        
+        // Create new image with target dimensions
+        $destination = imagecreatetruecolor($width, $height);
+        
+        // Preserve transparency for PNG
+        if ($mime_type === 'image/png') {
+            imagealphablending($destination, false);
+            imagesavealpha($destination, true);
+            $transparent = imagecolorallocatealpha($destination, 255, 255, 255, 127);
+            imagefill($destination, 0, 0, $transparent);
+        }
+        
+        // Resize image (this will stretch to fit exact dimensions)
+        imagecopyresampled($destination, $source, 0, 0, 0, 0, $width, $height, $current_width, $current_height);
+        
+        // Generate new filename
+        $path_info = pathinfo($file_path);
+        $new_file_path = $path_info['dirname'] . '/' . $path_info['filename'] . '-resized.' . $path_info['extension'];
+        
+        // Save resized image
+        $saved = false;
+        switch ($mime_type) {
+            case 'image/jpeg':
+                $saved = imagejpeg($destination, $new_file_path, 90);
+                break;
+            case 'image/png':
+                $saved = imagepng($destination, $new_file_path, 6);
+                break;
+            case 'image/gif':
+                $saved = imagegif($destination, $new_file_path);
+                break;
+        }
+        
+        // Clean up
+        imagedestroy($source);
+        imagedestroy($destination);
+        
+        if ($saved) {
+            // Remove original file
+            unlink($file_path);
+            return $new_file_path;
+        }
+        
+        return false;
     }
 }

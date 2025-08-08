@@ -250,7 +250,7 @@ if (is_object($vendor) && method_exists($vendor, 'get_name')) {
                                             </span>
                                         </div>
                                         <div class="vdp-recent-listing-actions">
-                                            <a href="<?php echo esc_url($listing['edit_url']); ?>" class="vdp-btn vdp-btn-secondary vdp-btn-sm">
+                                            <a href="<?php echo esc_url($listing['edit_url']); ?>" class="vdp-btn vdp-btn-secondary vdp-btn-sm" target="_blank">
                                                 <i class="fas fa-edit"></i>
                                                 <?php esc_html_e('Edit', 'vendor-dashboard-pro'); ?>
                                             </a>
