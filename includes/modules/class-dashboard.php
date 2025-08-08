@@ -275,7 +275,7 @@ class VDP_Dashboard {
                 'date' => $listing->post_date,
                 'price' => $price ? $price : 0,
                 'thumbnail' => $thumbnail_url,
-                'edit_url' => vdp_get_dashboard_url('products', $listing->ID),
+                'edit_url' => home_url('/account/listings/' . $listing->ID . '/'),
             );
         }
         

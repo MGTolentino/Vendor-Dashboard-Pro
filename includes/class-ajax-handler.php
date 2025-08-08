@@ -22,6 +22,7 @@ class VDP_Ajax_Handler {
         add_action('wp_ajax_vdp_delete_listing', array(__CLASS__, 'delete_listing'));
         add_action('wp_ajax_vdp_get_dashboard_data', array(__CLASS__, 'get_dashboard_data'));
         add_action('wp_ajax_vdp_save_vendor_settings', array(__CLASS__, 'save_vendor_settings'));
+        add_action('wp_ajax_vdp_save_settings', array(__CLASS__, 'save_settings'));
         add_action('wp_ajax_vdp_get_chart_data', array(__CLASS__, 'get_chart_data'));
         add_action('wp_ajax_vdp_trigger_listing_form', array(__CLASS__, 'trigger_listing_form'));
         
@@ -816,6 +817,106 @@ class VDP_Ajax_Handler {
 
         wp_send_json_success(array(
             'message' => __('PDF header image removed successfully.', 'vendor-dashboard-pro'),
+        ));
+    }
+    
+    /**
+     * Save settings Ajax handler.
+     */
+    public static function save_settings() {
+        // Verify request
+        if (!self::verify_ajax_request()) {
+            return;
+        }
+        
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+            return;
+        }
+        
+        // Handle store settings
+        if (isset($_POST['store_name'])) {
+            wp_update_post(array(
+                'ID' => $vendor->get_id(),
+                'post_title' => sanitize_text_field($_POST['store_name'])
+            ));
+        }
+        
+        if (isset($_POST['store_slug'])) {
+            wp_update_post(array(
+                'ID' => $vendor->get_id(),
+                'post_name' => sanitize_title($_POST['store_slug'])
+            ));
+        }
+        
+        if (isset($_POST['store_description'])) {
+            wp_update_post(array(
+                'ID' => $vendor->get_id(),
+                'post_content' => wp_kses_post($_POST['store_description'])
+            ));
+        }
+        
+        // Handle meta fields
+        $meta_fields = array(
+            'store_email' => 'email',
+            'store_phone' => 'text',
+            'store_website' => 'url',
+            'social_facebook' => 'url',
+            'social_instagram' => 'url', 
+            'social_twitter' => 'url',
+            'social_youtube' => 'url'
+        );
+        
+        foreach ($meta_fields as $field => $type) {
+            if (isset($_POST[$field])) {
+                $value = $_POST[$field];
+                
+                switch ($type) {
+                    case 'email':
+                        $value = sanitize_email($value);
+                        break;
+                    case 'url':
+                        $value = esc_url_raw($value);
+                        break;
+                    default:
+                        $value = sanitize_text_field($value);
+                        break;
+                }
+                
+                update_post_meta($vendor->get_id(), $field, $value);
+            }
+        }
+        
+        // Handle file uploads
+        if (!empty($_FILES)) {
+            foreach ($_FILES as $field_name => $file) {
+                if ($file['error'] === UPLOAD_ERR_OK) {
+                    $upload = wp_handle_upload($file, array('test_form' => false));
+                    
+                    if (!isset($upload['error'])) {
+                        $attachment_id = wp_insert_attachment(array(
+                            'post_mime_type' => $upload['type'],
+                            'post_title' => sanitize_file_name($file['name']),
+                            'post_content' => '',
+                            'post_status' => 'inherit'
+                        ), $upload['file'], $vendor->get_id());
+                        
+                        if (!is_wp_error($attachment_id)) {
+                            require_once(ABSPATH . 'wp-admin/includes/image.php');
+                            wp_update_attachment_metadata($attachment_id, wp_generate_attachment_metadata($attachment_id, $upload['file']));
+                            
+                            update_post_meta($vendor->get_id(), $field_name . '_id', $attachment_id);
+                            update_post_meta($vendor->get_id(), $field_name . '_url', $upload['url']);
+                        }
+                    }
+                }
+            }
+        }
+        
+        wp_send_json_success(array(
+            'message' => __('Settings saved successfully.', 'vendor-dashboard-pro')
         ));
     }
 }

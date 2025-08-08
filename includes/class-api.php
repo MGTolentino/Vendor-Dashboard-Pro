@@ -184,6 +184,145 @@ class VDP_API {
         
         return $vendor;
     }
+    
+    /**
+     * Delete listing.
+     *
+     * @param int $listing_id Listing ID to delete.
+     * @return bool True on success, false on failure.
+     */
+    public function delete_listing($listing_id) {
+        if (empty($listing_id)) {
+            return false;
+        }
+        
+        // Get current vendor to verify ownership
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            return false;
+        }
+        
+        // Get listing post
+        $listing = get_post($listing_id);
+        if (!$listing || $listing->post_type !== 'hp_listing') {
+            return false;
+        }
+        
+        // Verify vendor owns this listing
+        if ($listing->post_parent !== $vendor->get_id()) {
+            return false;
+        }
+        
+        // Delete the listing
+        $result = wp_delete_post($listing_id, true);
+        
+        return !empty($result);
+    }
+    
+    /**
+     * Save listing.
+     *
+     * @param array $sanitized_data Sanitized listing data.
+     * @param int   $listing_id     Listing ID (for updates) or 0 (for new).
+     * @return int|WP_Error Listing ID on success, WP_Error on failure.
+     */
+    public function save_listing($sanitized_data, $listing_id = 0) {
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            return new WP_Error('no_vendor', __('Vendor not found.', 'vendor-dashboard-pro'));
+        }
+        
+        // Prepare post data
+        $post_data = array(
+            'post_type' => 'hp_listing',
+            'post_status' => 'publish',
+            'post_parent' => $vendor->get_id(),
+            'post_title' => isset($sanitized_data['title']) ? $sanitized_data['title'] : '',
+            'post_content' => isset($sanitized_data['description']) ? $sanitized_data['description'] : '',
+        );
+        
+        if ($listing_id > 0) {
+            // Update existing listing
+            $post_data['ID'] = $listing_id;
+            
+            // Verify vendor owns this listing
+            $existing = get_post($listing_id);
+            if (!$existing || $existing->post_parent !== $vendor->get_id()) {
+                return new WP_Error('invalid_listing', __('Invalid listing.', 'vendor-dashboard-pro'));
+            }
+            
+            $result = wp_update_post($post_data);
+        } else {
+            // Create new listing
+            $result = wp_insert_post($post_data);
+        }
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        // Save meta fields
+        if (isset($sanitized_data['price'])) {
+            update_post_meta($result, 'hp_price', floatval($sanitized_data['price']));
+        }
+        
+        // Save other meta fields as needed
+        $meta_fields = array('category', 'location', 'featured');
+        foreach ($meta_fields as $field) {
+            if (isset($sanitized_data[$field])) {
+                update_post_meta($result, 'hp_' . $field, $sanitized_data[$field]);
+            }
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Update vendor profile.
+     *
+     * @param array $sanitized_data Sanitized vendor data.
+     * @return bool True on success, false on failure.
+     */
+    public function update_vendor_profile($sanitized_data) {
+        // Get current vendor
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            return false;
+        }
+        
+        // Prepare post data
+        $post_data = array(
+            'ID' => $vendor->get_id(),
+        );
+        
+        // Update title if provided
+        if (isset($sanitized_data['name'])) {
+            $post_data['post_title'] = $sanitized_data['name'];
+        }
+        
+        // Update description if provided
+        if (isset($sanitized_data['description'])) {
+            $post_data['post_content'] = $sanitized_data['description'];
+        }
+        
+        // Update post
+        $result = wp_update_post($post_data);
+        
+        if (is_wp_error($result)) {
+            return false;
+        }
+        
+        // Save meta fields
+        $meta_fields = array('email', 'phone', 'website', 'address');
+        foreach ($meta_fields as $field) {
+            if (isset($sanitized_data[$field])) {
+                update_post_meta($vendor->get_id(), 'hp_' . $field, $sanitized_data[$field]);
+            }
+        }
+        
+        return true;
+    }
 }
 
 /**
