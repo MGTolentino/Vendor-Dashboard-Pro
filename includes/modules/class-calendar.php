@@ -163,8 +163,6 @@ class VDP_Calendar {
             }
         }
         
-        // Debug: Log final events count
-        error_log('VDP Calendar Debug - Total events generated: ' . count($events));
         
         return array(
             'events' => $events,
@@ -191,9 +189,6 @@ class VDP_Calendar {
         $bookings = get_posts($bookings_query);
         $bookings_data = array();
         
-        // Debug: Log booking query results
-        error_log('VDP Calendar Debug - get_listing_bookings for listing ' . $listing_id . ' found ' . count($bookings) . ' raw bookings');
-        error_log('VDP Calendar Debug - Query: ' . print_r($bookings_query, true));
         
         foreach ($bookings as $booking) {
             $start_date = get_post_meta($booking->ID, 'hp_start_date', true);

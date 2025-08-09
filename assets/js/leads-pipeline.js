@@ -51,7 +51,7 @@ jQuery(document).ready(function($) {
         
         // For now, just show a simple alert
         // In a real implementation, this would open a contact modal
-        alert('Contact functionality for lead #' + leadId + ' - Coming soon!');
+        // TODO: Implement contact functionality
     });
 
     /**
