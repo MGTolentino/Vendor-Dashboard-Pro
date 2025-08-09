@@ -214,9 +214,9 @@ class VDP_API {
         // Verify vendor owns this listing
         error_log("DELETE DEBUG - Listing parent: " . $listing->post_parent . " (" . gettype($listing->post_parent) . ")");
         error_log("DELETE DEBUG - Vendor ID: " . $vendor->get_id() . " (" . gettype($vendor->get_id()) . ")");
-        error_log("DELETE DEBUG - Comparison result: " . ($listing->post_parent !== $vendor->get_id() ? 'FAIL' : 'PASS'));
+        error_log("DELETE DEBUG - Comparison result: " . ((int)$listing->post_parent !== (int)$vendor->get_id() ? 'FAIL' : 'PASS'));
         
-        if ($listing->post_parent !== $vendor->get_id()) {
+        if ((int)$listing->post_parent !== (int)$vendor->get_id()) {
             error_log("DELETE DEBUG - Ownership verification failed");
             return false;
         }
