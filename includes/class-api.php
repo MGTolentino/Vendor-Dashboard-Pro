@@ -193,23 +193,31 @@ class VDP_API {
      */
     public function delete_listing($listing_id) {
         if (empty($listing_id)) {
+            error_log("DELETE DEBUG - Empty listing ID");
             return false;
         }
         
         // Get current vendor to verify ownership
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
+            error_log("DELETE DEBUG - No vendor found for current user");
             return false;
         }
         
         // Get listing post
         $listing = get_post($listing_id);
         if (!$listing || $listing->post_type !== 'hp_listing') {
+            error_log("DELETE DEBUG - Listing not found or wrong post type. Listing: " . ($listing ? 'exists' : 'null') . ", Post type: " . ($listing ? $listing->post_type : 'null'));
             return false;
         }
         
         // Verify vendor owns this listing
+        error_log("DELETE DEBUG - Listing parent: " . $listing->post_parent . " (" . gettype($listing->post_parent) . ")");
+        error_log("DELETE DEBUG - Vendor ID: " . $vendor->get_id() . " (" . gettype($vendor->get_id()) . ")");
+        error_log("DELETE DEBUG - Comparison result: " . ($listing->post_parent !== $vendor->get_id() ? 'FAIL' : 'PASS'));
+        
         if ($listing->post_parent !== $vendor->get_id()) {
+            error_log("DELETE DEBUG - Ownership verification failed");
             return false;
         }
         
