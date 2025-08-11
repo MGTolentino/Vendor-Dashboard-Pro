@@ -56,6 +56,48 @@ class VDP_Settings {
         // Get vendor settings
         $settings = self::get_vendor_settings($vendor);
         
+        // Initialize variables for template
+        $user = get_userdata($vendor->get_user_id());
+        $payment_methods = self::get_payment_methods();
+        $payment_settings = $settings['payments'];
+        $shipping = $settings['shipping'];
+        $notifications = array(
+            'email' => array(
+                'new_order' => get_user_meta($vendor->get_user_id(), 'notify_new_order', true) !== 'no',
+                'order_status' => get_user_meta($vendor->get_user_id(), 'notify_order_status', true) !== 'no',
+                'new_message' => get_user_meta($vendor->get_user_id(), 'notify_new_message', true) !== 'no',
+                'new_review' => get_user_meta($vendor->get_user_id(), 'notify_new_review', true) !== 'no',
+                'low_stock' => get_user_meta($vendor->get_user_id(), 'notify_low_stock', true) !== 'no',
+                'payout' => get_user_meta($vendor->get_user_id(), 'notify_payout', true) !== 'no',
+            ),
+            'dashboard' => array(
+                'new_order' => get_user_meta($vendor->get_user_id(), 'notify_dashboard_new_order', true) !== 'no',
+                'new_message' => get_user_meta($vendor->get_user_id(), 'notify_dashboard_new_message', true) !== 'no',
+                'new_review' => get_user_meta($vendor->get_user_id(), 'notify_dashboard_new_review', true) !== 'no',
+                'payout' => get_user_meta($vendor->get_user_id(), 'notify_dashboard_payout', true) !== 'no',
+            ),
+            'reports' => array(
+                'sales_frequency' => get_user_meta($vendor->get_user_id(), 'sales_report_frequency', true) ?: 'weekly',
+                'inventory_frequency' => get_user_meta($vendor->get_user_id(), 'inventory_report_frequency', true) ?: 'monthly',
+            ),
+        );
+        $countries = array(
+            'US' => __('United States', 'vendor-dashboard-pro'),
+            'CA' => __('Canada', 'vendor-dashboard-pro'),
+            'MX' => __('Mexico', 'vendor-dashboard-pro'),
+            'GB' => __('United Kingdom', 'vendor-dashboard-pro'),
+            'AU' => __('Australia', 'vendor-dashboard-pro'),
+            'DE' => __('Germany', 'vendor-dashboard-pro'),
+            'FR' => __('France', 'vendor-dashboard-pro'),
+            'ES' => __('Spain', 'vendor-dashboard-pro'),
+            'IT' => __('Italy', 'vendor-dashboard-pro'),
+            'BR' => __('Brazil', 'vendor-dashboard-pro'),
+            'AR' => __('Argentina', 'vendor-dashboard-pro'),
+            'CL' => __('Chile', 'vendor-dashboard-pro'),
+            'CO' => __('Colombia', 'vendor-dashboard-pro'),
+            'PE' => __('Peru', 'vendor-dashboard-pro'),
+        );
+        
         // Include settings template
         include VDP_PLUGIN_DIR . 'templates/settings-content.php';
     }
