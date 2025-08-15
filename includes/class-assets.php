@@ -80,6 +80,14 @@ class VDP_Assets {
         
         // Register scripts
         wp_register_script(
+            'vdp-translations',
+            VDP_PLUGIN_URL . 'assets/js/vdp-translations.js',
+            array(),
+            VDP_VERSION,
+            true
+        );
+        
+        wp_register_script(
             'vdp-chart',
             'https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js',
             array(),
@@ -99,7 +107,7 @@ class VDP_Assets {
         wp_register_script(
             'vdp-main',
             VDP_PLUGIN_URL . 'assets/js/main.js',
-            array('jquery', 'vdp-chart', 'vdp-fullcalendar'),
+            array('jquery', 'vdp-translations', 'vdp-chart', 'vdp-fullcalendar'),
             VDP_VERSION,
             true
         );
@@ -160,6 +168,7 @@ class VDP_Assets {
             
             // Log para depuración CSS
             
+            wp_enqueue_script('vdp-translations');
             wp_enqueue_script('vdp-main');
         }
         
