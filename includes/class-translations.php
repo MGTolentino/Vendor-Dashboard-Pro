@@ -455,7 +455,7 @@ class VDP_Translations {
             'Good Performance' => array('es' => 'Buen Rendimiento', 'en' => 'Good Performance'),
             'Needs Improvement' => array('es' => 'Necesita Mejorar', 'en' => 'Needs Improvement'),
             'Your store is doing great. Keep up the good work!' => array('es' => 'Tu tienda está funcionando muy bien. ¡Sigue así!', 'en' => 'Your store is doing great. Keep up the good work!'),
-            'Your store is performing well. There\\'s always room for improvement!' => array('es' => 'Tu tienda está funcionando bien. ¡Siempre hay espacio para mejorar!', 'en' => 'Your store is performing well. There\\'s always room for improvement!'),
+            'Your store is performing well. There\'s always room for improvement!' => array('es' => 'Tu tienda está funcionando bien. ¡Siempre hay espacio para mejorar!', 'en' => 'Your store is performing well. There\'s always room for improvement!'),
             'Your store is doing okay. Check out the tips to improve your performance.' => array('es' => 'Tu tienda está funcionando bien. Revisa los consejos para mejorar tu rendimiento.', 'en' => 'Your store is doing okay. Check out the tips to improve your performance.'),
             'There are several areas that need attention. Check out the recommendations below.' => array('es' => 'Hay varias áreas que necesitan atención. Revisa las recomendaciones a continuación.', 'en' => 'There are several areas that need attention. Check out the recommendations below.'),
             
