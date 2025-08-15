@@ -166,10 +166,26 @@ class VDP_Settings {
      * @return array
      */
     public static function get_payment_methods() {
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            return array();
+        }
+        
+        $vendor_id = $vendor->get_user_id();
+        
         return array(
-            'paypal' => __('PayPal', 'vendor-dashboard-pro'),
-            'bank_transfer' => __('Bank Transfer', 'vendor-dashboard-pro'),
-            'cash' => __('Cash on Delivery', 'vendor-dashboard-pro'),
+            'paypal' => array(
+                'name' => __('PayPal', 'vendor-dashboard-pro'),
+                'connected' => !empty(get_user_meta($vendor_id, 'paypal_email', true)),
+            ),
+            'bank_transfer' => array(
+                'name' => __('Bank Transfer', 'vendor-dashboard-pro'),
+                'connected' => !empty(get_user_meta($vendor_id, 'bank_account_number', true)),
+            ),
+            'cash' => array(
+                'name' => __('Cash on Delivery', 'vendor-dashboard-pro'),
+                'connected' => get_user_meta($vendor_id, 'accept_cash', true) === 'yes',
+            ),
         );
     }
 }
