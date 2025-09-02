@@ -242,13 +242,16 @@
         },
         
         /**
-         * Abrir modal agregar lead - CLEAN VERSION
+         * Abrir modal agregar lead - WORKING VERSION
          */
         openAddLeadModal: function() {
+            console.log('VDPPipeline: Opening add lead modal');
             const modal = $('#vdp_add_lead_modal_unique');
             
             if (modal.length) {
-                // Force modal styles to ensure visibility
+                // Multiple methods to ensure it opens (same as working version)
+                
+                // Method 1: Force CSS styles
                 modal.css({
                     'position': 'fixed',
                     'top': '0',
@@ -264,12 +267,24 @@
                     'justify-content': 'center',
                     'margin': '0',
                     'padding': '0',
+                    'border': 'none',
+                    'outline': 'none',
                     'opacity': '1',
                     'visibility': 'visible'
                 });
                 
+                // Method 2: Show explicitly
+                modal.show();
+                
+                // Method 3: Add class
+                modal.addClass('vdp-active');
+                
+                // Method 4: Force display attribute (this was critical!)
+                modal.attr('style', modal.attr('style') + '; display: flex !important;');
+                
                 // Force modal content styles
-                modal.find('.vdp-modal-content').css({
+                const content = modal.find('.vdp-modal-content');
+                content.css({
                     'background': '#ffffff',
                     'width': '90%',
                     'max-width': '600px',
@@ -281,18 +296,23 @@
                     'position': 'relative',
                     'margin': '20px auto',
                     'padding': '0',
+                    'border': 'none',
+                    'outline': 'none',
                     'opacity': '1',
+                    'z-index': '999999',
                     'display': 'block',
                     'visibility': 'visible'
                 });
-                
-                modal.addClass('vdp-active').show();
                 
                 // Reset form
                 const form = modal.find('#vdp_lead_form');
                 if (form.length) {
                     form[0].reset();
                 }
+                
+                console.log('VDPPipeline: Modal opened with forced styles');
+            } else {
+                console.error('VDPPipeline: Modal not found');
             }
         },
         
