@@ -722,8 +722,8 @@ class VDP_Leads {
         // Get filters
         $filters = isset($_POST['filters']) ? $_POST['filters'] : array();
         
-        // Get leads data
-        $leads = $this->get_vendor_leads();
+        // Get leads data with proper pipeline format
+        $leads = $this->get_pipeline_leads_data();
         
         // Apply filters if any
         if (!empty($filters)) {
@@ -737,6 +737,35 @@ class VDP_Leads {
         );
         
         wp_send_json_success($response_data);
+    }
+    
+    /**
+     * Get properly formatted leads data for pipeline.
+     */
+    private function get_pipeline_leads_data() {
+        $raw_leads = $this->get_vendor_leads();
+        $formatted_leads = array();
+        
+        foreach ($raw_leads as $lead) {
+            $formatted_leads[] = array(
+                'lead_id' => $lead->lead_id,
+                'evento_id' => $lead->evento_id ?? null,
+                'nombre_completo' => trim($lead->lead_name . ' ' . ($lead->lead_apellido ?? '')),
+                'lead_nombre' => $lead->lead_name,
+                'lead_apellido' => $lead->lead_apellido ?? '',
+                'lead_email' => $lead->lead_email,
+                'lead_celular' => $lead->lead_phone,
+                'evento_status' => $lead->lead_status ?? 'nuevo',
+                'tipo_evento' => $lead->event_name ?? 'Consulta General',
+                'fecha_evento' => !empty($lead->fecha_de_evento) ? date('Y-m-d', $lead->fecha_de_evento) : null,
+                'servicio_titulo' => $lead->service_name ?? '',
+                'service_url' => $lead->evento_servicio_de_interes ?? '',
+                'lead_created' => $lead->lead_created_date,
+                'lead_priority' => 'media' // Default priority
+            );
+        }
+        
+        return $formatted_leads;
     }
     
     /**

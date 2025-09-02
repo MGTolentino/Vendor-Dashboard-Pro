@@ -140,7 +140,7 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
             </button>
             <button id="vdp-pipeline-view-btn" class="vdp-btn vdp-btn-secondary vdp-view-toggle-btn">
                 <i class="fas fa-columns"></i>
-                <?php esc_html_e('Pipeline View', 'vendor-dashboard-pro'); ?>
+                <span class="vdp-pipeline-text"><?php esc_html_e('Pipeline View', 'vendor-dashboard-pro'); ?></span>
             </button>
         </div>
     </div>
@@ -221,6 +221,11 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
         <div class="vdp-section-header">
             <h2 class="vdp-section-title"><?php esc_html_e('Mis Leads', 'vendor-dashboard-pro'); ?></h2>
             <div class="vdp-section-actions">
+                <!-- Add Lead Button for Table View -->
+                <button id="vdp_add_lead_btn_table" class="vdp-btn vdp-btn-primary" style="margin-right: 15px;">
+                    <i class="fas fa-plus"></i>
+                    <?php esc_html_e('Agregar Lead', 'vendor-dashboard-pro'); ?>
+                </button>
                 <div class="vdp-filters vdp-table-filters">
                     <input type="text" class="vdp-filter-input" id="table_quick_search" placeholder="Buscar...">
                     
@@ -692,10 +697,16 @@ jQuery(document).ready(function($) {
         }
     });
     
-    // Add lead button
-    $('.vdp-add-lead-btn').on('click', function(e) {
+    // Add lead button - Link both buttons to the pipeline modal
+    $('.vdp-add-lead-btn, #vdp_add_lead_btn_table').on('click', function(e) {
         e.preventDefault();
-        alert('In a real implementation, this would open a form to add a new lead.');
+        // Trigger the pipeline's add lead modal
+        if (window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
+            window.VDPPipeline.openAddLeadModal();
+        } else {
+            // Fallback - show the modal if it exists
+            $('#vdp_lead_modal').addClass('vdp-active');
+        }
     });
     
     // Delete lead button
@@ -737,6 +748,17 @@ jQuery(document).ready(function($) {
             localStorage.setItem('vdp_leads_view', 'pipeline');
         }
     });
+    
+    // Update pipeline text based on language detection
+    function updatePipelineText() {
+        const isSpanish = window.VDP && window.VDP.isSpanish ? window.VDP.isSpanish() : 
+                         (document.documentElement.lang && document.documentElement.lang.startsWith('es'));
+        const pipelineText = isSpanish ? 'Vista Pipeline' : 'Pipeline View';
+        $('.vdp-pipeline-text').text(pipelineText);
+    }
+    
+    // Update text on load
+    updatePipelineText();
     
     // Restore view preference on page load
     var savedView = localStorage.getItem('vdp_leads_view');
