@@ -869,24 +869,32 @@ class VDP_Leads {
      * AJAX handler for service search (autocomplete)
      */
     public function ajax_search_services() {
+        error_log('VDP: ajax_search_services llamado');
+        error_log('VDP: POST data: ' . print_r($_POST, true));
+        
         // Verify nonce
-        if (!isset($_GET['nonce']) || !wp_verify_nonce($_GET['nonce'], 'vdp-ajax-nonce')) {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
+            error_log('VDP: Nonce verification failed');
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
         }
         
         // Check if user is logged in and is vendor
-        if (!is_user_logged_in() || !vdp_is_user_vendor()) {
-            wp_send_json_error(array('message' => __('Access denied.', 'vendor-dashboard-pro')));
+        if (!is_user_logged_in()) {
+            error_log('VDP: User not logged in');
+            wp_send_json_error(array('message' => __('User not logged in.', 'vendor-dashboard-pro')));
         }
         
-        $search_term = isset($_GET['term']) ? sanitize_text_field($_GET['term']) : '';
+        $search_term = isset($_POST['term']) ? sanitize_text_field($_POST['term']) : '';
+        error_log('VDP: Search term: ' . $search_term);
         
         if (empty($search_term)) {
+            error_log('VDP: Search term is empty');
             wp_send_json_error(array('message' => __('Search term is empty.', 'vendor-dashboard-pro')));
         }
         
         // Get current vendor ID
         $vendor_id = $this->get_current_vendor_id();
+        error_log('VDP: Vendor ID: ' . $vendor_id);
         if (!$vendor_id) {
             wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
         }
@@ -902,8 +910,12 @@ class VDP_Leads {
             'order' => 'ASC'
         );
         
+        error_log('VDP: WP_Query args: ' . print_r($args, true));
+        
         $query = new WP_Query($args);
         $results = array();
+        
+        error_log('VDP: Posts encontrados: ' . $query->found_posts);
         
         if ($query->have_posts()) {
             while ($query->have_posts()) {
@@ -912,16 +924,21 @@ class VDP_Leads {
                 $title = get_the_title();
                 $url = get_permalink($post_id);
                 
-                $results[] = array(
+                $result = array(
                     'label' => $title,
                     'value' => $title,
                     'url' => $url,
+                    'title' => $title,
                     'id' => $post_id
                 );
+                
+                error_log('VDP: Agregando resultado: ' . print_r($result, true));
+                $results[] = $result;
             }
             wp_reset_postdata();
         }
         
+        error_log('VDP: Total resultados a enviar: ' . count($results));
         wp_send_json_success($results);
     }
     

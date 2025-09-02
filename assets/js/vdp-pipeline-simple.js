@@ -311,11 +311,18 @@
          * Inicializar autocomplete para campo servicio
          */
         initializeServiceAutocomplete: function() {
-            const serviceField = $('#vdp_servicio_url');
+            console.log('VDP: Inicializando autocomplete para servicio');
+            
+            const serviceField = $('input[name="service_url"]');
+            console.log('VDP: Campo servicio encontrado:', serviceField.length > 0);
+            console.log('VDP: jQuery UI autocomplete disponible:', typeof $.fn.autocomplete !== 'undefined');
+            console.log('VDP: vdpLeads objeto:', vdpLeads);
             
             if (serviceField.length && typeof $.fn.autocomplete !== 'undefined') {
+                console.log('VDP: Configurando autocomplete...');
                 serviceField.autocomplete({
                     source: function(request, response) {
+                        console.log('VDP: Buscando servicios para término:', request.term);
                         $.ajax({
                             url: vdpLeads.ajax_url,
                             type: 'POST',
@@ -325,14 +332,21 @@
                                 nonce: vdpLeads.nonce,
                                 term: request.term
                             },
+                            beforeSend: function() {
+                                console.log('VDP: Enviando request AJAX...');
+                            },
                             success: function(data) {
+                                console.log('VDP: Respuesta AJAX recibida:', data);
                                 if (data.success && data.data) {
+                                    console.log('VDP: Servicios encontrados:', data.data.length);
                                     response(data.data);
                                 } else {
+                                    console.log('VDP: No se encontraron servicios o error:', data);
                                     response([]);
                                 }
                             },
-                            error: function() {
+                            error: function(xhr, status, error) {
+                                console.log('VDP: Error en AJAX:', {xhr, status, error});
                                 response([]);
                             }
                         });
@@ -358,7 +372,7 @@
                     serviceField.attr('required', true);
                     
                     // Add visual indicator
-                    const label = serviceField.closest('.vdp-form-group').find('label');
+                    const label = serviceField.closest('.vdp-form-field').find('label');
                     if (label.length && !label.find('.required').length) {
                         label.append('<span class="required" style="color: red;"> *</span>');
                     }
@@ -399,10 +413,10 @@
             
             // Validate service field for vendors
             if (vdpLeads.user_role === 'vendor') {
-                const serviceUrl = $('#vdp_servicio_url').val().trim();
+                const serviceUrl = $('input[name="service_url"]').val().trim();
                 if (!serviceUrl) {
                     this.showNotice('El campo Servicio es obligatorio para vendors', 'error');
-                    $('#vdp_servicio_url').focus();
+                    $('input[name="service_url"]').focus();
                     return;
                 }
             }
