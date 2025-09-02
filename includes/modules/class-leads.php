@@ -59,6 +59,10 @@ class VDP_Leads {
         add_action('wp_ajax_nopriv_vdp_add_pipeline_lead', array($this, 'ajax_add_pipeline_lead'));
         add_action('wp_ajax_vdp_update_pipeline_status', array($this, 'ajax_update_pipeline_status'));
         add_action('wp_ajax_nopriv_vdp_update_pipeline_status', array($this, 'ajax_update_pipeline_status'));
+        
+        // Service search for autocomplete
+        add_action('wp_ajax_vdp_search_services', array($this, 'ajax_search_services'));
+        add_action('wp_ajax_nopriv_vdp_search_services', array($this, 'ajax_search_services'));
     }
 
     /**
@@ -90,6 +94,14 @@ class VDP_Leads {
             array(),
             '3.1.0'
         );
+
+        // jQuery UI CSS for autocomplete
+        wp_enqueue_style(
+            'jquery-ui-css',
+            'https://code.jquery.com/ui/1.13.2/themes/ui-lightness/jquery-ui.css',
+            array(),
+            '1.13.2'
+        );
         
         wp_enqueue_script(
             'moment',
@@ -108,11 +120,12 @@ class VDP_Leads {
         );
 
         wp_enqueue_script('jquery-ui-datepicker');
+        wp_enqueue_script('jquery-ui-autocomplete');
         
         wp_enqueue_script(
             'vdp-leads-pipeline',
             VDP_PLUGIN_URL . 'assets/js/leads-pipeline.js',
-            array('jquery', 'jquery-ui-datepicker'),
+            array('jquery', 'jquery-ui-datepicker', 'jquery-ui-autocomplete'),
             VDP_VERSION,
             true
         );
@@ -120,7 +133,7 @@ class VDP_Leads {
         wp_enqueue_script(
             'vdp-pipeline-simple',
             VDP_PLUGIN_URL . 'assets/js/vdp-pipeline-simple.js',
-            array('jquery', 'jquery-ui-datepicker'),
+            array('jquery', 'jquery-ui-datepicker', 'jquery-ui-autocomplete'),
             VDP_VERSION,
             true
         );
@@ -192,6 +205,7 @@ class VDP_Leads {
             'nonce' => wp_create_nonce('vdp-ajax-nonce'),
             'site_url' => site_url(),
             'vendor_id' => $this->get_current_vendor_id(),
+            'user_role' => $this->get_user_role(),
             'statusOptions' => $this->get_status_options()
         ));
 
@@ -200,6 +214,7 @@ class VDP_Leads {
             'nonce' => wp_create_nonce('vdp-ajax-nonce'),
             'site_url' => site_url(),
             'vendor_id' => $this->get_current_vendor_id(),
+            'user_role' => $this->get_user_role(),
             'statusOptions' => $this->get_status_options()
         ));
     }
@@ -535,6 +550,26 @@ class VDP_Leads {
         
         return $vendor_id;
     }
+    
+    /**
+     * Get current user role
+     */
+    private function get_user_role() {
+        $user = wp_get_current_user();
+        if (!$user || $user->ID === 0) {
+            return '';
+        }
+        
+        $roles = (array) $user->roles;
+        
+        // Check for vendor role first
+        if (in_array('vendor', $roles) || in_array('hp_vendor', $roles)) {
+            return 'vendor';
+        }
+        
+        // Return first role if no vendor role found
+        return !empty($roles) ? $roles[0] : '';
+    }
 
     /**
      * Check if leads tables exist.
@@ -828,6 +863,66 @@ class VDP_Leads {
         }
         
         return $formatted_leads;
+    }
+    
+    /**
+     * AJAX handler for service search (autocomplete)
+     */
+    public function ajax_search_services() {
+        // Verify nonce
+        if (!isset($_GET['nonce']) || !wp_verify_nonce($_GET['nonce'], 'vdp-ajax-nonce')) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
+        }
+        
+        // Check if user is logged in and is vendor
+        if (!is_user_logged_in() || !vdp_is_user_vendor()) {
+            wp_send_json_error(array('message' => __('Access denied.', 'vendor-dashboard-pro')));
+        }
+        
+        $search_term = isset($_GET['term']) ? sanitize_text_field($_GET['term']) : '';
+        
+        if (empty($search_term)) {
+            wp_send_json_error(array('message' => __('Search term is empty.', 'vendor-dashboard-pro')));
+        }
+        
+        // Get current vendor ID
+        $vendor_id = $this->get_current_vendor_id();
+        if (!$vendor_id) {
+            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+        }
+        
+        // Search only vendor's listings
+        $args = array(
+            'post_type' => 'hp_listing',
+            'post_status' => 'publish',
+            'posts_per_page' => 10,
+            's' => $search_term,
+            'post_parent' => $vendor_id, // Only vendor's listings
+            'orderby' => 'title',
+            'order' => 'ASC'
+        );
+        
+        $query = new WP_Query($args);
+        $results = array();
+        
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $post_id = get_the_ID();
+                $title = get_the_title();
+                $url = get_permalink($post_id);
+                
+                $results[] = array(
+                    'label' => $title,
+                    'value' => $title,
+                    'url' => $url,
+                    'id' => $post_id
+                );
+            }
+            wp_reset_postdata();
+        }
+        
+        wp_send_json_success($results);
     }
     
     /**

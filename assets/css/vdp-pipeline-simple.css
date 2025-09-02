@@ -552,3 +552,59 @@ html body div#vdp_add_lead_modal_unique .vdp-close-modal:hover {
 .vdp-lead-card[data-priority="baja"] {
     border-left: 4px solid var(--vdp-success, #2ecc71);
 }
+
+/* Autocomplete styling */
+.vdp-form-group .ui-autocomplete {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-size: 13px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.vdp-form-group .ui-menu-item {
+    padding: 0;
+    margin: 0;
+}
+
+.vdp-form-group .ui-menu-item .ui-menu-item-wrapper {
+    padding: 8px 12px;
+    border: none;
+    display: block;
+    line-height: 1.4;
+}
+
+.vdp-form-group .ui-menu-item .ui-menu-item-wrapper:hover,
+.vdp-form-group .ui-menu-item .ui-menu-item-wrapper.ui-state-active {
+    background: #f8f9fa;
+    color: #333;
+    border: none;
+    margin: 0;
+}
+
+.vdp-form-group .ui-menu-item .service-item {
+    display: block;
+}
+
+.vdp-form-group .ui-menu-item .service-item strong {
+    display: block;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.vdp-form-group .ui-menu-item .service-item small {
+    color: #6c757d;
+    font-size: 12px;
+    display: block;
+}
+
+/* Required field indicator */
+.vdp-form-group label .required {
+    color: #e74c3c;
+    font-weight: bold;
+}

@@ -301,6 +301,68 @@
                 if (form.length) {
                     form[0].reset();
                 }
+                
+                // Initialize service autocomplete
+                this.initializeServiceAutocomplete();
+            }
+        },
+        
+        /**
+         * Inicializar autocomplete para campo servicio
+         */
+        initializeServiceAutocomplete: function() {
+            const serviceField = $('#vdp_servicio_url');
+            
+            if (serviceField.length && typeof $.fn.autocomplete !== 'undefined') {
+                serviceField.autocomplete({
+                    source: function(request, response) {
+                        $.ajax({
+                            url: vdpLeads.ajax_url,
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {
+                                action: 'vdp_search_services',
+                                nonce: vdpLeads.nonce,
+                                term: request.term
+                            },
+                            success: function(data) {
+                                if (data.success && data.data) {
+                                    response(data.data);
+                                } else {
+                                    response([]);
+                                }
+                            },
+                            error: function() {
+                                response([]);
+                            }
+                        });
+                    },
+                    minLength: 2,
+                    delay: 300,
+                    select: function(event, ui) {
+                        $(this).val(ui.item.url);
+                        return false;
+                    },
+                    focus: function(event, ui) {
+                        $(this).val(ui.item.url);
+                        return false;
+                    }
+                }).autocomplete("instance")._renderItem = function(ul, item) {
+                    return $("<li>")
+                        .append('<div class="service-item"><strong>' + item.title + '</strong><br><small>' + item.url + '</small></div>')
+                        .appendTo(ul);
+                };
+                
+                // Make field required for vendors
+                if (vdpLeads.user_role === 'vendor') {
+                    serviceField.attr('required', true);
+                    
+                    // Add visual indicator
+                    const label = serviceField.closest('.vdp-form-group').find('label');
+                    if (label.length && !label.find('.required').length) {
+                        label.append('<span class="required" style="color: red;"> *</span>');
+                    }
+                }
             }
         },
         
@@ -334,6 +396,16 @@
          */
         handleAddLead: function(e) {
             e.preventDefault();
+            
+            // Validate service field for vendors
+            if (vdpLeads.user_role === 'vendor') {
+                const serviceUrl = $('#vdp_servicio_url').val().trim();
+                if (!serviceUrl) {
+                    this.showNotice('El campo Servicio es obligatorio para vendors', 'error');
+                    $('#vdp_servicio_url').focus();
+                    return;
+                }
+            }
             
             const formData = new FormData(e.target);
             formData.append('action', 'vdp_add_pipeline_lead');
