@@ -265,37 +265,86 @@ $vdp_status_options = array(
                     </div>
                     <div class="vdp-form-field">
                         <label><?php esc_html_e('Email', 'vendor-dashboard-pro'); ?> *</label>
-                        <input type="email" name="lead_email" required>
+                        <input type="email" name="lead_e_mail" required>
                     </div>
                 </div>
                 
                 <div class="vdp-form-row">
                     <div class="vdp-form-field">
-                        <label><?php esc_html_e('Service URL', 'vendor-dashboard-pro'); ?></label>
-                        <input type="url" name="service_url" placeholder="<?php esc_attr_e('URL of the service they\'re interested in', 'vendor-dashboard-pro'); ?>">
-                    </div>
-                    <div class="vdp-form-field">
-                        <label><?php esc_html_e('Status', 'vendor-dashboard-pro'); ?></label>
-                        <select name="evento_status">
-                            <?php foreach ($vdp_status_options as $status_value => $status_label) : ?>
-                                <option value="<?php echo esc_attr($status_value); ?>" <?php selected($status_value, 'nuevo'); ?>>
-                                    <?php echo esc_html($status_label); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label><?php esc_html_e('Company Name', 'vendor-dashboard-pro'); ?></label>
+                        <input type="text" name="lead_razon_social">
                     </div>
                 </div>
                 
-                <div class="vdp-form-row">
-                    <div class="vdp-form-field full-width">
-                        <label><?php esc_html_e('Notes', 'vendor-dashboard-pro'); ?></label>
-                        <textarea name="lead_notas" rows="3" placeholder="<?php esc_attr_e('Additional information about this lead...', 'vendor-dashboard-pro'); ?>"></textarea>
+                <!-- Información del evento (opcional) -->
+                <div class="vdp-form-section">
+                    <label class="vdp-checkbox-label">
+                        <input type="checkbox" id="vdp_include_event"> <?php esc_html_e('Include event information', 'vendor-dashboard-pro'); ?>
+                    </label>
+                </div>
+                
+                <div id="vdp_event_fields" style="display:none;">
+                    <div class="vdp-form-row">
+                        <div class="vdp-form-field">
+                            <label><?php esc_html_e('Event Date', 'vendor-dashboard-pro'); ?></label>
+                            <input type="date" id="vdp_evento_fecha" name="fecha_de_evento">
+                        </div>
+                        <div class="vdp-form-field">
+                            <label><?php esc_html_e('Event Type', 'vendor-dashboard-pro'); ?></label>
+                            <select id="vdp_evento_tipo" name="tipo_de_evento">
+                                <option value=""><?php esc_html_e('Select...', 'vendor-dashboard-pro'); ?></option>
+                                <option value="boda"><?php esc_html_e('Wedding', 'vendor-dashboard-pro'); ?></option>
+                                <option value="quinceanos"><?php esc_html_e('Quinceañera', 'vendor-dashboard-pro'); ?></option>
+                                <option value="bautizo"><?php esc_html_e('Baptism', 'vendor-dashboard-pro'); ?></option>
+                                <option value="cumpleanos"><?php esc_html_e('Birthday', 'vendor-dashboard-pro'); ?></option>
+                                <option value="corporativo"><?php esc_html_e('Corporate', 'vendor-dashboard-pro'); ?></option>
+                                <option value="otro"><?php esc_html_e('Other', 'vendor-dashboard-pro'); ?></option>
+                            </select>
+                        </div>
                     </div>
+                    
+                    <div class="vdp-form-row">
+                        <div class="vdp-form-field">
+                            <label><?php esc_html_e('Number of Guests', 'vendor-dashboard-pro'); ?></label>
+                            <input type="number" id="vdp_evento_asistentes" name="evento_asistentes" min="1">
+                        </div>
+                        <div class="vdp-form-field">
+                            <label><?php esc_html_e('Status', 'vendor-dashboard-pro'); ?></label>
+                            <select id="vdp_evento_status" name="evento_status">
+                                <?php foreach ($vdp_status_options as $status_value => $status_label) : ?>
+                                    <option value="<?php echo esc_attr($status_value); ?>" <?php selected($status_value, 'nuevo'); ?>>
+                                        <?php echo esc_html($status_label); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="vdp-form-row">
+                        <div class="vdp-form-field">
+                            <label><?php esc_html_e('Event Address', 'vendor-dashboard-pro'); ?></label>
+                            <input type="text" id="vdp_evento_direccion" name="direccion_evento" placeholder="<?php esc_attr_e('Complete event address', 'vendor-dashboard-pro'); ?>">
+                        </div>
+                        <div class="vdp-form-field">
+                            <label><?php esc_html_e('Service of Interest', 'vendor-dashboard-pro'); ?></label>
+                            <input type="text" id="vdp_evento_servicio_search" placeholder="<?php esc_attr_e('Search service...', 'vendor-dashboard-pro'); ?>">
+                            <input type="hidden" id="vdp_evento_servicio" name="evento_servicio_de_interes">
+                        </div>
+                    </div>
+                    
+                    <div class="vdp-form-row">
+                        <div class="vdp-form-field full-width">
+                            <label><?php esc_html_e('Additional Comments', 'vendor-dashboard-pro'); ?></label>
+                            <textarea id="vdp_evento_comentarios" name="comentarios_evento" rows="3" placeholder="<?php esc_attr_e('Notes or comments about the event...', 'vendor-dashboard-pro'); ?>"></textarea>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="vdp_evento_ubicacion" name="evento_ubicacion">
                 </div>
                 
                 <div class="vdp-form-actions">
                     <button type="button" class="vdp-btn vdp-btn-secondary vdp-close-modal"><?php esc_html_e('Cancel', 'vendor-dashboard-pro'); ?></button>
-                    <button type="submit" class="vdp-btn vdp-btn-primary"><?php esc_html_e('Add Lead', 'vendor-dashboard-pro'); ?></button>
+                    <button type="submit" class="vdp-btn vdp-btn-primary"><?php esc_html_e('Save Lead', 'vendor-dashboard-pro'); ?></button>
                 </div>
             </form>
         </div>

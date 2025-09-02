@@ -300,11 +300,38 @@
                 const form = modal.find('#vdp_lead_form');
                 if (form.length) {
                     form[0].reset();
+                    // Hide event fields and uncheck event checkbox
+                    $('#vdp_event_fields').hide();
+                    $('#vdp_include_event').prop('checked', false);
                 }
+                
+                // Initialize event toggle
+                this.initializeEventToggle();
                 
                 // Initialize service autocomplete
                 this.initializeServiceAutocomplete();
             }
+        },
+        
+        /**
+         * Inicializar toggle para campos de evento
+         */
+        initializeEventToggle: function() {
+            console.log('VDP: Inicializando toggle de evento');
+            
+            // Toggle event fields
+            $(document).off('change', '#vdp_include_event').on('change', '#vdp_include_event', function() {
+                const isChecked = $(this).is(':checked');
+                console.log('VDP: Event checkbox changed:', isChecked);
+                
+                if (isChecked) {
+                    $('#vdp_event_fields').slideDown(300);
+                } else {
+                    $('#vdp_event_fields').slideUp(300);
+                    // Clear event fields when hiding
+                    $('#vdp_event_fields input, #vdp_event_fields select, #vdp_event_fields textarea').val('');
+                }
+            });
         },
         
         /**
@@ -313,7 +340,7 @@
         initializeServiceAutocomplete: function() {
             console.log('VDP: Inicializando autocomplete para servicio');
             
-            const serviceField = $('input[name="service_url"]');
+            const serviceField = $('#vdp_evento_servicio_search');
             console.log('VDP: Campo servicio encontrado:', serviceField.length > 0);
             console.log('VDP: jQuery UI autocomplete disponible:', typeof $.fn.autocomplete !== 'undefined');
             console.log('VDP: vdpLeads objeto:', vdpLeads);
@@ -339,6 +366,7 @@
                                 console.log('VDP: Respuesta AJAX recibida:', data);
                                 if (data.success && data.data) {
                                     console.log('VDP: Servicios encontrados:', data.data.length);
+                                    console.log('VDP: Datos de servicios:', data.data);
                                     response(data.data);
                                 } else {
                                     console.log('VDP: No se encontraron servicios o error:', data);
@@ -354,29 +382,36 @@
                     minLength: 2,
                     delay: 300,
                     select: function(event, ui) {
-                        $(this).val(ui.item.url);
+                        console.log('VDP: Item seleccionado:', ui.item);
+                        $(this).val(ui.item.title);
+                        $('#vdp_evento_servicio').val(ui.item.url);
                         return false;
                     },
                     focus: function(event, ui) {
-                        $(this).val(ui.item.url);
+                        console.log('VDP: Focus en item:', ui.item);
+                        $(this).val(ui.item.title);
                         return false;
+                    },
+                    open: function() {
+                        console.log('VDP: Autocomplete abierto');
+                        // Force higher z-index for modal
+                        $(this).autocomplete('widget').css('z-index', 2147483647);
+                        console.log('VDP: Z-index del autocomplete:', $(this).autocomplete('widget').css('z-index'));
+                    },
+                    close: function() {
+                        console.log('VDP: Autocomplete cerrado');
+                    },
+                    response: function(event, ui) {
+                        console.log('VDP: Response event triggered, content:', ui.content);
                     }
                 }).autocomplete("instance")._renderItem = function(ul, item) {
+                    console.log('VDP: Renderizando item:', item);
                     return $("<li>")
                         .append('<div class="service-item"><strong>' + item.title + '</strong><br><small>' + item.url + '</small></div>')
                         .appendTo(ul);
                 };
                 
-                // Make field required for vendors
-                if (vdpLeads.user_role === 'vendor') {
-                    serviceField.attr('required', true);
-                    
-                    // Add visual indicator
-                    const label = serviceField.closest('.vdp-form-field').find('label');
-                    if (label.length && !label.find('.required').length) {
-                        label.append('<span class="required" style="color: red;"> *</span>');
-                    }
-                }
+                // Field is not required since it's part of optional event section
             }
         },
         
@@ -411,17 +446,38 @@
         handleAddLead: function(e) {
             e.preventDefault();
             
-            // Validate service field for vendors
-            if (vdpLeads.user_role === 'vendor') {
-                const serviceUrl = $('input[name="service_url"]').val().trim();
-                if (!serviceUrl) {
-                    this.showNotice('El campo Servicio es obligatorio para vendors', 'error');
-                    $('input[name="service_url"]').focus();
+            // Validate required lead fields
+            const requiredFields = {
+                'lead_nombre': 'Name',
+                'lead_apellido': 'Last Name',
+                'lead_celular': 'Phone',
+                'lead_e_mail': 'Email'
+            };
+            
+            for (const [field, label] of Object.entries(requiredFields)) {
+                const value = $(`[name="${field}"]`).val().trim();
+                if (!value) {
+                    this.showNotice(`${label} is required`, 'error');
+                    $(`[name="${field}"]`).focus();
                     return;
                 }
             }
             
+            // Validate email format
+            const email = $('[name="lead_e_mail"]').val().trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                this.showNotice('Please enter a valid email address', 'error');
+                $('[name="lead_e_mail"]').focus();
+                return;
+            }
+            
             const formData = new FormData(e.target);
+            
+            // Determine form type based on event checkbox
+            const includeEvent = $('#vdp_include_event').is(':checked');
+            formData.append('form_type', includeEvent ? 'lead_and_event' : 'lead_only');
+            
             formData.append('action', 'vdp_add_pipeline_lead');
             formData.append('nonce', vdpLeads.nonce);
             

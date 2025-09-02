@@ -943,61 +943,168 @@ class VDP_Leads {
     }
     
     /**
-     * AJAX handler to add new pipeline lead.
+     * AJAX handler to add new pipeline lead (siguiendo la estructura de Leads Management).
      */
     public function ajax_add_pipeline_lead() {
+        error_log('VDP: ajax_add_pipeline_lead llamado');
+        
         // Verify request
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vdp-ajax-nonce')) {
+            error_log('VDP: Nonce verification failed');
             wp_send_json_error(array('message' => __('Security check failed.', 'vendor-dashboard-pro')));
         }
         
-        // Check if user is logged in and is vendor
-        if (!is_user_logged_in() || !vdp_is_user_vendor()) {
-            wp_send_json_error(array('message' => __('Access denied.', 'vendor-dashboard-pro')));
+        // Check if user is logged in
+        if (!is_user_logged_in()) {
+            error_log('VDP: User not logged in');
+            wp_send_json_error(array('message' => __('User not logged in.', 'vendor-dashboard-pro')));
         }
         
         // Get vendor ID
         $vendor_id = $this->get_current_vendor_id();
-        if (!$vendor_id) {
-            wp_send_json_error(array('message' => __('Vendor not found.', 'vendor-dashboard-pro')));
+        error_log('VDP: Vendor ID: ' . $vendor_id);
+        
+        // Get form type
+        $form_type = isset($_POST['form_type']) ? sanitize_text_field($_POST['form_type']) : '';
+        error_log('VDP: Form type: ' . $form_type);
+        
+        if (!in_array($form_type, array('lead_only', 'lead_and_event'))) {
+            wp_send_json_error(array('message' => __('Invalid form type.', 'vendor-dashboard-pro')));
         }
         
-        // Validate required fields
-        $required_fields = array('lead_nombre', 'lead_apellido', 'lead_email', 'lead_celular');
-        foreach ($required_fields as $field) {
-            if (empty($_POST[$field])) {
-                wp_send_json_error(array('message' => sprintf(__('Field %s is required.', 'vendor-dashboard-pro'), $field)));
+        // Datos obligatorios del lead
+        $lead_data = array(
+            'lead_razon_social' => isset($_POST['lead_razon_social']) ? sanitize_text_field($_POST['lead_razon_social']) : '',
+            'lead_nombre' => isset($_POST['lead_nombre']) ? sanitize_text_field($_POST['lead_nombre']) : '',
+            'lead_apellido' => isset($_POST['lead_apellido']) ? sanitize_text_field($_POST['lead_apellido']) : '',
+            'lead_celular' => isset($_POST['lead_celular']) ? sanitize_text_field($_POST['lead_celular']) : '',
+            'lead_e_mail' => isset($_POST['lead_e_mail']) ? sanitize_email($_POST['lead_e_mail']) : '',
+            'cct_status' => 'publish',
+            'cct_created' => current_time('mysql'),
+            'cct_modified' => current_time('mysql')
+        );
+        
+        // Add vendor_id if we have it
+        if ($vendor_id) {
+            $lead_data['vendor_id'] = $vendor_id;
+        }
+        
+        // Validar datos obligatorios
+        if (empty($lead_data['lead_nombre']) || empty($lead_data['lead_apellido']) || 
+            empty($lead_data['lead_celular']) || empty($lead_data['lead_e_mail'])) {
+            wp_send_json_error(array('message' => __('Please complete all required lead fields.', 'vendor-dashboard-pro')));
+        }
+        
+        // Validar email
+        if (!is_email($lead_data['lead_e_mail'])) {
+            wp_send_json_error(array('message' => __('Invalid email address.', 'vendor-dashboard-pro')));
+        }
+        
+        // Check if user already exists with this email
+        $existing_user_id = email_exists($lead_data['lead_e_mail']);
+        
+        if ($existing_user_id) {
+            // Verificar si ya existe un lead con este usuario
+            $existing_lead = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT _ID FROM {$this->leads_table} WHERE lead_e_mail = %s",
+                    $lead_data['lead_e_mail']
+                )
+            );
+            
+            if ($existing_lead) {
+                // Si ya existe un lead, devuelve la información
+                wp_send_json_error(array(
+                    'code' => 'existing_lead',
+                    'lead_id' => $existing_lead->_ID,
+                    'message' => __('This email is already registered.', 'vendor-dashboard-pro')
+                ));
+            }
+            
+            // Asignar el ID de usuario existente al lead
+            $lead_data['cct_author_id'] = $existing_user_id;
+        } else {
+            // Crear nuevo usuario
+            $username = $lead_data['lead_e_mail'];
+            $password = wp_generate_password(12, true, true);
+            
+            $user_id = wp_create_user($username, $password, $lead_data['lead_e_mail']);
+            
+            if (is_wp_error($user_id)) {
+                error_log('VDP: Error creating user: ' . $user_id->get_error_message());
+                // Continuamos aunque haya error, solo que el lead no tendrá usuario asociado
+            } else {
+                // Actualizar datos del usuario
+                wp_update_user(array(
+                    'ID' => $user_id,
+                    'first_name' => $lead_data['lead_nombre'],
+                    'last_name' => $lead_data['lead_apellido'],
+                    'display_name' => $lead_data['lead_nombre'] . ' ' . $lead_data['lead_apellido']
+                ));
+                
+                $lead_data['cct_author_id'] = $user_id;
+                
+                // Enviar email de bienvenida (opcional)
+                // wp_new_user_notification($user_id, null, 'user');
             }
         }
         
-        // Sanitize input data
-        $lead_data = array(
-            'lead_nombre' => sanitize_text_field($_POST['lead_nombre']),
-            'lead_apellido' => sanitize_text_field($_POST['lead_apellido']),
-            'lead_email' => sanitize_email($_POST['lead_email']),
-            'lead_celular' => sanitize_text_field($_POST['lead_celular']),
-            'service_url' => esc_url_raw($_POST['service_url'] ?? ''),
-            'lead_notas' => sanitize_textarea_field($_POST['lead_notas'] ?? ''),
-            'evento_status' => sanitize_text_field($_POST['evento_status'] ?? 'nuevo'),
-            'vendor_id' => $vendor_id,
-            'lead_created' => current_time('mysql')
-        );
-        
-        // Insert lead into database
+        // Insertar lead en la base de datos
         global $wpdb;
         $result = $wpdb->insert(
             $this->leads_table,
-            $lead_data,
-            array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s')
+            $lead_data
         );
         
         if ($result === false) {
+            error_log('VDP: Failed to insert lead: ' . $wpdb->last_error);
             wp_send_json_error(array('message' => __('Failed to create lead.', 'vendor-dashboard-pro')));
         }
         
+        $lead_id = $wpdb->insert_id;
+        error_log('VDP: Lead created with ID: ' . $lead_id);
+        
+        // Si se incluye información de evento, crear evento
+        if ($form_type === 'lead_and_event') {
+            $evento_data = array(
+                'lead_id' => $lead_id,
+                'fecha_de_evento' => isset($_POST['fecha_de_evento']) ? sanitize_text_field($_POST['fecha_de_evento']) : '',
+                'tipo_de_evento' => isset($_POST['tipo_de_evento']) ? sanitize_text_field($_POST['tipo_de_evento']) : '',
+                'evento_asistentes' => isset($_POST['evento_asistentes']) ? intval($_POST['evento_asistentes']) : 0,
+                'direccion_evento' => isset($_POST['direccion_evento']) ? sanitize_text_field($_POST['direccion_evento']) : '',
+                'evento_servicio_de_interes' => isset($_POST['evento_servicio_de_interes']) ? esc_url_raw($_POST['evento_servicio_de_interes']) : '',
+                'comentarios_evento' => isset($_POST['comentarios_evento']) ? sanitize_textarea_field($_POST['comentarios_evento']) : '',
+                'evento_status' => isset($_POST['evento_status']) ? sanitize_text_field($_POST['evento_status']) : 'nuevo',
+                'evento_ubicacion' => isset($_POST['evento_ubicacion']) ? sanitize_text_field($_POST['evento_ubicacion']) : '',
+                'cct_status' => 'publish',
+                'cct_created' => current_time('mysql'),
+                'cct_modified' => current_time('mysql')
+            );
+            
+            // Add vendor_id to event if we have it
+            if ($vendor_id) {
+                $evento_data['vendor_id'] = $vendor_id;
+            }
+            
+            $evento_result = $wpdb->insert(
+                $this->eventos_table,
+                $evento_data
+            );
+            
+            if ($evento_result === false) {
+                error_log('VDP: Failed to insert event: ' . $wpdb->last_error);
+                // No fallar si el evento no se pudo crear, el lead ya existe
+            } else {
+                error_log('VDP: Event created with ID: ' . $wpdb->insert_id);
+            }
+        }
+        
+        // Enviar respuesta exitosa
         wp_send_json_success(array(
-            'message' => __('Lead created successfully.', 'vendor-dashboard-pro'),
-            'lead_id' => $wpdb->insert_id
+            'lead_id' => $lead_id,
+            'message' => $form_type === 'lead_only' ? 
+                        __('Lead saved successfully.', 'vendor-dashboard-pro') : 
+                        __('Lead and event saved successfully.', 'vendor-dashboard-pro')
         ));
     }
     
