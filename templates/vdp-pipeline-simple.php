@@ -241,7 +241,8 @@ $vdp_status_options = array(
     <div id="vdp_add_lead_modal_unique" class="vdp-modal vdp-add-lead-modal">
         <div class="vdp-modal-content">
             <div class="vdp-modal-header">
-                <h2><?php esc_html_e('Add Lead', 'vendor-dashboard-pro'); ?></h2>
+<?php $translations = VDP_Translations::instance(); ?>
+                <h2><?php echo esc_html($translations->get_translation('Add Lead')); ?></h2>
                 <button class="vdp-close-modal">&times;</button>
             </div>
             
@@ -249,29 +250,29 @@ $vdp_status_options = array(
                 <!-- Información básica del lead -->
                 <div class="vdp-form-row">
                     <div class="vdp-form-field">
-                        <label><?php esc_html_e('Name', 'vendor-dashboard-pro'); ?> *</label>
+                        <label><?php echo esc_html($translations->get_translation('Name')); ?> *</label>
                         <input type="text" name="lead_nombre" required>
                     </div>
                     <div class="vdp-form-field">
-                        <label><?php esc_html_e('Last Name', 'vendor-dashboard-pro'); ?> *</label>
+                        <label><?php echo esc_html($translations->get_translation('Last Name')); ?> *</label>
                         <input type="text" name="lead_apellido" required>
                     </div>
                 </div>
                 
                 <div class="vdp-form-row">
                     <div class="vdp-form-field">
-                        <label><?php esc_html_e('Phone', 'vendor-dashboard-pro'); ?> *</label>
+                        <label><?php echo esc_html($translations->get_translation('Phone')); ?> *</label>
                         <input type="tel" name="lead_celular" required>
                     </div>
                     <div class="vdp-form-field">
-                        <label><?php esc_html_e('Email', 'vendor-dashboard-pro'); ?> *</label>
+                        <label><?php echo esc_html($translations->get_translation('Email')); ?> *</label>
                         <input type="email" name="lead_e_mail" required>
                     </div>
                 </div>
                 
                 <div class="vdp-form-row">
                     <div class="vdp-form-field">
-                        <label><?php esc_html_e('Company Name', 'vendor-dashboard-pro'); ?></label>
+                        <label><?php echo esc_html($translations->get_translation('Company Name')); ?></label>
                         <input type="text" name="lead_razon_social">
                     </div>
                 </div>
@@ -279,37 +280,37 @@ $vdp_status_options = array(
                 <!-- Información del evento (opcional) -->
                 <div class="vdp-form-section">
                     <label class="vdp-checkbox-label">
-                        <input type="checkbox" id="vdp_include_event"> <?php esc_html_e('Include event information', 'vendor-dashboard-pro'); ?>
+                        <input type="checkbox" id="vdp_include_event"> <?php echo esc_html($translations->get_translation('Include event information')); ?>
                     </label>
                 </div>
                 
                 <div id="vdp_event_fields" style="display:none;">
                     <div class="vdp-form-row">
                         <div class="vdp-form-field">
-                            <label><?php esc_html_e('Event Date', 'vendor-dashboard-pro'); ?></label>
+                            <label><?php echo esc_html($translations->get_translation('Event Date')); ?></label>
                             <input type="date" id="vdp_evento_fecha" name="fecha_de_evento">
                         </div>
                         <div class="vdp-form-field">
-                            <label><?php esc_html_e('Event Type', 'vendor-dashboard-pro'); ?></label>
+                            <label><?php echo esc_html($translations->get_translation('Event Type')); ?></label>
                             <select id="vdp_evento_tipo" name="tipo_de_evento">
-                                <option value=""><?php esc_html_e('Select...', 'vendor-dashboard-pro'); ?></option>
-                                <option value="boda"><?php esc_html_e('Wedding', 'vendor-dashboard-pro'); ?></option>
-                                <option value="quinceanos"><?php esc_html_e('Quinceañera', 'vendor-dashboard-pro'); ?></option>
-                                <option value="bautizo"><?php esc_html_e('Baptism', 'vendor-dashboard-pro'); ?></option>
-                                <option value="cumpleanos"><?php esc_html_e('Birthday', 'vendor-dashboard-pro'); ?></option>
-                                <option value="corporativo"><?php esc_html_e('Corporate', 'vendor-dashboard-pro'); ?></option>
-                                <option value="otro"><?php esc_html_e('Other', 'vendor-dashboard-pro'); ?></option>
+                                <option value=""><?php echo esc_html($translations->get_translation('Select...')); ?></option>
+                                <option value="boda"><?php echo esc_html($translations->get_translation('Wedding')); ?></option>
+                                <option value="quinceanos"><?php echo esc_html($translations->get_translation('Quinceañera')); ?></option>
+                                <option value="bautizo"><?php echo esc_html($translations->get_translation('Baptism')); ?></option>
+                                <option value="cumpleanos"><?php echo esc_html($translations->get_translation('Birthday')); ?></option>
+                                <option value="corporativo"><?php echo esc_html($translations->get_translation('Corporate')); ?></option>
+                                <option value="otro"><?php echo esc_html($translations->get_translation('Other')); ?></option>
                             </select>
                         </div>
                     </div>
                     
                     <div class="vdp-form-row">
                         <div class="vdp-form-field">
-                            <label><?php esc_html_e('Number of Guests', 'vendor-dashboard-pro'); ?></label>
+                            <label><?php echo esc_html($translations->get_translation('Number of Guests')); ?></label>
                             <input type="number" id="vdp_evento_asistentes" name="evento_asistentes" min="1">
                         </div>
                         <div class="vdp-form-field">
-                            <label><?php esc_html_e('Status', 'vendor-dashboard-pro'); ?></label>
+                            <label><?php echo esc_html($translations->get_translation('Status')); ?></label>
                             <select id="vdp_evento_status" name="evento_status">
                                 <?php foreach ($vdp_status_options as $status_value => $status_label) : ?>
                                     <option value="<?php echo esc_attr($status_value); ?>" <?php selected($status_value, 'nuevo'); ?>>
@@ -322,20 +323,20 @@ $vdp_status_options = array(
                     
                     <div class="vdp-form-row">
                         <div class="vdp-form-field">
-                            <label><?php esc_html_e('Event Address', 'vendor-dashboard-pro'); ?></label>
-                            <input type="text" id="vdp_evento_direccion" name="direccion_evento" placeholder="<?php esc_attr_e('Complete event address', 'vendor-dashboard-pro'); ?>">
+                            <label><?php echo esc_html($translations->get_translation('Event Address')); ?></label>
+                            <input type="text" id="vdp_evento_direccion" name="direccion_evento" placeholder="<?php echo esc_attr($translations->get_translation('Complete event address')); ?>">
                         </div>
                         <div class="vdp-form-field">
-                            <label><?php esc_html_e('Service of Interest', 'vendor-dashboard-pro'); ?></label>
-                            <input type="text" id="vdp_evento_servicio_search" placeholder="<?php esc_attr_e('Search service...', 'vendor-dashboard-pro'); ?>">
+                            <label><?php echo esc_html($translations->get_translation('Service of Interest')); ?></label>
+                            <input type="text" id="vdp_evento_servicio_search" placeholder="<?php echo esc_attr($translations->get_translation('Search service...')); ?>">
                             <input type="hidden" id="vdp_evento_servicio" name="evento_servicio_de_interes">
                         </div>
                     </div>
                     
                     <div class="vdp-form-row">
                         <div class="vdp-form-field full-width">
-                            <label><?php esc_html_e('Additional Comments', 'vendor-dashboard-pro'); ?></label>
-                            <textarea id="vdp_evento_comentarios" name="comentarios_evento" rows="3" placeholder="<?php esc_attr_e('Notes or comments about the event...', 'vendor-dashboard-pro'); ?>"></textarea>
+                            <label><?php echo esc_html($translations->get_translation('Additional Comments')); ?></label>
+                            <textarea id="vdp_evento_comentarios" name="comentarios_evento" rows="3" placeholder="<?php echo esc_attr($translations->get_translation('Notes or comments about the event...')); ?>"></textarea>
                         </div>
                     </div>
                     
@@ -343,8 +344,8 @@ $vdp_status_options = array(
                 </div>
                 
                 <div class="vdp-form-actions">
-                    <button type="button" class="vdp-btn vdp-btn-secondary vdp-close-modal"><?php esc_html_e('Cancel', 'vendor-dashboard-pro'); ?></button>
-                    <button type="submit" class="vdp-btn vdp-btn-primary"><?php esc_html_e('Save Lead', 'vendor-dashboard-pro'); ?></button>
+                    <button type="button" class="vdp-btn vdp-btn-secondary vdp-close-modal"><?php echo esc_html($translations->get_translation('Cancel')); ?></button>
+                    <button type="submit" class="vdp-btn vdp-btn-primary"><?php echo esc_html($translations->get_translation('Save Lead')); ?></button>
                 </div>
             </form>
         </div>

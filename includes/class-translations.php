@@ -570,6 +570,34 @@ class VDP_Translations {
             'Only letters, numbers and hyphens are allowed' => array('es' => 'Solo se permiten letras, números y guiones', 'en' => 'Only letters, numbers and hyphens are allowed'),
             'URL of the service they\'re interested in' => array('es' => 'URL del servicio en el que están interesados', 'en' => 'URL of the service they\'re interested in'),
             'Service URL' => array('es' => 'URL del Servicio', 'en' => 'Service URL'),
+            
+            // Lead modal translations
+            'Add Lead' => array('es' => 'Agregar Lead', 'en' => 'Add Lead'),
+            'Name' => array('es' => 'Nombre', 'en' => 'Name'),
+            'Last Name' => array('es' => 'Apellido', 'en' => 'Last Name'),
+            'Phone' => array('es' => 'Teléfono', 'en' => 'Phone'),
+            'Email' => array('es' => 'Email', 'en' => 'Email'),
+            'Company Name' => array('es' => 'Razón Social', 'en' => 'Company Name'),
+            'Include event information' => array('es' => 'Incluir información de evento', 'en' => 'Include event information'),
+            'Event Date' => array('es' => 'Fecha del Evento', 'en' => 'Event Date'),
+            'Event Type' => array('es' => 'Tipo de Evento', 'en' => 'Event Type'),
+            'Select...' => array('es' => 'Seleccionar...', 'en' => 'Select...'),
+            'Wedding' => array('es' => 'Boda', 'en' => 'Wedding'),
+            'Quinceañera' => array('es' => 'Quinceañera', 'en' => 'Quinceañera'),
+            'Baptism' => array('es' => 'Bautizo', 'en' => 'Baptism'),
+            'Birthday' => array('es' => 'Cumpleaños', 'en' => 'Birthday'),
+            'Corporate' => array('es' => 'Corporativo', 'en' => 'Corporate'),
+            'Other' => array('es' => 'Otro', 'en' => 'Other'),
+            'Number of Guests' => array('es' => 'Número de Invitados', 'en' => 'Number of Guests'),
+            'Status' => array('es' => 'Estado', 'en' => 'Status'),
+            'Event Address' => array('es' => 'Dirección del Evento', 'en' => 'Event Address'),
+            'Complete event address' => array('es' => 'Dirección completa del evento', 'en' => 'Complete event address'),
+            'Service of Interest' => array('es' => 'Servicio de Interés', 'en' => 'Service of Interest'),
+            'Search service...' => array('es' => 'Buscar servicio...', 'en' => 'Search service...'),
+            'Additional Comments' => array('es' => 'Comentarios Adicionales', 'en' => 'Additional Comments'),
+            'Notes or comments about the event...' => array('es' => 'Notas o comentarios sobre el evento...', 'en' => 'Notes or comments about the event...'),
+            'Cancel' => array('es' => 'Cancelar', 'en' => 'Cancel'),
+            'Save Lead' => array('es' => 'Guardar Lead', 'en' => 'Save Lead'),
             'Recommended size: 200x200 pixels. Maximum file size: 2MB.' => array('es' => 'Tamaño recomendado: 200x200 píxeles. Tamaño máximo de archivo: 2MB.', 'en' => 'Recommended size: 200x200 pixels. Maximum file size: 2MB.'),
             'Recommended size: 1200x300 pixels. Maximum file size: 2MB.' => array('es' => 'Tamaño recomendado: 1200x300 píxeles. Tamaño máximo de archivo: 2MB.', 'en' => 'Recommended size: 1200x300 pixels. Maximum file size: 2MB.'),
             'Recommended image size: 800x600 pixels. Maximum file size: 2MB.' => array('es' => 'Tamaño de imagen recomendado: 800x600 píxeles. Tamaño máximo de archivo: 2MB.', 'en' => 'Recommended image size: 800x600 pixels. Maximum file size: 2MB.'),
@@ -706,6 +734,17 @@ class VDP_Translations {
             'es' => $es_translation,
             'en' => $en_translation ?: $text
         );
+    }
+    
+    /**
+     * Get translation for a text
+     */
+    public function get_translation($text) {
+        if (isset($this->translations[$text][$this->current_lang])) {
+            return $this->translations[$text][$this->current_lang];
+        }
+        
+        return $text; // Fallback to original text
     }
 }
 
