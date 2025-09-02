@@ -232,57 +232,78 @@
     border: 2px dashed var(--vdp-primary, #3483fa);
 }
 
-/* Modal - Increased specificity to avoid conflicts */
-.vdp-pipeline-container .vdp-modal,
-#vdp_lead_modal.vdp-modal {
-    display: none;
+/* Modal - Maximum specificity to override all conflicts */
+body .vdp-pipeline-container .vdp-modal,
+body #vdp_lead_modal.vdp-modal,
+body div[id="vdp_lead_modal"],
+.vdp-modal#vdp_lead_modal {
+    display: none !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    background: rgba(0,0,0,0.5) !important;
+    background: rgba(0,0,0,0.6) !important;
     z-index: 999999 !important;
-    width: 100% !important;
-    height: 100% !important;
+    width: 100vw !important;
+    height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    opacity: 1 !important;
 }
 
-.vdp-pipeline-container .vdp-modal.vdp-active,
-#vdp_lead_modal.vdp-modal.vdp-active {
+body .vdp-pipeline-container .vdp-modal.vdp-active,
+body #vdp_lead_modal.vdp-modal.vdp-active,
+body div[id="vdp_lead_modal"].vdp-active,
+.vdp-modal#vdp_lead_modal.vdp-active {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     overflow-y: auto !important;
 }
 
-.vdp-pipeline-container .vdp-modal-content,
-#vdp_lead_modal .vdp-modal-content {
-    background: white !important;
+body .vdp-pipeline-container .vdp-modal-content,
+body #vdp_lead_modal .vdp-modal-content,
+body div[id="vdp_lead_modal"] .vdp-modal-content,
+.vdp-modal#vdp_lead_modal .vdp-modal-content {
+    background: #ffffff !important;
     width: 90% !important;
     max-width: 600px !important;
+    min-width: 300px !important;
     max-height: 90vh !important;
     overflow-y: auto !important;
     border-radius: 8px !important;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
     position: relative !important;
     margin: 20px auto !important;
+    border: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    z-index: 1000000 !important;
 }
 
 .vdp-modal-small .vdp-modal-content {
     max-width: 400px;
 }
 
-.vdp-pipeline-container .vdp-modal-header,
-#vdp_lead_modal .vdp-modal-header {
+body .vdp-pipeline-container .vdp-modal-header,
+body #vdp_lead_modal .vdp-modal-header,
+body div[id="vdp_lead_modal"] .vdp-modal-header,
+.vdp-modal#vdp_lead_modal .vdp-modal-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     padding: 20px !important;
-    border-bottom: 1px solid var(--vdp-gray-300, #dee2e6) !important;
-    background: white !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    background: #ffffff !important;
     border-radius: 8px 8px 0 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .vdp-modal-header h2 {
@@ -312,10 +333,42 @@
 }
 
 /* Formulario */
-.vdp-pipeline-container .vdp-simple-form,
-#vdp_lead_modal .vdp-simple-form {
+body .vdp-pipeline-container .vdp-simple-form,
+body #vdp_lead_modal .vdp-simple-form,
+body div[id="vdp_lead_modal"] .vdp-simple-form,
+.vdp-modal#vdp_lead_modal .vdp-simple-form {
     padding: 20px !important;
-    background: white !important;
+    background: #ffffff !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+/* Close button */
+body .vdp-close-modal,
+body #vdp_lead_modal .vdp-close-modal,
+.vdp-modal .vdp-close-modal {
+    background: none !important;
+    border: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    color: #6c757d !important;
+    padding: 0 !important;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background-color 0.2s !important;
+    z-index: 1000001 !important;
+}
+
+body .vdp-close-modal:hover,
+body #vdp_lead_modal .vdp-close-modal:hover,
+.vdp-modal .vdp-close-modal:hover {
+    background: #e9ecef !important;
 }
 
 .vdp-form-row {

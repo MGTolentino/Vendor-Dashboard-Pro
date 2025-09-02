@@ -99,12 +99,18 @@
                 self.initializeDateRangePicker();
             }, 100);
             
-            // Modal events
+            // Modal events - Enhanced
             $(document).on('click', '.vdp-close-modal', this.closeModal.bind(this));
-            $(document).on('click', '.vdp-modal', function(e) {
+            $(document).on('click', '.vdp-modal, #vdp_lead_modal', function(e) {
                 if (e.target === this) {
+                    console.log('VDPPipeline: Clicked outside modal');
                     VDPPipeline.closeModal();
                 }
+            });
+            
+            // Prevent modal content clicks from closing modal
+            $(document).on('click', '.vdp-modal-content', function(e) {
+                e.stopPropagation();
             });
             
             // Formulario agregar lead
@@ -259,10 +265,12 @@
         },
         
         /**
-         * Cerrar modales
+         * Cerrar modales - Enhanced
          */
         closeModal: function() {
-            $('.vdp-modal').removeClass('vdp-active');
+            console.log('VDPPipeline: Closing modal');
+            $('.vdp-modal').removeClass('vdp-active').hide();
+            $('#vdp_lead_modal').removeClass('vdp-active vdp-modal-open').hide();
         },
         
         /**

@@ -476,12 +476,12 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
         <?php endif; ?>
     </div>
     
-    <!-- Lead Modal -->
-    <div class="vdp-modal" id="vdp-lead-modal">
+    <!-- Lead Modal (hidden by default, will be shown by pipeline) -->
+    <div class="vdp-modal" id="vdp-lead-modal" style="display: none;">
         <div class="vdp-modal-content">
             <div class="vdp-modal-header">
                 <h3 class="vdp-modal-title"><?php esc_html_e('Lead Details', 'vendor-dashboard-pro'); ?></h3>
-                <button type="button" class="vdp-modal-close">
+                <button type="button" class="vdp-modal-close vdp-close-modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -686,26 +686,66 @@ jQuery(document).ready(function($) {
         }, 500);
     });
     
-    // Close the modal when clicking the close button or outside the modal
-    $('.vdp-modal-close').on('click', function() {
-        $('#vdp-lead-modal').removeClass('vdp-modal-open');
-    });
-    
-    $(document).on('click', function(e) {
-        if ($(e.target).is('.vdp-modal')) {
-            $('.vdp-modal').removeClass('vdp-modal-open');
+    // Enhanced modal close functionality
+    $(document).on('click', '.vdp-modal-close, .vdp-close-modal', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Close button clicked');
+        
+        // Close all modals with all possible classes and methods
+        $('.vdp-modal').removeClass('vdp-modal-open vdp-active').hide();
+        $('#vdp_lead_modal').removeClass('vdp-modal-open vdp-active').hide();
+        
+        // Also call VDPPipeline close if available
+        if (window.VDPPipeline && typeof window.VDPPipeline.closeModal === 'function') {
+            window.VDPPipeline.closeModal();
         }
     });
     
+    // Enhanced click outside to close
+    $(document).on('click', '.vdp-modal, #vdp_lead_modal', function(e) {
+        // Only close if clicking the modal backdrop (not the content)
+        if (e.target === this) {
+            console.log('Clicked outside modal, closing...');
+            
+            // Close all modals
+            $('.vdp-modal').removeClass('vdp-modal-open vdp-active').hide();
+            $('#vdp_lead_modal').removeClass('vdp-modal-open vdp-active').hide();
+            
+            // Also call VDPPipeline close if available
+            if (window.VDPPipeline && typeof window.VDPPipeline.closeModal === 'function') {
+                window.VDPPipeline.closeModal();
+            }
+        }
+    });
+    
+    // Prevent modal content clicks from bubbling up
+    $(document).on('click', '.vdp-modal-content', function(e) {
+        e.stopPropagation();
+    });
+    
     // Add lead button - Link both buttons to the pipeline modal
-    $('.vdp-add-lead-btn, #vdp_add_lead_btn_table').on('click', function(e) {
+    $(document).on('click', '.vdp-add-lead-btn, #vdp_add_lead_btn_table', function(e) {
         e.preventDefault();
-        // Trigger the pipeline's add lead modal
-        if (window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
+        console.log('Add lead button clicked');
+        
+        // First check if we're in pipeline view and VDPPipeline is available
+        if ($('#vdp-pipeline-view-container').is(':visible') && window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
             window.VDPPipeline.openAddLeadModal();
         } else {
-            // Fallback - show the modal if it exists
-            $('#vdp_lead_modal').addClass('vdp-active');
+            // For table view or fallback, show the pipeline modal directly
+            const modal = $('#vdp_lead_modal');
+            if (modal.length === 0) {
+                // If modal doesn't exist in table view, switch to pipeline first
+                $('#vdp-pipeline-view-btn').click();
+                setTimeout(() => {
+                    if (window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
+                        window.VDPPipeline.openAddLeadModal();
+                    }
+                }, 100);
+            } else {
+                modal.addClass('vdp-active').show();
+            }
         }
     });
     
