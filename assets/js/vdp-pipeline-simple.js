@@ -242,37 +242,69 @@
         },
         
         /**
-         * Abrir modal agregar lead - FORCED STYLES VERSION
+         * Abrir modal agregar lead - DEBUG VERSION
          */
         openAddLeadModal: function() {
             console.log('VDPPipeline: Opening add lead modal');
             const modal = $('#vdp_add_lead_modal_unique');
+            
+            // EXTENSIVE DEBUGGING
+            console.log('Modal debugging info:', {
+                exists: modal.length > 0,
+                visible: modal.is(':visible'),
+                display: modal.css('display'),
+                position: modal.css('position'),
+                zIndex: modal.css('z-index'),
+                classes: modal.attr('class'),
+                computedDisplay: window.getComputedStyle(modal[0])?.display,
+                parent: modal.parent().length,
+                parentVisible: modal.parent().is(':visible'),
+                offsetParent: modal.offsetParent().length
+            });
+            
             if (modal.length) {
-                // FORCE styles with JavaScript as backup
+                // EXTREME FORCE - Multiple approaches
+                
+                // Method 1: Direct CSS
                 modal.css({
-                    'position': 'fixed !important',
-                    'top': '0px',
-                    'left': '0px', 
-                    'right': '0px',
-                    'bottom': '0px',
+                    'position': 'fixed',
+                    'top': '0',
+                    'left': '0', 
+                    'right': '0',
+                    'bottom': '0',
                     'width': '100vw',
                     'height': '100vh',
                     'background': 'rgba(0,0,0,0.6)',
-                    'z-index': '2147483647',
+                    'z-index': '999999',
                     'display': 'flex',
                     'align-items': 'center',
                     'justify-content': 'center',
-                    'margin': '0px',
-                    'padding': '0px',
+                    'margin': '0',
+                    'padding': '0',
                     'border': 'none',
                     'outline': 'none',
-                    'box-shadow': 'none',
-                    'transform': 'none',
-                    'opacity': '1'
+                    'opacity': '1',
+                    'visibility': 'visible'
                 });
                 
+                // Method 2: Show explicitly
+                modal.show();
+                
+                // Method 3: Add class
+                modal.addClass('vdp-active');
+                
+                // Method 4: Force display attribute
+                modal.attr('style', modal.attr('style') + '; display: flex !important;');
+                
+                // Method 5: Move to body if hidden
+                if (!modal.is(':visible')) {
+                    console.log('Modal still not visible, moving to body...');
+                    modal.appendTo('body');
+                }
+                
                 // Force modal content styles
-                modal.find('.vdp-modal-content').css({
+                const content = modal.find('.vdp-modal-content');
+                content.css({
                     'background': '#ffffff',
                     'width': '90%',
                     'max-width': '600px',
@@ -283,15 +315,24 @@
                     'box-shadow': '0 20px 40px rgba(0,0,0,0.4)',
                     'position': 'relative',
                     'margin': '20px auto',
-                    'padding': '0px',
+                    'padding': '0',
                     'border': 'none',
                     'outline': 'none',
-                    'transform': 'none',
                     'opacity': '1',
-                    'z-index': '2147483647'
+                    'z-index': '999999',
+                    'display': 'block',
+                    'visibility': 'visible'
                 });
                 
-                modal.addClass('vdp-active');
+                // Final check
+                setTimeout(() => {
+                    console.log('Final modal state:', {
+                        visible: modal.is(':visible'),
+                        display: modal.css('display'),
+                        computedDisplay: window.getComputedStyle(modal[0])?.display,
+                        rect: modal[0].getBoundingClientRect()
+                    });
+                }, 100);
                 
                 // Reset form
                 const form = modal.find('#vdp_lead_form');
@@ -299,9 +340,37 @@
                     form[0].reset();
                 }
                 console.log('VDPPipeline: Modal opened with forced styles');
+                
+                // EMERGENCY FALLBACK: Create a test modal if nothing works
+                if (!modal.is(':visible')) {
+                    console.log('Creating emergency test modal...');
+                    this.createEmergencyModal();
+                }
             } else {
-                console.error('VDPPipeline: Modal not found');
+                console.error('VDPPipeline: Modal not found - creating emergency modal');
+                this.createEmergencyModal();
             }
+        },
+        
+        /**
+         * Create emergency modal for testing
+         */
+        createEmergencyModal: function() {
+            // Remove any existing emergency modal
+            $('#emergency_test_modal').remove();
+            
+            // Create simple test modal
+            const testModal = $('<div id="emergency_test_modal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,0,0,0.8);z-index:999999;display:flex;align-items:center;justify-content:center;">' +
+                '<div style="background:white;padding:20px;border-radius:8px;max-width:500px;">' +
+                '<h2>Emergency Test Modal</h2>' +
+                '<p>This is a test modal to verify modal functionality works.</p>' +
+                '<p>Original modal ID: vdp_add_lead_modal_unique</p>' +
+                '<button onclick="$(\"#emergency_test_modal\").remove();">Close Test Modal</button>' +
+                '</div>' +
+                '</div>');
+            
+            $('body').append(testModal);
+            console.log('Emergency test modal created and should be visible');
         },
         
         /**
