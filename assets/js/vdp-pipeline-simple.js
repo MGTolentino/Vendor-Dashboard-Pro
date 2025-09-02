@@ -242,30 +242,13 @@
         },
         
         /**
-         * Abrir modal agregar lead - DEBUG VERSION
+         * Abrir modal agregar lead - CLEAN VERSION
          */
         openAddLeadModal: function() {
-            console.log('VDPPipeline: Opening add lead modal');
             const modal = $('#vdp_add_lead_modal_unique');
             
-            // EXTENSIVE DEBUGGING
-            console.log('Modal debugging info:', {
-                exists: modal.length > 0,
-                visible: modal.is(':visible'),
-                display: modal.css('display'),
-                position: modal.css('position'),
-                zIndex: modal.css('z-index'),
-                classes: modal.attr('class'),
-                computedDisplay: window.getComputedStyle(modal[0])?.display,
-                parent: modal.parent().length,
-                parentVisible: modal.parent().is(':visible'),
-                offsetParent: modal.offsetParent().length
-            });
-            
             if (modal.length) {
-                // EXTREME FORCE - Multiple approaches
-                
-                // Method 1: Direct CSS
+                // Force modal styles to ensure visibility
                 modal.css({
                     'position': 'fixed',
                     'top': '0',
@@ -281,30 +264,12 @@
                     'justify-content': 'center',
                     'margin': '0',
                     'padding': '0',
-                    'border': 'none',
-                    'outline': 'none',
                     'opacity': '1',
                     'visibility': 'visible'
                 });
                 
-                // Method 2: Show explicitly
-                modal.show();
-                
-                // Method 3: Add class
-                modal.addClass('vdp-active');
-                
-                // Method 4: Force display attribute
-                modal.attr('style', modal.attr('style') + '; display: flex !important;');
-                
-                // Method 5: Move to body if hidden
-                if (!modal.is(':visible')) {
-                    console.log('Modal still not visible, moving to body...');
-                    modal.appendTo('body');
-                }
-                
                 // Force modal content styles
-                const content = modal.find('.vdp-modal-content');
-                content.css({
+                modal.find('.vdp-modal-content').css({
                     'background': '#ffffff',
                     'width': '90%',
                     'max-width': '600px',
@@ -316,61 +281,19 @@
                     'position': 'relative',
                     'margin': '20px auto',
                     'padding': '0',
-                    'border': 'none',
-                    'outline': 'none',
                     'opacity': '1',
-                    'z-index': '999999',
                     'display': 'block',
                     'visibility': 'visible'
                 });
                 
-                // Final check
-                setTimeout(() => {
-                    console.log('Final modal state:', {
-                        visible: modal.is(':visible'),
-                        display: modal.css('display'),
-                        computedDisplay: window.getComputedStyle(modal[0])?.display,
-                        rect: modal[0].getBoundingClientRect()
-                    });
-                }, 100);
+                modal.addClass('vdp-active').show();
                 
                 // Reset form
                 const form = modal.find('#vdp_lead_form');
                 if (form.length) {
                     form[0].reset();
                 }
-                console.log('VDPPipeline: Modal opened with forced styles');
-                
-                // EMERGENCY FALLBACK: Create a test modal if nothing works
-                if (!modal.is(':visible')) {
-                    console.log('Creating emergency test modal...');
-                    this.createEmergencyModal();
-                }
-            } else {
-                console.error('VDPPipeline: Modal not found - creating emergency modal');
-                this.createEmergencyModal();
             }
-        },
-        
-        /**
-         * Create emergency modal for testing
-         */
-        createEmergencyModal: function() {
-            // Remove any existing emergency modal
-            $('#emergency_test_modal').remove();
-            
-            // Create simple test modal
-            const testModal = $('<div id="emergency_test_modal" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,0,0,0.8);z-index:999999;display:flex;align-items:center;justify-content:center;">' +
-                '<div style="background:white;padding:20px;border-radius:8px;max-width:500px;">' +
-                '<h2>Emergency Test Modal</h2>' +
-                '<p>This is a test modal to verify modal functionality works.</p>' +
-                '<p>Original modal ID: vdp_add_lead_modal_unique</p>' +
-                '<button onclick="$(\"#emergency_test_modal\").remove();">Close Test Modal</button>' +
-                '</div>' +
-                '</div>');
-            
-            $('body').append(testModal);
-            console.log('Emergency test modal created and should be visible');
         },
         
         /**
@@ -389,16 +312,13 @@
         },
         
         /**
-         * Cerrar modales - FORCED STYLES VERSION
+         * Cerrar modales - CLEAN VERSION
          */
         closeModal: function() {
-            console.log('VDPPipeline: Closing modal');
             const modal = $('#vdp_add_lead_modal_unique');
             if (modal.length) {
-                // Force display none
-                modal.css('display', 'none');
-                modal.removeClass('vdp-active');
-                console.log('VDPPipeline: Modal closed with forced styles');
+                // Hide modal and remove active class
+                modal.css('display', 'none').removeClass('vdp-active');
             }
         },
         
