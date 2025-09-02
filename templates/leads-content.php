@@ -727,34 +727,81 @@ jQuery(document).ready(function($) {
         e.stopPropagation();
     });
     
-    // Add lead button - UNIFIED VERSION
+    // Add lead button - FIXED VERSION FOR BOTH VIEWS
     $(document).on('click', '.vdp-add-lead-btn, #vdp_add_lead_btn_table', function(e) {
         e.preventDefault();
-        console.log('Add lead button clicked from table view');
+        console.log('Add lead button clicked');
         
-        // Always use VDPPipeline method if available
-        if (window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
-            console.log('Using VDPPipeline method');
-            window.VDPPipeline.openAddLeadModal();
-        } else {
-            // Fallback - try to open modal directly
-            console.log('Fallback: trying to open modal directly');
-            const modal = $('#vdp_add_lead_modal_unique');
-            if (modal.length) {
-                modal.removeAttr('style').addClass('vdp-active');
-                console.log('Modal opened directly');
-            } else {
-                console.log('Modal not found, switching to pipeline view');
-                // Switch to pipeline view first
-                $('#vdp-pipeline-view-btn').click();
-                setTimeout(() => {
-                    if (window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
-                        window.VDPPipeline.openAddLeadModal();
+        // Check if modal exists first
+        let modal = $('#vdp_add_lead_modal_unique');
+        
+        if (modal.length === 0) {
+            console.log('Modal not found, need to load pipeline content first');
+            // Modal doesn't exist, need to ensure pipeline is loaded
+            const pipelineContainer = $('#vdp-pipeline-view-container');
+            
+            if (pipelineContainer.length && !pipelineContainer.hasClass('loaded')) {
+                // Force load pipeline content if not loaded
+                if (!pipelineContainer.is(':visible')) {
+                    console.log('Loading pipeline content in background...');
+                    // Temporarily show pipeline to load content
+                    pipelineContainer.show();
+                    // Mark as loaded
+                    pipelineContainer.addClass('loaded');
+                    // Hide it again if we were in table view
+                    if (!$(this).closest('#vdp-pipeline-view-container').length) {
+                        setTimeout(() => {
+                            pipelineContainer.hide();
+                            $('#vdp-table-view-container').show();
+                        }, 100);
                     }
-                }, 200);
+                }
             }
+            
+            // Try to find modal again
+            setTimeout(() => {
+                modal = $('#vdp_add_lead_modal_unique');
+                this.openModalAfterCheck(modal);
+            }.bind(this), 150);
+        } else {
+            // Modal exists, open it
+            this.openModalAfterCheck(modal);
         }
     });
+    
+    // Helper function to open modal
+    function openModalAfterCheck(modal) {
+        if (modal.length) {
+            console.log('Opening modal...');
+            // Use VDPPipeline method if available
+            if (window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
+                window.VDPPipeline.openAddLeadModal();
+            } else {
+                // Fallback - force open modal directly
+                modal.css({
+                    'position': 'fixed',
+                    'top': '0',
+                    'left': '0',
+                    'right': '0',
+                    'bottom': '0',
+                    'width': '100vw',
+                    'height': '100vh',
+                    'background': 'rgba(0,0,0,0.6)',
+                    'z-index': '999999',
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    'margin': '0',
+                    'padding': '0',
+                    'opacity': '1',
+                    'visibility': 'visible'
+                });
+                modal.show().addClass('vdp-active');
+            }
+        } else {
+            console.error('Modal still not found after loading attempt');
+        }
+    }
     
     // Delete lead button
     $('.vdp-delete-lead').on('click', function() {
