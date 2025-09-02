@@ -135,7 +135,7 @@ $vdp_status_options = array(
     </div>
 
     <!-- Modal simplificado para agregar lead -->
-    <div id="vdp_lead_modal" class="vdp-modal">
+    <div id="vdp_add_lead_modal_unique" class="vdp-modal vdp-add-lead-modal">
         <div class="vdp-modal-content">
             <div class="vdp-modal-header">
                 <h2><?php esc_html_e('Add Lead', 'vendor-dashboard-pro'); ?></h2>

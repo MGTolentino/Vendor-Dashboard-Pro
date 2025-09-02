@@ -99,11 +99,11 @@
                 self.initializeDateRangePicker();
             }, 100);
             
-            // Modal events - Enhanced
+            // Modal events - NEW VERSION
             $(document).on('click', '.vdp-close-modal', this.closeModal.bind(this));
-            $(document).on('click', '.vdp-modal, #vdp_lead_modal', function(e) {
+            $(document).on('click', '#vdp_add_lead_modal_unique', function(e) {
                 if (e.target === this) {
-                    console.log('VDPPipeline: Clicked outside modal');
+                    console.log('VDPPipeline: Clicked outside modal backdrop');
                     VDPPipeline.closeModal();
                 }
             });
@@ -242,11 +242,24 @@
         },
         
         /**
-         * Abrir modal agregar lead
+         * Abrir modal agregar lead - NEW VERSION
          */
         openAddLeadModal: function() {
-            $('#vdp_lead_modal').addClass('vdp-active');
-            $('#vdp_lead_form')[0].reset();
+            console.log('VDPPipeline: Opening add lead modal');
+            const modal = $('#vdp_add_lead_modal_unique');
+            if (modal.length) {
+                // Clear any inline styles that might interfere
+                modal.removeAttr('style');
+                modal.removeClass('vdp-active').addClass('vdp-active');
+                // Reset form
+                const form = modal.find('#vdp_lead_form');
+                if (form.length) {
+                    form[0].reset();
+                }
+                console.log('VDPPipeline: Modal opened successfully');
+            } else {
+                console.error('VDPPipeline: Modal not found');
+            }
         },
         
         /**
@@ -265,12 +278,18 @@
         },
         
         /**
-         * Cerrar modales - Enhanced
+         * Cerrar modales - NEW VERSION
          */
         closeModal: function() {
             console.log('VDPPipeline: Closing modal');
-            $('.vdp-modal').removeClass('vdp-active').hide();
-            $('#vdp_lead_modal').removeClass('vdp-active vdp-modal-open').hide();
+            const modal = $('#vdp_add_lead_modal_unique');
+            if (modal.length) {
+                // Remove class without using .hide() to avoid inline styles
+                modal.removeClass('vdp-active');
+                // Clear any inline styles
+                modal.removeAttr('style');
+                console.log('VDPPipeline: Modal closed successfully');
+            }
         },
         
         /**

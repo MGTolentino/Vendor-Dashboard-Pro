@@ -232,68 +232,87 @@
     border: 2px dashed var(--vdp-primary, #3483fa);
 }
 
-/* Modal - Maximum specificity to override all conflicts */
-body .vdp-pipeline-container .vdp-modal,
-body #vdp_lead_modal.vdp-modal,
-body div[id="vdp_lead_modal"],
-.vdp-modal#vdp_lead_modal {
+/* MODAL CSS - ULTRA SPECIFIC FOR ADD LEAD MODAL ONLY */
+/* Using unique ID to avoid ALL conflicts */
+html body #vdp_add_lead_modal_unique,
+html body div[id="vdp_add_lead_modal_unique"],
+html body .vdp-add-lead-modal,
+html body div#vdp_add_lead_modal_unique.vdp-modal,
+html body div#vdp_add_lead_modal_unique.vdp-add-lead-modal {
+    /* RESET everything */
+    all: unset !important;
+    /* SET our styles */
     display: none !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    background: rgba(0,0,0,0.6) !important;
-    z-index: 999999 !important;
     width: 100vw !important;
     height: 100vh !important;
+    background: rgba(0,0,0,0.6) !important;
+    z-index: 2147483647 !important; /* Maximum z-index */
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
-    border-radius: 0 !important;
+    outline: none !important;
     box-shadow: none !important;
     transform: none !important;
     opacity: 1 !important;
+    font-family: inherit !important;
 }
 
-body .vdp-pipeline-container .vdp-modal.vdp-active,
-body #vdp_lead_modal.vdp-modal.vdp-active,
-body div[id="vdp_lead_modal"].vdp-active,
-.vdp-modal#vdp_lead_modal.vdp-active {
+/* ACTIVE STATE */
+html body #vdp_add_lead_modal_unique.vdp-active,
+html body div[id="vdp_add_lead_modal_unique"].vdp-active,
+html body .vdp-add-lead-modal.vdp-active,
+html body div#vdp_add_lead_modal_unique.vdp-modal.vdp-active,
+html body div#vdp_add_lead_modal_unique.vdp-add-lead-modal.vdp-active {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     overflow-y: auto !important;
 }
 
-body .vdp-pipeline-container .vdp-modal-content,
-body #vdp_lead_modal .vdp-modal-content,
-body div[id="vdp_lead_modal"] .vdp-modal-content,
-.vdp-modal#vdp_lead_modal .vdp-modal-content {
+/* MODAL CONTENT */
+html body #vdp_add_lead_modal_unique .vdp-modal-content,
+html body div[id="vdp_add_lead_modal_unique"] .vdp-modal-content,
+html body .vdp-add-lead-modal .vdp-modal-content,
+html body div#vdp_add_lead_modal_unique .vdp-modal-content {
+    /* RESET everything */
+    all: unset !important;
+    /* SET our styles */
+    display: block !important;
     background: #ffffff !important;
     width: 90% !important;
     max-width: 600px !important;
-    min-width: 300px !important;
+    min-width: 320px !important;
     max-height: 90vh !important;
     overflow-y: auto !important;
     border-radius: 8px !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4) !important;
     position: relative !important;
     margin: 20px auto !important;
+    padding: 0 !important;
     border: none !important;
+    outline: none !important;
     transform: none !important;
     opacity: 1 !important;
-    z-index: 1000000 !important;
+    z-index: 2147483647 !important;
+    font-family: inherit !important;
+    box-sizing: border-box !important;
 }
 
 .vdp-modal-small .vdp-modal-content {
     max-width: 400px;
 }
 
-body .vdp-pipeline-container .vdp-modal-header,
-body #vdp_lead_modal .vdp-modal-header,
-body div[id="vdp_lead_modal"] .vdp-modal-header,
-.vdp-modal#vdp_lead_modal .vdp-modal-header {
+/* MODAL HEADER */
+html body #vdp_add_lead_modal_unique .vdp-modal-header,
+html body div[id="vdp_add_lead_modal_unique"] .vdp-modal-header,
+html body .vdp-add-lead-modal .vdp-modal-header,
+html body div#vdp_add_lead_modal_unique .vdp-modal-header {
+    all: unset !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -304,6 +323,7 @@ body div[id="vdp_lead_modal"] .vdp-modal-header,
     margin: 0 !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    font-family: inherit !important;
 }
 
 .vdp-modal-header h2 {
@@ -332,42 +352,52 @@ body div[id="vdp_lead_modal"] .vdp-modal-header,
     background: var(--vdp-gray-200, #e9ecef);
 }
 
-/* Formulario */
-body .vdp-pipeline-container .vdp-simple-form,
-body #vdp_lead_modal .vdp-simple-form,
-body div[id="vdp_lead_modal"] .vdp-simple-form,
-.vdp-modal#vdp_lead_modal .vdp-simple-form {
+/* MODAL FORM */
+html body #vdp_add_lead_modal_unique .vdp-simple-form,
+html body div[id="vdp_add_lead_modal_unique"] .vdp-simple-form,
+html body .vdp-add-lead-modal .vdp-simple-form,
+html body div#vdp_add_lead_modal_unique .vdp-simple-form {
+    all: unset !important;
+    display: block !important;
     padding: 20px !important;
     background: #ffffff !important;
     width: 100% !important;
     box-sizing: border-box !important;
     margin: 0 !important;
     border: none !important;
+    font-family: inherit !important;
 }
 
-/* Close button */
-body .vdp-close-modal,
-body #vdp_lead_modal .vdp-close-modal,
-.vdp-modal .vdp-close-modal {
+/* CLOSE BUTTON */
+html body #vdp_add_lead_modal_unique .vdp-close-modal,
+html body div[id="vdp_add_lead_modal_unique"] .vdp-close-modal,
+html body .vdp-add-lead-modal .vdp-close-modal,
+html body div#vdp_add_lead_modal_unique .vdp-close-modal {
+    all: unset !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     background: none !important;
     border: none !important;
     font-size: 24px !important;
     cursor: pointer !important;
     color: #6c757d !important;
     padding: 0 !important;
+    margin: 0 !important;
     width: 30px !important;
     height: 30px !important;
     border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
     transition: background-color 0.2s !important;
-    z-index: 1000001 !important;
+    z-index: 2147483647 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
 }
 
-body .vdp-close-modal:hover,
-body #vdp_lead_modal .vdp-close-modal:hover,
-.vdp-modal .vdp-close-modal:hover {
+html body #vdp_add_lead_modal_unique .vdp-close-modal:hover,
+html body div[id="vdp_add_lead_modal_unique"] .vdp-close-modal:hover,
+html body .vdp-add-lead-modal .vdp-close-modal:hover,
+html body div#vdp_add_lead_modal_unique .vdp-close-modal:hover {
     background: #e9ecef !important;
 }
 

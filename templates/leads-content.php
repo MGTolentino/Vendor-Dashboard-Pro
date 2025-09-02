@@ -476,23 +476,7 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
         <?php endif; ?>
     </div>
     
-    <!-- Lead Modal (hidden by default, will be shown by pipeline) -->
-    <div class="vdp-modal" id="vdp-lead-modal" style="display: none;">
-        <div class="vdp-modal-content">
-            <div class="vdp-modal-header">
-                <h3 class="vdp-modal-title"><?php esc_html_e('Lead Details', 'vendor-dashboard-pro'); ?></h3>
-                <button type="button" class="vdp-modal-close vdp-close-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="vdp-modal-body">
-                <div class="vdp-lead-details">
-                    <!-- Lead details will be loaded here via JavaScript -->
-                    <div class="vdp-loading"><div class="vdp-loading-spinner"></div></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Modal removed from here - will use the one from pipeline view -->
     </div> <!-- End Table View Container -->
 
     <!-- Pipeline View Container -->
@@ -500,6 +484,24 @@ $conversion_rate = $total_leads_count > 0 ? round(($won_leads / $total_leads_cou
         <?php include VDP_PLUGIN_DIR . 'templates/vdp-pipeline-simple.php'; ?>
     </div>
 </div>
+
+<!-- SHARED MODAL: Always present in DOM, works for both views -->
+<script>
+// Ensure modal is always accessible by including it at page level
+jQuery(document).ready(function($) {
+    // Make sure VDPPipeline modal is accessible from table view too
+    if (!$('#vdp_add_lead_modal_unique').length && $('#vdp-pipeline-view-container').length) {
+        // Load pipeline container content to make modal available
+        const pipelineContent = $('#vdp-pipeline-view-container').html();
+        if (pipelineContent && pipelineContent.includes('vdp_add_lead_modal_unique')) {
+            console.log('Modal is available in pipeline container');
+        } else {
+            // Force load pipeline to ensure modal exists
+            $('#vdp-pipeline-view-container').load(location.href + ' #vdp-pipeline-view-container > *');
+        }
+    }
+});
+</script>
 
 <!-- Leads JavaScript -->
 <script>
@@ -686,35 +688,36 @@ jQuery(document).ready(function($) {
         }, 500);
     });
     
-    // Enhanced modal close functionality
+    // UNIFIED modal close functionality
     $(document).on('click', '.vdp-modal-close, .vdp-close-modal', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Close button clicked');
+        console.log('Close button clicked from table view');
         
-        // Close all modals with all possible classes and methods
-        $('.vdp-modal').removeClass('vdp-modal-open vdp-active').hide();
-        $('#vdp_lead_modal').removeClass('vdp-modal-open vdp-active').hide();
-        
-        // Also call VDPPipeline close if available
+        // Always use VDPPipeline method if available
         if (window.VDPPipeline && typeof window.VDPPipeline.closeModal === 'function') {
             window.VDPPipeline.closeModal();
+        } else {
+            // Fallback close
+            const modal = $('#vdp_add_lead_modal_unique');
+            if (modal.length) {
+                modal.removeClass('vdp-active').removeAttr('style');
+            }
         }
     });
     
-    // Enhanced click outside to close
-    $(document).on('click', '.vdp-modal, #vdp_lead_modal', function(e) {
+    // UNIFIED click outside to close
+    $(document).on('click', '#vdp_add_lead_modal_unique', function(e) {
         // Only close if clicking the modal backdrop (not the content)
         if (e.target === this) {
-            console.log('Clicked outside modal, closing...');
+            console.log('Clicked outside modal backdrop from table view');
             
-            // Close all modals
-            $('.vdp-modal').removeClass('vdp-modal-open vdp-active').hide();
-            $('#vdp_lead_modal').removeClass('vdp-modal-open vdp-active').hide();
-            
-            // Also call VDPPipeline close if available
+            // Always use VDPPipeline method if available
             if (window.VDPPipeline && typeof window.VDPPipeline.closeModal === 'function') {
                 window.VDPPipeline.closeModal();
+            } else {
+                // Fallback close
+                $(this).removeClass('vdp-active').removeAttr('style');
             }
         }
     });
@@ -724,27 +727,31 @@ jQuery(document).ready(function($) {
         e.stopPropagation();
     });
     
-    // Add lead button - Link both buttons to the pipeline modal
+    // Add lead button - UNIFIED VERSION
     $(document).on('click', '.vdp-add-lead-btn, #vdp_add_lead_btn_table', function(e) {
         e.preventDefault();
-        console.log('Add lead button clicked');
+        console.log('Add lead button clicked from table view');
         
-        // First check if we're in pipeline view and VDPPipeline is available
-        if ($('#vdp-pipeline-view-container').is(':visible') && window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
+        // Always use VDPPipeline method if available
+        if (window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
+            console.log('Using VDPPipeline method');
             window.VDPPipeline.openAddLeadModal();
         } else {
-            // For table view or fallback, show the pipeline modal directly
-            const modal = $('#vdp_lead_modal');
-            if (modal.length === 0) {
-                // If modal doesn't exist in table view, switch to pipeline first
+            // Fallback - try to open modal directly
+            console.log('Fallback: trying to open modal directly');
+            const modal = $('#vdp_add_lead_modal_unique');
+            if (modal.length) {
+                modal.removeAttr('style').addClass('vdp-active');
+                console.log('Modal opened directly');
+            } else {
+                console.log('Modal not found, switching to pipeline view');
+                // Switch to pipeline view first
                 $('#vdp-pipeline-view-btn').click();
                 setTimeout(() => {
                     if (window.VDPPipeline && typeof window.VDPPipeline.openAddLeadModal === 'function') {
                         window.VDPPipeline.openAddLeadModal();
                     }
-                }, 100);
-            } else {
-                modal.addClass('vdp-active').show();
+                }, 200);
             }
         }
     });
@@ -800,11 +807,23 @@ jQuery(document).ready(function($) {
     // Update text on load
     updatePipelineText();
     
-    // Restore view preference on page load
+    // Restore view preference on page load and ensure modal availability
     var savedView = localStorage.getItem('vdp_leads_view');
     if (savedView === 'pipeline') {
         $('#vdp-pipeline-view-btn').click();
     }
+    
+    // DEBUG: Check modal availability after page load
+    setTimeout(() => {
+        const modal = $('#vdp_add_lead_modal_unique');
+        console.log('VDP Modal Status:', {
+            exists: modal.length > 0,
+            visible: modal.is(':visible'),
+            classes: modal.attr('class'),
+            VDPPipeline: typeof window.VDPPipeline,
+            currentView: $('#vdp-pipeline-view-container').is(':visible') ? 'pipeline' : 'table'
+        });
+    }, 1500);
 });
 </script>
 
