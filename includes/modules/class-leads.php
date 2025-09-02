@@ -124,6 +124,68 @@ class VDP_Leads {
             VDP_VERSION,
             true
         );
+        
+        // CRITICAL: Load our modal CSS with maximum priority
+        wp_enqueue_style(
+            'vdp-modal-override',
+            VDP_PLUGIN_URL . 'assets/css/vdp-pipeline-simple.css',
+            array(),
+            VDP_VERSION . '-' . time(), // Cache busting
+            'all'
+        );
+        
+        // Add inline CSS with maximum specificity as backup
+        $modal_override_css = '
+        /* MODAL OVERRIDE - ABSOLUTE PRIORITY */
+        html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"].vdp-modal.vdp-add-lead-modal,
+        html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"].vdp-modal,
+        html body #vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"] {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0,0,0,0.6) !important;
+            z-index: 2147483647 !important;
+            display: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+        }
+        
+        html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"].vdp-active {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow-y: auto !important;
+        }
+        
+        html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"] .vdp-modal-content {
+            background: #ffffff !important;
+            width: 90% !important;
+            max-width: 600px !important;
+            min-width: 320px !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            border-radius: 8px !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4) !important;
+            position: relative !important;
+            margin: 20px auto !important;
+            padding: 0 !important;
+            border: none !important;
+            outline: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+            z-index: 2147483647 !important;
+        }
+        ';
+        wp_add_inline_style('vdp-modal-override', $modal_override_css);
 
         wp_localize_script('vdp-leads-pipeline', 'vdpLeads', array(
             'ajax_url' => admin_url('admin-ajax.php'),

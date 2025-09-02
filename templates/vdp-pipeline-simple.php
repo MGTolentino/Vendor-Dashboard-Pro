@@ -134,6 +134,109 @@ $vdp_status_options = array(
         <?php endforeach; ?>
     </div>
 
+    <!-- FORCE MODAL CSS -->
+    <style id="vdp-modal-force-css">
+    /* ABSOLUTE OVERRIDE - NOTHING CAN BEAT THIS */
+    html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"][class*="vdp-modal"] {
+        position: fixed !important;
+        top: 0px !important;
+        left: 0px !important;
+        right: 0px !important;
+        bottom: 0px !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0,0,0,0.6) !important;
+        z-index: 2147483647 !important;
+        display: none !important;
+        margin: 0px !important;
+        padding: 0px !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+        font-family: inherit !important;
+    }
+    
+    html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"][class*="vdp-active"] {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow-y: auto !important;
+    }
+    
+    html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"] .vdp-modal-content {
+        background: #ffffff !important;
+        width: 90% !important;
+        max-width: 600px !important;
+        min-width: 320px !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        border-radius: 8px !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4) !important;
+        position: relative !important;
+        margin: 20px auto !important;
+        padding: 0px !important;
+        border: none !important;
+        outline: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+        z-index: 2147483647 !important;
+        font-family: inherit !important;
+        box-sizing: border-box !important;
+    }
+    
+    html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"] .vdp-modal-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 20px !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        background: #ffffff !important;
+        border-radius: 8px 8px 0 0 !important;
+        margin: 0px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        font-family: inherit !important;
+    }
+    
+    html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"] .vdp-close-modal {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: none !important;
+        border: none !important;
+        font-size: 24px !important;
+        cursor: pointer !important;
+        color: #6c757d !important;
+        padding: 0px !important;
+        margin: 0px !important;
+        width: 30px !important;
+        height: 30px !important;
+        border-radius: 50% !important;
+        transition: background-color 0.2s !important;
+        z-index: 2147483647 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        text-decoration: none !important;
+    }
+    
+    html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"] .vdp-close-modal:hover {
+        background: #e9ecef !important;
+    }
+    
+    html body div#vdp_add_lead_modal_unique[id="vdp_add_lead_modal_unique"] .vdp-simple-form {
+        display: block !important;
+        padding: 20px !important;
+        background: #ffffff !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0px !important;
+        border: none !important;
+        font-family: inherit !important;
+    }
+    </style>
+    
     <!-- Modal simplificado para agregar lead -->
     <div id="vdp_add_lead_modal_unique" class="vdp-modal vdp-add-lead-modal">
         <div class="vdp-modal-content">

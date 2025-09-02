@@ -242,21 +242,63 @@
         },
         
         /**
-         * Abrir modal agregar lead - NEW VERSION
+         * Abrir modal agregar lead - FORCED STYLES VERSION
          */
         openAddLeadModal: function() {
             console.log('VDPPipeline: Opening add lead modal');
             const modal = $('#vdp_add_lead_modal_unique');
             if (modal.length) {
-                // Clear any inline styles that might interfere
-                modal.removeAttr('style');
-                modal.removeClass('vdp-active').addClass('vdp-active');
+                // FORCE styles with JavaScript as backup
+                modal.css({
+                    'position': 'fixed !important',
+                    'top': '0px',
+                    'left': '0px', 
+                    'right': '0px',
+                    'bottom': '0px',
+                    'width': '100vw',
+                    'height': '100vh',
+                    'background': 'rgba(0,0,0,0.6)',
+                    'z-index': '2147483647',
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    'margin': '0px',
+                    'padding': '0px',
+                    'border': 'none',
+                    'outline': 'none',
+                    'box-shadow': 'none',
+                    'transform': 'none',
+                    'opacity': '1'
+                });
+                
+                // Force modal content styles
+                modal.find('.vdp-modal-content').css({
+                    'background': '#ffffff',
+                    'width': '90%',
+                    'max-width': '600px',
+                    'min-width': '320px',
+                    'max-height': '90vh',
+                    'overflow-y': 'auto',
+                    'border-radius': '8px',
+                    'box-shadow': '0 20px 40px rgba(0,0,0,0.4)',
+                    'position': 'relative',
+                    'margin': '20px auto',
+                    'padding': '0px',
+                    'border': 'none',
+                    'outline': 'none',
+                    'transform': 'none',
+                    'opacity': '1',
+                    'z-index': '2147483647'
+                });
+                
+                modal.addClass('vdp-active');
+                
                 // Reset form
                 const form = modal.find('#vdp_lead_form');
                 if (form.length) {
                     form[0].reset();
                 }
-                console.log('VDPPipeline: Modal opened successfully');
+                console.log('VDPPipeline: Modal opened with forced styles');
             } else {
                 console.error('VDPPipeline: Modal not found');
             }
@@ -278,17 +320,16 @@
         },
         
         /**
-         * Cerrar modales - NEW VERSION
+         * Cerrar modales - FORCED STYLES VERSION
          */
         closeModal: function() {
             console.log('VDPPipeline: Closing modal');
             const modal = $('#vdp_add_lead_modal_unique');
             if (modal.length) {
-                // Remove class without using .hide() to avoid inline styles
+                // Force display none
+                modal.css('display', 'none');
                 modal.removeClass('vdp-active');
-                // Clear any inline styles
-                modal.removeAttr('style');
-                console.log('VDPPipeline: Modal closed successfully');
+                console.log('VDPPipeline: Modal closed with forced styles');
             }
         },
         
