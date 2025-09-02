@@ -727,13 +727,14 @@ jQuery(document).ready(function($) {
         e.stopPropagation();
     });
     
-    // Add lead button - FIXED VERSION FOR BOTH VIEWS
+    // Add lead button - CORRECTED SYNTAX
     $(document).on('click', '.vdp-add-lead-btn, #vdp_add_lead_btn_table', function(e) {
         e.preventDefault();
         console.log('Add lead button clicked');
         
         // Check if modal exists first
         let modal = $('#vdp_add_lead_modal_unique');
+        const currentButton = $(this);
         
         if (modal.length === 0) {
             console.log('Modal not found, need to load pipeline content first');
@@ -749,8 +750,8 @@ jQuery(document).ready(function($) {
                     // Mark as loaded
                     pipelineContainer.addClass('loaded');
                     // Hide it again if we were in table view
-                    if (!$(this).closest('#vdp-pipeline-view-container').length) {
-                        setTimeout(() => {
+                    if (!currentButton.closest('#vdp-pipeline-view-container').length) {
+                        setTimeout(function() {
                             pipelineContainer.hide();
                             $('#vdp-table-view-container').show();
                         }, 100);
@@ -759,13 +760,13 @@ jQuery(document).ready(function($) {
             }
             
             // Try to find modal again
-            setTimeout(() => {
+            setTimeout(function() {
                 modal = $('#vdp_add_lead_modal_unique');
-                this.openModalAfterCheck(modal);
-            }.bind(this), 150);
+                openModalAfterCheck(modal);
+            }, 150);
         } else {
             // Modal exists, open it
-            this.openModalAfterCheck(modal);
+            openModalAfterCheck(modal);
         }
     });
     
