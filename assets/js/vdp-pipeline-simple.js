@@ -242,16 +242,13 @@
         },
         
         /**
-         * Abrir modal agregar lead - WORKING VERSION
+         * Abrir modal agregar lead
          */
         openAddLeadModal: function() {
-            console.log('VDPPipeline: Opening add lead modal');
             const modal = $('#vdp_add_lead_modal_unique');
             
             if (modal.length) {
-                // Multiple methods to ensure it opens (same as working version)
-                
-                // Method 1: Force CSS styles
+                // Force CSS styles
                 modal.css({
                     'position': 'fixed',
                     'top': '0',
@@ -273,18 +270,13 @@
                     'visibility': 'visible'
                 });
                 
-                // Method 2: Show explicitly
-                modal.show();
+                modal.show().addClass('vdp-active');
                 
-                // Method 3: Add class
-                modal.addClass('vdp-active');
-                
-                // Method 4: Force display attribute (this was critical!)
+                // Force display attribute
                 modal.attr('style', modal.attr('style') + '; display: flex !important;');
                 
                 // Force modal content styles
-                const content = modal.find('.vdp-modal-content');
-                content.css({
+                modal.find('.vdp-modal-content').css({
                     'background': '#ffffff',
                     'width': '90%',
                     'max-width': '600px',
@@ -309,10 +301,6 @@
                 if (form.length) {
                     form[0].reset();
                 }
-                
-                console.log('VDPPipeline: Modal opened with forced styles');
-            } else {
-                console.error('VDPPipeline: Modal not found');
             }
         },
         
@@ -332,12 +320,11 @@
         },
         
         /**
-         * Cerrar modales - CLEAN VERSION
+         * Cerrar modales
          */
         closeModal: function() {
             const modal = $('#vdp_add_lead_modal_unique');
             if (modal.length) {
-                // Hide modal and remove active class
                 modal.css('display', 'none').removeClass('vdp-active');
             }
         },
