@@ -42,6 +42,7 @@ $page_titles = array(
     'leads' => __('Leads', 'vendor-dashboard-pro'),
     'bookings' => $is_spanish ? __('Reservaciones', 'vendor-dashboard-pro') : __('Bookings', 'vendor-dashboard-pro'),
     'calendar' => $is_spanish ? __('Calendario', 'vendor-dashboard-pro') : __('Calendar', 'vendor-dashboard-pro'),
+    'contracts' => $is_spanish ? __('Contratos', 'vendor-dashboard-pro') : __('Contracts', 'vendor-dashboard-pro'),
     'messages' => __('Messages', 'vendor-dashboard-pro'),
     'analytics' => __('Analytics', 'vendor-dashboard-pro'),
     'settings' => __('Settings', 'vendor-dashboard-pro'),
@@ -172,6 +173,12 @@ if ($current_action === 'products' && isset($_GET['edit'])) {
                             <a href="<?php echo esc_url(vdp_get_dashboard_url('calendar')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="calendar">
                                 <i class="fas fa-calendar"></i>
                                 <span><?php echo $is_spanish ? esc_html__('Calendario', 'vendor-dashboard-pro') : esc_html__('Calendar', 'vendor-dashboard-pro'); ?></span>
+                            </a>
+                        </li>
+                        <li class="vdp-nav-item <?php echo $active_action === 'contracts' ? 'vdp-active' : ''; ?>" id="vdp-nav-contracts">
+                            <a href="<?php echo esc_url(vdp_get_dashboard_url('contracts')); ?>" class="vdp-nav-link vdp-ajax-link" data-action="contracts">
+                                <i class="fas fa-file-contract"></i>
+                                <span><?php echo $is_spanish ? esc_html__('Contratos', 'vendor-dashboard-pro') : esc_html__('Contracts', 'vendor-dashboard-pro'); ?></span>
                             </a>
                         </li>
                         <li class="vdp-nav-item <?php echo $active_action === 'messages' ? 'vdp-active' : ''; ?>" id="vdp-nav-messages">
