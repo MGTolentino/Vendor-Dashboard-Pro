@@ -170,6 +170,16 @@ class VDP_Assets {
             
             wp_enqueue_script('vdp-translations');
             wp_enqueue_script('vdp-main');
+            
+            // Localize script for AJAX operations
+            wp_localize_script(
+                'vdp-main',
+                'vdp_ajax',
+                array(
+                    'url' => admin_url('admin-ajax.php'),
+                    'nonce' => wp_create_nonce('vdp_nonce')
+                )
+            );
         }
         
         // También cargamos el CSS de mensajes en las páginas de listing individual para el modal de contacto
