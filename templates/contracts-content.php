@@ -426,7 +426,26 @@ jQuery(document).ready(function($) {
     // Functions
     function saveContractSettings($form) {
         var formData = $form.serialize();
-        formData += '&action=vdp_save_contract_settings&nonce=' + vdp_ajax.nonce;
+        
+        // Determine which section is being saved based on form ID
+        var section = 'all';
+        var formId = $form.attr('id');
+        
+        if (formId === 'company-info-form') {
+            section = 'company';
+        } else if (formId === 'bank-info-form') {
+            section = 'bank';
+        } else if (formId === 'contract-terms-form') {
+            section = 'terms';
+        } else if (formId === 'validation-rules-form') {
+            section = 'validation';
+        }
+        
+        formData += '&action=vdp_save_contract_settings&nonce=' + vdp_ajax.nonce + '&section=' + section;
+        
+        console.log('VDP Contracts - Saving section:', section);
+        console.log('VDP Contracts - Form ID:', formId);
+        console.log('VDP Contracts - Form data:', formData);
         
         $.post(vdp_ajax.url, formData, function(response) {
             if (response.success) {

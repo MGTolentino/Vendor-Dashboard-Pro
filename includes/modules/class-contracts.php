@@ -168,6 +168,10 @@ class VDP_Contracts {
         // Determine which section is being saved based on submitted fields
         $section = sanitize_text_field($_POST['section'] ?? 'all');
         
+        // Debug logging
+        error_log('VDP Contracts Save - Section: ' . $section);
+        error_log('VDP Contracts Save - POST keys: ' . implode(', ', array_keys($_POST)));
+        
         // Start with existing settings to preserve all data
         $settings = $existing_settings;
         
@@ -204,8 +208,8 @@ class VDP_Contracts {
             );
         }
         
-        // If all sections are being saved at once
-        if ($section === 'all') {
+        // Only handle 'all' section if we actually have data for all sections
+        if ($section === 'all' && isset($_POST['company_name']) && isset($_POST['bank_name']) && isset($_POST['contract_terms'])) {
             $settings = array(
                 'company_data' => array(
                     'name' => sanitize_text_field($_POST['company_name'] ?? ''),
