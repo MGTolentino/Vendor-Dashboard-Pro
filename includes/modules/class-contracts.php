@@ -162,32 +162,80 @@ class VDP_Contracts {
             wp_send_json_error('Vendor not found');
         }
         
-        $settings = array(
-            'company_data' => array(
+        // Get existing settings first to preserve data
+        $existing_settings = $this->get_contract_settings($vendor->get_id());
+        
+        // Determine which section is being saved based on submitted fields
+        $section = sanitize_text_field($_POST['section'] ?? 'all');
+        
+        // Start with existing settings to preserve all data
+        $settings = $existing_settings;
+        
+        // Update only the relevant section
+        if ($section === 'company' || isset($_POST['company_name'])) {
+            $settings['company_data'] = array(
                 'name' => sanitize_text_field($_POST['company_name'] ?? ''),
                 'address' => sanitize_textarea_field($_POST['company_address'] ?? ''),
                 'phone' => sanitize_text_field($_POST['company_phone'] ?? ''),
                 'email' => sanitize_email($_POST['company_email'] ?? ''),
                 'rfc' => sanitize_text_field($_POST['company_rfc'] ?? '')
-            ),
-            'bank_data' => array(
+            );
+        }
+        
+        if ($section === 'bank' || isset($_POST['bank_name'])) {
+            $settings['bank_data'] = array(
                 'bank_name' => sanitize_text_field($_POST['bank_name'] ?? ''),
                 'account_number' => sanitize_text_field($_POST['account_number'] ?? ''),
                 'clabe' => sanitize_text_field($_POST['clabe'] ?? ''),
                 'account_holder' => sanitize_text_field($_POST['account_holder'] ?? '')
-            ),
-            'contract_terms' => wp_kses_post($_POST['contract_terms'] ?? ''),
-            'validation_rules' => array(
+            );
+        }
+        
+        if ($section === 'terms' || isset($_POST['contract_terms'])) {
+            $settings['contract_terms'] = wp_kses_post($_POST['contract_terms'] ?? '');
+        }
+        
+        if ($section === 'validation' || isset($_POST['min_days_before_event'])) {
+            $settings['validation_rules'] = array(
                 'min_days_before_event' => intval($_POST['min_days_before_event'] ?? 7),
                 'force_full_payment_days' => intval($_POST['force_full_payment_days'] ?? 15),
                 'min_initial_payment' => intval($_POST['min_initial_payment'] ?? 30),
                 'max_payment_terms' => intval($_POST['max_payment_terms'] ?? 12)
-            )
-        );
+            );
+        }
         
-        // Preserve existing payment templates
-        $existing_settings = $this->get_contract_settings($vendor->get_id());
-        $settings['payment_templates'] = $existing_settings['payment_templates'] ?? $this->get_default_payment_templates();
+        // If all sections are being saved at once
+        if ($section === 'all') {
+            $settings = array(
+                'company_data' => array(
+                    'name' => sanitize_text_field($_POST['company_name'] ?? ''),
+                    'address' => sanitize_textarea_field($_POST['company_address'] ?? ''),
+                    'phone' => sanitize_text_field($_POST['company_phone'] ?? ''),
+                    'email' => sanitize_email($_POST['company_email'] ?? ''),
+                    'rfc' => sanitize_text_field($_POST['company_rfc'] ?? '')
+                ),
+                'bank_data' => array(
+                    'bank_name' => sanitize_text_field($_POST['bank_name'] ?? ''),
+                    'account_number' => sanitize_text_field($_POST['account_number'] ?? ''),
+                    'clabe' => sanitize_text_field($_POST['clabe'] ?? ''),
+                    'account_holder' => sanitize_text_field($_POST['account_holder'] ?? '')
+                ),
+                'contract_terms' => wp_kses_post($_POST['contract_terms'] ?? ''),
+                'validation_rules' => array(
+                    'min_days_before_event' => intval($_POST['min_days_before_event'] ?? 7),
+                    'force_full_payment_days' => intval($_POST['force_full_payment_days'] ?? 15),
+                    'min_initial_payment' => intval($_POST['min_initial_payment'] ?? 30),
+                    'max_payment_terms' => intval($_POST['max_payment_terms'] ?? 12)
+                ),
+                // Always preserve payment templates
+                'payment_templates' => $existing_settings['payment_templates'] ?? $this->get_default_payment_templates()
+            );
+        }
+        
+        // Always ensure payment templates are preserved
+        if (!isset($settings['payment_templates']) || empty($settings['payment_templates'])) {
+            $settings['payment_templates'] = $existing_settings['payment_templates'] ?? $this->get_default_payment_templates();
+        }
         
         update_post_meta($vendor->get_id(), 'vdp_contract_settings', $settings);
         
