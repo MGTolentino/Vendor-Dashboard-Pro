@@ -425,6 +425,11 @@ jQuery(document).ready(function($) {
     
     // Functions
     function saveContractSettings($form) {
+        // Validate form before sending
+        if (!validateContractForm($form)) {
+            return false;
+        }
+        
         var formData = $form.serialize();
         
         // Determine which section is being saved based on form ID
@@ -447,13 +452,71 @@ jQuery(document).ready(function($) {
         console.log('VDP Contracts - Form ID:', formId);
         console.log('VDP Contracts - Form data:', formData);
         
+        // Show loading state
+        var $submitBtn = $form.find('button[type="submit"]');
+        var originalText = $submitBtn.html();
+        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        
         $.post(vdp_ajax.url, formData, function(response) {
             if (response.success) {
                 showNotification('success', 'Settings saved successfully');
             } else {
                 showNotification('error', response.data || 'Error saving settings');
             }
+        }).fail(function() {
+            showNotification('error', 'Network error. Please try again.');
+        }).always(function() {
+            // Restore button state
+            $submitBtn.prop('disabled', false).html(originalText);
         });
+    }
+    
+    function validateContractForm($form) {
+        var isValid = true;
+        var errors = [];
+        
+        // Clear previous errors
+        $form.find('.vdp-field-error').remove();
+        $form.find('.vdp-form-control').removeClass('error');
+        
+        // Get form ID to determine which fields to validate
+        var formId = $form.attr('id');
+        
+        if (formId === 'company-info-form') {
+            // Validate company email
+            var email = $form.find('#company-email').val().trim();
+            if (email && !isValidEmail(email)) {
+                showFieldError($form.find('#company-email'), 'Please enter a valid email address');
+                isValid = false;
+            }
+            
+            // Validate required fields
+            var requiredFields = ['#company-name', '#company-address', '#company-phone', '#company-email'];
+            requiredFields.forEach(function(fieldId) {
+                var $field = $form.find(fieldId);
+                if (!$field.val().trim()) {
+                    showFieldError($field, 'This field is required');
+                    isValid = false;
+                }
+            });
+        }
+        
+        if (!isValid) {
+            showNotification('error', 'Please fix the errors below before saving');
+        }
+        
+        return isValid;
+    }
+    
+    function isValidEmail(email) {
+        var emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    function showFieldError($field, message) {
+        $field.addClass('error');
+        var $error = $('<div class=\"vdp-field-error\" style=\"color: #dc3545; font-size: 12px; margin-top: 5px;\">' + message + '</div>');
+        $field.closest('.vdp-form-group').append($error);
     }
     
     function openPaymentTemplateModal(templateData = null) {
@@ -640,3 +703,22 @@ jQuery(document).ready(function($) {
     }
 });
 </script>
+
+<style>
+.vdp-form-control.error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.vdp-field-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+.vdp-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+</style>

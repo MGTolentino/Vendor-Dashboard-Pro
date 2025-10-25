@@ -49,12 +49,16 @@ class VDP_Contracts {
      * Get default contract settings
      */
     private function get_default_contract_settings() {
+        // Get current user's email as default
+        $current_user = wp_get_current_user();
+        $default_email = $current_user->user_email ?? '';
+        
         return array(
             'company_data' => array(
                 'name' => '',
                 'address' => '',
                 'phone' => '',
-                'email' => '',
+                'email' => $default_email,
                 'rfc' => ''
             ),
             'bank_data' => array(
@@ -171,17 +175,26 @@ class VDP_Contracts {
         // Debug logging
         error_log('VDP Contracts Save - Section: ' . $section);
         error_log('VDP Contracts Save - POST keys: ' . implode(', ', array_keys($_POST)));
+        error_log('VDP Contracts Save - company_email value: ' . ($_POST['company_email'] ?? 'NOT SET'));
+        error_log('VDP Contracts Save - sanitized email: ' . sanitize_email($_POST['company_email'] ?? ''));
         
         // Start with existing settings to preserve all data
         $settings = $existing_settings;
         
         // Update only the relevant section
         if ($section === 'company' || isset($_POST['company_name'])) {
+            // Validate email first
+            $email = sanitize_text_field($_POST['company_email'] ?? '');
+            if (!empty($email) && !is_email($email)) {
+                wp_send_json_error('Please enter a valid email address for company email.');
+                return;
+            }
+            
             $settings['company_data'] = array(
                 'name' => sanitize_text_field($_POST['company_name'] ?? ''),
                 'address' => sanitize_textarea_field($_POST['company_address'] ?? ''),
                 'phone' => sanitize_text_field($_POST['company_phone'] ?? ''),
-                'email' => sanitize_email($_POST['company_email'] ?? ''),
+                'email' => $email,
                 'rfc' => sanitize_text_field($_POST['company_rfc'] ?? '')
             );
         }
@@ -215,7 +228,7 @@ class VDP_Contracts {
                     'name' => sanitize_text_field($_POST['company_name'] ?? ''),
                     'address' => sanitize_textarea_field($_POST['company_address'] ?? ''),
                     'phone' => sanitize_text_field($_POST['company_phone'] ?? ''),
-                    'email' => sanitize_email($_POST['company_email'] ?? ''),
+                    'email' => is_email($_POST['company_email'] ?? '') ? sanitize_text_field($_POST['company_email']) : sanitize_text_field($_POST['company_email'] ?? ''),
                     'rfc' => sanitize_text_field($_POST['company_rfc'] ?? '')
                 ),
                 'bank_data' => array(
