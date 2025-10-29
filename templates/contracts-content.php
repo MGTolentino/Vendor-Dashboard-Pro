@@ -415,7 +415,19 @@ jQuery(document).ready(function($) {
     });
     
     $('#cancel-template').on('click', function() {
-        $('#vdp-payment-template-modal').hide();
+        $('#vdp-payment-template-modal').css('display', 'none');
+    });
+    
+    // Close modal when clicking close button
+    $('.vdp-modal-close').on('click', function() {
+        $('#vdp-payment-template-modal').css('display', 'none');
+    });
+    
+    // Close modal when clicking outside
+    $('#vdp-payment-template-modal').on('click', function(e) {
+        if (e.target === this) {
+            $(this).css('display', 'none');
+        }
     });
     
     // Preview refresh
