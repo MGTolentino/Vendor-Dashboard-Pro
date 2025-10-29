@@ -446,7 +446,7 @@ jQuery(document).ready(function($) {
             section = 'validation';
         }
         
-        formData += '&action=vdp_save_contract_settings&nonce=' + vdp_ajax.nonce + '&section=' + section;
+        formData += '&action=vdp_save_contract_settings&nonce=' + vdp_nonce + '&section=' + section;
         
         console.log('VDP Contracts - Saving section:', section);
         console.log('VDP Contracts - Form ID:', formId);
@@ -457,7 +457,7 @@ jQuery(document).ready(function($) {
         var originalText = $submitBtn.html();
         $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
         
-        $.post(vdp_ajax.url, formData, function(response) {
+        $.post(ajaxurl, formData, function(response) {
             if (response.success) {
                 showNotification('success', 'Settings saved successfully');
             } else {
@@ -611,7 +611,7 @@ jQuery(document).ready(function($) {
         
         var data = {
             action: 'vdp_save_payment_template',
-            nonce: vdp_ajax.nonce,
+            nonce: vdp_nonce,
             template_id: 'custom_' + Date.now(),
             template_name: $('#template-name').val(),
             min_days_required: $('#min-days').val(),
@@ -619,7 +619,7 @@ jQuery(document).ready(function($) {
             payments: JSON.stringify(payments)
         };
         
-        $.post(vdp_ajax.url, data, function(response) {
+        $.post(ajaxurl, data, function(response) {
             if (response.success) {
                 showNotification('success', 'Template saved successfully');
                 $('#vdp-payment-template-modal').hide();
@@ -637,11 +637,11 @@ jQuery(document).ready(function($) {
         
         var data = {
             action: 'vdp_delete_payment_template',
-            nonce: vdp_ajax.nonce,
+            nonce: vdp_nonce,
             template_id: templateId
         };
         
-        $.post(vdp_ajax.url, data, function(response) {
+        $.post(ajaxurl, data, function(response) {
             if (response.success) {
                 showNotification('success', 'Template deleted successfully');
                 $('[data-template-id="' + templateId + '"]').remove();
