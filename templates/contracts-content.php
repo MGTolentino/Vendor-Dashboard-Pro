@@ -314,9 +314,9 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
 </div>
 
 <!-- Payment Template Modal -->
-<div id="vdp-payment-template-modal" class="vdp-modal">
-    <div class="vdp-modal-content">
-        <span class="vdp-modal-close">&times;</span>
+<div id="vdp-payment-template-modal" class="vdp-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999999; align-items: center; justify-content: center;">
+    <div class="vdp-modal-content" style="background: white; padding: 20px; border-radius: 8px; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative;">
+        <span class="vdp-modal-close" style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer;">&times;</span>
         <h2 id="template-modal-title"><?php esc_html_e('Add Payment Template', 'vendor-dashboard-pro'); ?></h2>
         
         <form id="payment-template-form">
@@ -537,7 +537,7 @@ jQuery(document).ready(function($) {
             addPaymentItem(); // Add one default payment item
         }
         
-        $('#vdp-payment-template-modal').show();
+        $('#vdp-payment-template-modal').css('display', 'flex');
         updateTemplateTotal();
     }
     
