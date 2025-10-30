@@ -162,7 +162,7 @@ class VDP_Contracts {
      * Save contract settings via AJAX
      */
     public function save_contract_settings() {
-        check_ajax_referer('vdp_orders_nonce', 'nonce');
+        check_ajax_referer('vdp_contracts_nonce', 'nonce');
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
@@ -272,7 +272,7 @@ class VDP_Contracts {
      * Get contract templates via AJAX
      */
     public function get_contract_templates() {
-        check_ajax_referer('vdp_orders_nonce', 'nonce');
+        check_ajax_referer('vdp_contracts_nonce', 'nonce');
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
@@ -287,7 +287,7 @@ class VDP_Contracts {
      * Save payment template via AJAX
      */
     public function save_payment_template() {
-        check_ajax_referer('vdp_orders_nonce', 'nonce');
+        check_ajax_referer('vdp_contracts_nonce', 'nonce');
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
@@ -345,7 +345,7 @@ class VDP_Contracts {
      * Delete payment template via AJAX
      */
     public function delete_payment_template() {
-        check_ajax_referer('vdp_orders_nonce', 'nonce');
+        check_ajax_referer('vdp_contracts_nonce', 'nonce');
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
@@ -442,7 +442,7 @@ class VDP_Contracts {
      * Upload contract logo
      */
     public function upload_contract_logo() {
-        check_ajax_referer('vdp_orders_nonce', 'nonce');
+        check_ajax_referer('vdp_contracts_nonce', 'nonce');
         
         // Check if user can upload files
         if (!current_user_can('upload_files')) {

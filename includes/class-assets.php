@@ -142,6 +142,7 @@ class VDP_Assets {
                 'nonce' => wp_create_nonce('vdp_orders_nonce'),
                 'calendar_nonce' => wp_create_nonce('vdp_calendar_nonce'),
                 'bookings_nonce' => wp_create_nonce('vdp_bookings_nonce'),
+                'contracts_nonce' => wp_create_nonce('vdp_contracts_nonce'),
             )
         );
     }
