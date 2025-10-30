@@ -791,7 +791,8 @@ jQuery(document).ready(function($) {
         
         console.log('VDP Upload - FormData created');
         console.log('VDP Upload - Action:', 'vdp_upload_contract_logo');
-        console.log('VDP Upload - Nonce:', vdp_ajax.contracts_nonce);
+        console.log('VDP Upload - Available nonces:', vdp_ajax);
+        console.log('VDP Upload - Contracts Nonce:', vdp_ajax.contracts_nonce);
         console.log('VDP Upload - URL:', vdp_ajax.url);
         
         // Show loading state
