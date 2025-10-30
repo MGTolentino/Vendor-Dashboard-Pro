@@ -520,7 +520,7 @@ jQuery(document).ready(function($) {
         var originalText = $submitBtn.html();
         $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
         
-        $.post(ajaxurl, formData, function(response) {
+        $.post(vdp_ajax.url, formData, function(response) {
             if (response.success) {
                 showNotification('success', 'Settings saved successfully');
             } else {
@@ -682,7 +682,7 @@ jQuery(document).ready(function($) {
             payments: JSON.stringify(payments)
         };
         
-        $.post(ajaxurl, data, function(response) {
+        $.post(vdp_ajax.url, data, function(response) {
             if (response.success) {
                 showNotification('success', 'Template saved successfully');
                 $('#vdp-payment-template-modal').hide();
@@ -704,7 +704,7 @@ jQuery(document).ready(function($) {
             template_id: templateId
         };
         
-        $.post(ajaxurl, data, function(response) {
+        $.post(vdp_ajax.url, data, function(response) {
             if (response.success) {
                 showNotification('success', 'Template deleted successfully');
                 $('[data-template-id="' + templateId + '"]').remove();
@@ -788,7 +788,7 @@ jQuery(document).ready(function($) {
         $('.vdp-logo-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
         
         $.ajax({
-            url: ajaxurl,
+            url: vdp_ajax.url,
             type: 'POST',
             data: formData,
             processData: false,
