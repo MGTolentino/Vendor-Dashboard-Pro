@@ -674,7 +674,7 @@ jQuery(document).ready(function($) {
         
         var data = {
             action: 'vdp_save_payment_template',
-            nonce: vdp_ajax.contracts_nonce,
+            nonce: vdp_ajax.nonce,
             template_id: 'custom_' + Date.now(),
             template_name: $('#template-name').val(),
             min_days_required: $('#min-days').val(),
@@ -700,7 +700,7 @@ jQuery(document).ready(function($) {
         
         var data = {
             action: 'vdp_delete_payment_template',
-            nonce: vdp_ajax.contracts_nonce,
+            nonce: vdp_ajax.nonce,
             template_id: templateId
         };
         
@@ -786,7 +786,7 @@ jQuery(document).ready(function($) {
         
         const formData = new FormData();
         formData.append('action', 'vdp_upload_contract_logo');
-        formData.append('nonce', vdp_ajax.contracts_nonce);
+        formData.append('nonce', vdp_ajax.nonce);
         formData.append('logo_file', file);
         
         console.log('VDP Upload - FormData created');
