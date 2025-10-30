@@ -90,6 +90,41 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                             <label for="company-rfc" class="vdp-form-label"><?php esc_html_e('Tax ID (RFC)', 'vendor-dashboard-pro'); ?></label>
                             <input type="text" id="company-rfc" name="company_rfc" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['company_data']['rfc']); ?>">
                         </div>
+                        
+                        <div class="vdp-form-group">
+                            <label for="contract-logo" class="vdp-form-label"><?php esc_html_e('Contract Logo', 'vendor-dashboard-pro'); ?></label>
+                            <div class="vdp-logo-uploader">
+                                <div class="vdp-current-logo">
+                                    <?php if (!empty($contract_settings['company_data']['logo_url'])): ?>
+                                        <img src="<?php echo esc_url($contract_settings['company_data']['logo_url']); ?>" alt="Contract Logo" style="max-width: 200px; max-height: 80px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <?php else: ?>
+                                        <div class="vdp-logo-placeholder">
+                                            <i class="fas fa-image"></i>
+                                            <span><?php esc_html_e('No logo uploaded', 'vendor-dashboard-pro'); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="vdp-logo-controls">
+                                    <input type="file" id="contract-logo" name="contract_logo" class="vdp-file-input" accept="image/*" style="display: none;">
+                                    <button type="button" class="vdp-btn vdp-btn-outline vdp-logo-btn">
+                                        <i class="fas fa-upload"></i> <?php esc_html_e('Upload Logo', 'vendor-dashboard-pro'); ?>
+                                    </button>
+                                    <?php if (!empty($contract_settings['company_data']['logo_url'])): ?>
+                                        <button type="button" class="vdp-btn vdp-btn-outline vdp-remove-logo">
+                                            <i class="fas fa-trash"></i> <?php esc_html_e('Remove', 'vendor-dashboard-pro'); ?>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                                <input type="hidden" id="logo-url" name="logo_url" value="<?php echo esc_attr($contract_settings['company_data']['logo_url'] ?? ''); ?>">
+                            </div>
+                            <div class="vdp-form-help"><?php esc_html_e('Upload a logo that will appear on your contracts. Recommended size: 200x80px', 'vendor-dashboard-pro'); ?></div>
+                        </div>
+                        
+                        <div class="vdp-form-group">
+                            <label for="razon-social" class="vdp-form-label"><?php esc_html_e('Business Name (Razón Social)', 'vendor-dashboard-pro'); ?></label>
+                            <input type="text" id="razon-social" name="razon_social" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['company_data']['razon_social'] ?? ''); ?>">
+                            <div class="vdp-form-help"><?php esc_html_e('Official business name that will appear in contract bank information', 'vendor-dashboard-pro'); ?></div>
+                        </div>
                     </div>
                     
                     <div class="vdp-form-actions">
@@ -435,6 +470,22 @@ jQuery(document).ready(function($) {
         generateContractPreview();
     });
     
+    // Logo upload functionality
+    $('.vdp-logo-btn').on('click', function() {
+        $('#contract-logo').click();
+    });
+
+    $('#contract-logo').on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            uploadContractLogo(file);
+        }
+    });
+
+    $('.vdp-remove-logo').on('click', function() {
+        removeContractLogo();
+    });
+    
     // Functions
     function saveContractSettings($form) {
         // Validate form before sending
@@ -712,6 +763,85 @@ jQuery(document).ready(function($) {
                 $(this).remove();
             });
         }, 3000);
+    }
+    
+    function uploadContractLogo(file) {
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            showNotification('error', 'Invalid file type. Only JPG, PNG and GIF are allowed.');
+            return;
+        }
+        
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            showNotification('error', 'File too large. Maximum size is 2MB.');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('action', 'vdp_upload_contract_logo');
+        formData.append('nonce', vdp_nonce);
+        formData.append('logo_file', file);
+        
+        // Show loading state
+        $('.vdp-logo-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    displayContractLogo(response.data.url);
+                    $('#logo-url').val(response.data.url);
+                    showNotification('success', 'Logo uploaded successfully');
+                } else {
+                    showNotification('error', response.data || 'Error uploading logo');
+                }
+            },
+            error: function() {
+                showNotification('error', 'Network error. Please try again.');
+            },
+            complete: function() {
+                $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Logo');
+            }
+        });
+    }
+    
+    function displayContractLogo(url) {
+        const $container = $('.vdp-current-logo');
+        $container.html(`<img src="${url}" alt="Contract Logo" style="max-width: 200px; max-height: 80px; border: 1px solid #ddd; border-radius: 4px;">`);
+        
+        // Show remove button if not already visible
+        if (!$('.vdp-remove-logo').is(':visible')) {
+            $('.vdp-logo-controls').append(`
+                <button type="button" class="vdp-btn vdp-btn-outline vdp-remove-logo">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            `);
+            
+            // Bind remove event to new button
+            $('.vdp-remove-logo').on('click', function() {
+                removeContractLogo();
+            });
+        }
+    }
+    
+    function removeContractLogo() {
+        const $container = $('.vdp-current-logo');
+        $container.html(`
+            <div class="vdp-logo-placeholder">
+                <i class="fas fa-image"></i>
+                <span>No logo uploaded</span>
+            </div>
+        `);
+        $('.vdp-remove-logo').remove();
+        $('#logo-url').val('');
+        $('#contract-logo').val('');
+        showNotification('success', 'Logo removed');
     }
 });
 </script>

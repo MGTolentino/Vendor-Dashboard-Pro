@@ -30,6 +30,7 @@ class VDP_Contracts {
         add_action('wp_ajax_vdp_get_contract_templates', array($this, 'get_contract_templates'));
         add_action('wp_ajax_vdp_save_payment_template', array($this, 'save_payment_template'));
         add_action('wp_ajax_vdp_delete_payment_template', array($this, 'delete_payment_template'));
+        add_action('wp_ajax_vdp_upload_contract_logo', array($this, 'upload_contract_logo'));
     }
     
     /**
@@ -427,6 +428,67 @@ class VDP_Contracts {
             'warnings' => $warnings,
             'days_until_event' => $days_until_event
         );
+    }
+    
+    /**
+     * Upload contract logo
+     */
+    public function upload_contract_logo() {
+        check_ajax_referer('vdp_nonce', 'nonce');
+        
+        // Check if user can upload files
+        if (!current_user_can('upload_files')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        try {
+            // Check if file was uploaded
+            if (!isset($_FILES['logo_file']) || $_FILES['logo_file']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('No file uploaded or upload error');
+            }
+            
+            $file = $_FILES['logo_file'];
+            
+            // Validate file type
+            $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif');
+            if (!in_array($file['type'], $allowed_types)) {
+                throw new Exception('Invalid file type. Only JPG, PNG and GIF are allowed.');
+            }
+            
+            // Validate file size (max 2MB)
+            if ($file['size'] > 2 * 1024 * 1024) {
+                throw new Exception('File too large. Maximum size is 2MB.');
+            }
+            
+            // Create upload directory
+            $user_id = get_current_user_id();
+            $upload_dir = wp_upload_dir();
+            $plugin_upload_dir = $upload_dir['basedir'] . '/vendor-dashboard-pro/' . $user_id . '/logos/';
+            
+            if (!file_exists($plugin_upload_dir)) {
+                wp_mkdir_p($plugin_upload_dir);
+            }
+            
+            // Generate unique filename
+            $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = 'contract_logo_' . time() . '_' . uniqid() . '.' . $file_extension;
+            $file_path = $plugin_upload_dir . $filename;
+            $file_url = $upload_dir['baseurl'] . '/vendor-dashboard-pro/' . $user_id . '/logos/' . $filename;
+            
+            // Move uploaded file
+            if (!move_uploaded_file($file['tmp_name'], $file_path)) {
+                throw new Exception('Error saving uploaded file');
+            }
+            
+            wp_send_json_success(array(
+                'url' => $file_url,
+                'path' => $file_path,
+                'filename' => $filename
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error uploading logo: ' . $e->getMessage());
+        }
     }
 }
 
