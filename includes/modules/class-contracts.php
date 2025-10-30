@@ -162,7 +162,7 @@ class VDP_Contracts {
      * Save contract settings via AJAX
      */
     public function save_contract_settings() {
-        check_ajax_referer('vdp_nonce', 'nonce');
+        check_ajax_referer('vdp_orders_nonce', 'nonce');
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
@@ -272,7 +272,7 @@ class VDP_Contracts {
      * Get contract templates via AJAX
      */
     public function get_contract_templates() {
-        check_ajax_referer('vdp_nonce', 'nonce');
+        check_ajax_referer('vdp_orders_nonce', 'nonce');
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
@@ -287,7 +287,7 @@ class VDP_Contracts {
      * Save payment template via AJAX
      */
     public function save_payment_template() {
-        check_ajax_referer('vdp_nonce', 'nonce');
+        check_ajax_referer('vdp_orders_nonce', 'nonce');
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
@@ -345,7 +345,7 @@ class VDP_Contracts {
      * Delete payment template via AJAX
      */
     public function delete_payment_template() {
-        check_ajax_referer('vdp_nonce', 'nonce');
+        check_ajax_referer('vdp_orders_nonce', 'nonce');
         
         $vendor = vdp_get_current_vendor();
         if (!$vendor) {
@@ -442,7 +442,7 @@ class VDP_Contracts {
      * Upload contract logo
      */
     public function upload_contract_logo() {
-        check_ajax_referer('vdp_nonce', 'nonce');
+        check_ajax_referer('vdp_orders_nonce', 'nonce');
         
         // Check if user can upload files
         if (!current_user_can('upload_files')) {
@@ -450,9 +450,21 @@ class VDP_Contracts {
         }
         
         try {
+            // Send debug info to browser console
+            $debug_info = array(
+                'POST_keys' => array_keys($_POST),
+                'FILES_keys' => array_keys($_FILES),
+                'logo_file_exists' => isset($_FILES['logo_file']),
+                'logo_file_error' => isset($_FILES['logo_file']) ? $_FILES['logo_file']['error'] : 'N/A'
+            );
+            
             // Check if file was uploaded
-            if (!isset($_FILES['logo_file']) || $_FILES['logo_file']['error'] !== UPLOAD_ERR_OK) {
-                throw new Exception('No file uploaded or upload error');
+            if (!isset($_FILES['logo_file'])) {
+                wp_send_json_error('No file field found in request. Debug: ' . json_encode($debug_info));
+            }
+            
+            if ($_FILES['logo_file']['error'] !== UPLOAD_ERR_OK) {
+                wp_send_json_error('File upload error code: ' . $_FILES['logo_file']['error'] . '. Debug: ' . json_encode($debug_info));
             }
             
             $file = $_FILES['logo_file'];

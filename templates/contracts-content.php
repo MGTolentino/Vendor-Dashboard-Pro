@@ -766,6 +766,11 @@ jQuery(document).ready(function($) {
     }
     
     function uploadContractLogo(file) {
+        console.log('VDP Upload - File selected:', file);
+        console.log('VDP Upload - File name:', file.name);
+        console.log('VDP Upload - File type:', file.type);
+        console.log('VDP Upload - File size:', file.size);
+        
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
         if (!allowedTypes.includes(file.type)) {
@@ -784,6 +789,11 @@ jQuery(document).ready(function($) {
         formData.append('nonce', vdp_ajax.nonce);
         formData.append('logo_file', file);
         
+        console.log('VDP Upload - FormData created');
+        console.log('VDP Upload - Action:', 'vdp_upload_contract_logo');
+        console.log('VDP Upload - Nonce:', vdp_ajax.nonce);
+        console.log('VDP Upload - URL:', vdp_ajax.url);
+        
         // Show loading state
         $('.vdp-logo-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
         
@@ -794,15 +804,19 @@ jQuery(document).ready(function($) {
             processData: false,
             contentType: false,
             success: function(response) {
+                console.log('VDP Upload - Response received:', response);
                 if (response.success) {
+                    console.log('VDP Upload - Success! URL:', response.data.url);
                     displayContractLogo(response.data.url);
                     $('#logo-url').val(response.data.url);
                     showNotification('success', 'Logo uploaded successfully');
                 } else {
+                    console.log('VDP Upload - Error response:', response.data);
                     showNotification('error', response.data || 'Error uploading logo');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.log('VDP Upload - AJAX Error:', {xhr: xhr, status: status, error: error});
                 showNotification('error', 'Network error. Please try again.');
             },
             complete: function() {
