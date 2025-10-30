@@ -799,14 +799,12 @@ jQuery(document).ready(function($) {
         // Show loading state
         $('.vdp-logo-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
         
-        $.ajax({
-            url: vdp_ajax.url,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                console.log('VDP Upload - Response received:', response);
+        const xhr = new XMLHttpRequest();
+        
+        xhr.onload = function() {
+            console.log('VDP Upload - XHR Response received:', xhr.responseText);
+            try {
+                const response = JSON.parse(xhr.responseText);
                 if (response.success) {
                     console.log('VDP Upload - Success! URL:', response.data.url);
                     displayContractLogo(response.data.url);
@@ -816,15 +814,23 @@ jQuery(document).ready(function($) {
                     console.log('VDP Upload - Error response:', response.data);
                     showNotification('error', response.data || 'Error uploading logo');
                 }
-            },
-            error: function(xhr, status, error) {
-                console.log('VDP Upload - AJAX Error:', {xhr: xhr, status: status, error: error});
-                showNotification('error', 'Network error. Please try again.');
-            },
-            complete: function() {
-                $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Logo');
+            } catch (e) {
+                console.log('VDP Upload - Parse error:', e);
+                showNotification('error', 'Invalid server response');
             }
-        });
+        };
+        
+        xhr.onerror = function() {
+            console.log('VDP Upload - XHR Error');
+            showNotification('error', 'Network error. Please try again.');
+        };
+        
+        xhr.onloadend = function() {
+            $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Logo');
+        };
+        
+        xhr.open('POST', vdp_ajax.url);
+        xhr.send(formData);
     }
     
     function displayContractLogo(url) {
