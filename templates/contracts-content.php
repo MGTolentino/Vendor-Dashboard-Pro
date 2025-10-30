@@ -57,7 +57,7 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
         <div class="vdp-tabs-content">
             <!-- Company Info Tab -->
             <div class="vdp-tab-content vdp-active" id="company-tab">
-                <form id="company-info-form" class="vdp-contracts-form">
+                <form id="company-info-form" class="vdp-contracts-form" enctype="multipart/form-data">
                     <div class="vdp-form-section">
                         <div class="vdp-section-header">
                             <h3 class="vdp-section-title"><?php esc_html_e('Company Information for Contracts', 'vendor-dashboard-pro'); ?></h3>
@@ -105,7 +105,7 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                                     <?php endif; ?>
                                 </div>
                                 <div class="vdp-logo-controls">
-                                    <input type="file" id="contract-logo" name="contract_logo" class="vdp-file-input" accept="image/*" style="display: none;">
+                                    <input type="file" id="contract-logo" name="logo_file" class="vdp-file-input" accept="image/*" style="display: none;">
                                     <button type="button" class="vdp-btn vdp-btn-outline vdp-logo-btn">
                                         <i class="fas fa-upload"></i> <?php esc_html_e('Upload Logo', 'vendor-dashboard-pro'); ?>
                                     </button>

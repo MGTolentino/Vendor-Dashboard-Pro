@@ -60,7 +60,9 @@ class VDP_Contracts {
                 'address' => '',
                 'phone' => '',
                 'email' => $default_email,
-                'rfc' => ''
+                'rfc' => '',
+                'logo_url' => '',
+                'razon_social' => ''
             ),
             'bank_data' => array(
                 'bank_name' => '',
@@ -191,12 +193,18 @@ class VDP_Contracts {
                 return;
             }
             
+            // Preserve existing logo_url if not being updated
+            $existing_logo_url = $existing_settings['company_data']['logo_url'] ?? '';
+            $new_logo_url = esc_url_raw($_POST['logo_url'] ?? '');
+            
             $settings['company_data'] = array(
                 'name' => sanitize_text_field($_POST['company_name'] ?? ''),
                 'address' => sanitize_textarea_field($_POST['company_address'] ?? ''),
                 'phone' => sanitize_text_field($_POST['company_phone'] ?? ''),
                 'email' => $email,
-                'rfc' => sanitize_text_field($_POST['company_rfc'] ?? '')
+                'rfc' => sanitize_text_field($_POST['company_rfc'] ?? ''),
+                'logo_url' => !empty($new_logo_url) ? $new_logo_url : $existing_logo_url,
+                'razon_social' => sanitize_text_field($_POST['razon_social'] ?? '')
             );
         }
         
