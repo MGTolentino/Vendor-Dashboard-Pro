@@ -784,49 +784,57 @@ jQuery(document).ready(function($) {
             return;
         }
         
-        const formData = new FormData();
-        formData.append('action', 'vdp_upload_contract_logo');
-        formData.append('nonce', vdp_vars.nonce);
-        formData.append('logo_file', file);
-        
-        console.log('VDP Upload - FormData created');
-        console.log('VDP Upload - Action:', 'vdp_upload_contract_logo');
-        console.log('VDP Upload - Available nonces:', vdp_ajax);
-        console.log('VDP Upload - VDP Vars nonce:', vdp_vars.nonce);
-        console.log('VDP Upload - File in FormData:', formData.get('logo_file'));
-        console.log('VDP Upload - URL:', vdp_ajax.url);
-        
         // Show loading state
         $('.vdp-logo-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
         
-        $.ajax({
-            url: vdp_ajax.url,
-            type: 'POST',
-            data: formData,
-            processData: false,  // Important: Don't process the FormData
-            contentType: false,  // Important: Let browser set the content type with boundary
-            success: function(response) {
-                console.log('VDP Upload - AJAX Response received:', response);
-                if (response.success) {
-                    console.log('VDP Upload - Success! URL:', response.data.url);
-                    displayContractLogo(response.data.url);
-                    $('#logo-url').val(response.data.url);
-                    showNotification('success', 'Logo uploaded successfully');
-                } else {
-                    console.log('VDP Upload - Error response:', response.data);
-                    showNotification('error', response.data || 'Error uploading logo');
+        // Convert file to Base64
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64Data = e.target.result;
+            console.log('VDP Upload - File converted to Base64');
+            
+            // Send as regular POST data instead of FormData
+            $.ajax({
+                url: vdp_ajax.url,
+                type: 'POST',
+                data: {
+                    action: 'vdp_upload_contract_logo_base64',
+                    nonce: vdp_vars.nonce,
+                    file_data: base64Data,
+                    file_name: file.name,
+                    file_type: file.type
+                },
+                success: function(response) {
+                    console.log('VDP Upload - AJAX Response received:', response);
+                    if (response.success) {
+                        console.log('VDP Upload - Success! URL:', response.data.url);
+                        displayContractLogo(response.data.url);
+                        $('#logo-url').val(response.data.url);
+                        showNotification('success', 'Logo uploaded successfully');
+                    } else {
+                        console.log('VDP Upload - Error response:', response.data);
+                        showNotification('error', response.data || 'Error uploading logo');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log('VDP Upload - AJAX Error:', error);
+                    console.log('VDP Upload - Status:', status);
+                    console.log('VDP Upload - Response:', xhr.responseText);
+                    showNotification('error', 'Network error. Please try again.');
+                },
+                complete: function() {
+                    $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Logo');
                 }
-            },
-            error: function(xhr, status, error) {
-                console.log('VDP Upload - AJAX Error:', error);
-                console.log('VDP Upload - Status:', status);
-                console.log('VDP Upload - Response:', xhr.responseText);
-                showNotification('error', 'Network error. Please try again.');
-            },
-            complete: function() {
-                $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Logo');
-            }
-        });
+            });
+        };
+        
+        reader.onerror = function() {
+            showNotification('error', 'Error reading file. Please try again.');
+            $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Logo');
+        };
+        
+        // Start reading the file
+        reader.readAsDataURL(file);
     }
     
     function displayContractLogo(url) {

@@ -31,6 +31,7 @@ class VDP_Contracts {
         add_action('wp_ajax_vdp_save_payment_template', array($this, 'save_payment_template'));
         add_action('wp_ajax_vdp_delete_payment_template', array($this, 'delete_payment_template'));
         add_action('wp_ajax_vdp_upload_contract_logo', array($this, 'upload_contract_logo'));
+        add_action('wp_ajax_vdp_upload_contract_logo_base64', array($this, 'upload_contract_logo_base64'));
     }
     
     /**
@@ -504,6 +505,84 @@ class VDP_Contracts {
                 ));
             } else {
                 wp_send_json_error('Upload failed: ' . ($movefile['error'] ?? 'Unknown error'));
+            }
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error uploading logo: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Upload contract logo using Base64 data
+     */
+    public function upload_contract_logo_base64() {
+        check_ajax_referer('vdp-ajax-nonce', 'nonce');
+        
+        // Check if user can upload files
+        if (!current_user_can('upload_files')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        try {
+            // Get the Base64 data
+            $file_data = $_POST['file_data'] ?? '';
+            $file_name = sanitize_file_name($_POST['file_name'] ?? 'logo.png');
+            $file_type = $_POST['file_type'] ?? 'image/png';
+            
+            if (empty($file_data)) {
+                wp_send_json_error('No file data received');
+            }
+            
+            // Extract Base64 content (remove data:image/xxx;base64, prefix)
+            $file_data = preg_replace('/^data:image\/\w+;base64,/', '', $file_data);
+            $file_data = base64_decode($file_data);
+            
+            if ($file_data === false) {
+                wp_send_json_error('Invalid Base64 data');
+            }
+            
+            // Check file size (max 2MB)
+            if (strlen($file_data) > 2 * 1024 * 1024) {
+                wp_send_json_error('File too large. Maximum size is 2MB.');
+            }
+            
+            // Include WordPress file handling functions
+            if (!function_exists('wp_upload_bits')) {
+                require_once(ABSPATH . 'wp-admin/includes/file.php');
+            }
+            
+            // Generate unique filename
+            $file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
+            if (empty($file_ext)) {
+                // Determine extension from MIME type
+                $extensions = array(
+                    'image/jpeg' => 'jpg',
+                    'image/jpg' => 'jpg',
+                    'image/png' => 'png',
+                    'image/gif' => 'gif'
+                );
+                $file_ext = $extensions[$file_type] ?? 'png';
+            }
+            
+            $new_file_name = 'contract_logo_' . time() . '_' . uniqid() . '.' . $file_ext;
+            
+            // Custom upload directory for vendor logos
+            add_filter('upload_dir', array($this, 'custom_upload_dir'));
+            
+            // Upload the file using WordPress function
+            $upload = wp_upload_bits($new_file_name, null, $file_data);
+            
+            // Remove the upload directory filter
+            remove_filter('upload_dir', array($this, 'custom_upload_dir'));
+            
+            if (!$upload['error']) {
+                wp_send_json_success(array(
+                    'url' => $upload['url'],
+                    'path' => $upload['file'],
+                    'filename' => basename($upload['file'])
+                ));
+            } else {
+                wp_send_json_error('Upload failed: ' . $upload['error']);
             }
             
         } catch (Exception $e) {
