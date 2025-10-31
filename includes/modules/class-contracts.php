@@ -455,13 +455,19 @@ class VDP_Contracts {
         }
         
         try {
-            // Send debug info to browser console
+            // Enhanced debug info
             $debug_info = array(
                 'POST_keys' => array_keys($_POST),
                 'FILES_keys' => array_keys($_FILES),
                 'logo_file_exists' => isset($_FILES['logo_file']),
                 'logo_file_error' => isset($_FILES['logo_file']) ? $_FILES['logo_file']['error'] : 'N/A',
-                'FILES_content' => $_FILES
+                'FILES_content' => $_FILES,
+                'PHP_upload_max_filesize' => ini_get('upload_max_filesize'),
+                'PHP_post_max_size' => ini_get('post_max_size'),
+                'PHP_max_file_uploads' => ini_get('max_file_uploads'),
+                'content_type' => $_SERVER['CONTENT_TYPE'] ?? 'not set',
+                'request_method' => $_SERVER['REQUEST_METHOD'],
+                'php_input_empty' => empty(file_get_contents('php://input'))
             );
             
             // Check if file was uploaded
