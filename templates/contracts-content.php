@@ -509,7 +509,7 @@ jQuery(document).ready(function($) {
             section = 'validation';
         }
         
-        formData += '&action=vdp_save_contract_settings&nonce=' + vdp_ajax.nonce + '&section=' + section;
+        formData += '&action=vdp_save_contract_settings&nonce=' + vdp_vars.nonce + '&section=' + section;
         
         console.log('VDP Contracts - Saving section:', section);
         console.log('VDP Contracts - Form ID:', formId);
