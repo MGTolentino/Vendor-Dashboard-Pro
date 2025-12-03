@@ -35,16 +35,16 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
     <div class="vdp-contracts-tabs">
         <div class="vdp-tabs-nav">
             <button class="vdp-tab-btn vdp-active" data-tab="company">
-                <i class="fas fa-building"></i> <?php esc_html_e('Company Info', 'vendor-dashboard-pro'); ?>
+                <i class="fas fa-building"></i> <?php esc_html_e('Información de Empresa', 'vendor-dashboard-pro'); ?>
             </button>
             <button class="vdp-tab-btn" data-tab="payment-templates">
-                <i class="fas fa-credit-card"></i> <?php esc_html_e('Payment Templates', 'vendor-dashboard-pro'); ?>
+                <i class="fas fa-credit-card"></i> <?php esc_html_e('Plantillas de Pago', 'vendor-dashboard-pro'); ?>
             </button>
             <button class="vdp-tab-btn" data-tab="terms">
-                <i class="fas fa-file-alt"></i> <?php esc_html_e('Contract Terms', 'vendor-dashboard-pro'); ?>
+                <i class="fas fa-file-alt"></i> <?php esc_html_e('Términos del Contrato', 'vendor-dashboard-pro'); ?>
             </button>
             <button class="vdp-tab-btn" data-tab="bank-info">
-                <i class="fas fa-university"></i> <?php esc_html_e('Bank Information', 'vendor-dashboard-pro'); ?>
+                <i class="fas fa-university"></i> <?php esc_html_e('Información Bancaria', 'vendor-dashboard-pro'); ?>
             </button>
             <button class="vdp-tab-btn" data-tab="validation">
                 <i class="fas fa-shield-alt"></i> <?php esc_html_e('Reglas de Validación', 'vendor-dashboard-pro'); ?>
@@ -57,79 +57,79 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                 <form id="company-info-form" class="vdp-contracts-form" enctype="multipart/form-data">
                     <div class="vdp-form-section">
                         <div class="vdp-section-header">
-                            <h3 class="vdp-section-title"><?php esc_html_e('Company Information for Contracts', 'vendor-dashboard-pro'); ?></h3>
-                            <p class="vdp-section-subtitle"><?php esc_html_e('This information will appear on all generated contracts', 'vendor-dashboard-pro'); ?></p>
+                            <h3 class="vdp-section-title"><?php esc_html_e('Información de la Empresa para Contratos', 'vendor-dashboard-pro'); ?></h3>
+                            <p class="vdp-section-subtitle"><?php esc_html_e('Esta información aparecerá en todos los contratos generados', 'vendor-dashboard-pro'); ?></p>
                             <button type="button" class="vdp-btn vdp-btn-secondary vdp-btn-sm" id="copy-from-settings">
                                 <i class="fas fa-copy"></i> <?php esc_html_e('Copiar desde Configuración de Tienda', 'vendor-dashboard-pro'); ?>
                             </button>
                         </div>
                         
                         <div class="vdp-form-group">
-                            <label for="company-name" class="vdp-form-label"><?php esc_html_e('Company Name', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
+                            <label for="company-name" class="vdp-form-label"><?php esc_html_e('Nombre de la Empresa', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
                             <input type="text" id="company-name" name="company_name" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['company_data']['name']); ?>" required>
                         </div>
                         
                         <div class="vdp-form-group">
-                            <label for="company-address" class="vdp-form-label"><?php esc_html_e('Company Address', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
+                            <label for="company-address" class="vdp-form-label"><?php esc_html_e('Dirección de la Empresa', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
                             <textarea id="company-address" name="company_address" class="vdp-form-control" rows="3" required><?php echo esc_textarea($contract_settings['company_data']['address']); ?></textarea>
                         </div>
                         
                         <div class="vdp-form-grid">
                             <div class="vdp-form-group">
-                                <label for="company-phone" class="vdp-form-label"><?php esc_html_e('Phone Number', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
+                                <label for="company-phone" class="vdp-form-label"><?php esc_html_e('Número de Teléfono', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
                                 <input type="tel" id="company-phone" name="company_phone" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['company_data']['phone']); ?>" required>
                             </div>
                             
                             <div class="vdp-form-group">
-                                <label for="company-email" class="vdp-form-label"><?php esc_html_e('Company Email', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
+                                <label for="company-email" class="vdp-form-label"><?php esc_html_e('Email de la Empresa', 'vendor-dashboard-pro'); ?> <span class="vdp-required">*</span></label>
                                 <input type="email" id="company-email" name="company_email" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['company_data']['email']); ?>" required>
                             </div>
                         </div>
                         
                         <div class="vdp-form-group">
-                            <label for="company-rfc" class="vdp-form-label"><?php esc_html_e('Tax ID (RFC)', 'vendor-dashboard-pro'); ?></label>
+                            <label for="company-rfc" class="vdp-form-label"><?php esc_html_e('RFC', 'vendor-dashboard-pro'); ?></label>
                             <input type="text" id="company-rfc" name="company_rfc" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['company_data']['rfc']); ?>">
                         </div>
                         
                         <div class="vdp-form-group">
-                            <label for="contract-logo" class="vdp-form-label"><?php esc_html_e('Contract Logo', 'vendor-dashboard-pro'); ?></label>
+                            <label for="contract-logo" class="vdp-form-label"><?php esc_html_e('Logo para Contratos', 'vendor-dashboard-pro'); ?></label>
                             <div class="vdp-logo-uploader">
                                 <div class="vdp-current-logo">
                                     <?php if (!empty($contract_settings['company_data']['logo_url'])): ?>
-                                        <img src="<?php echo esc_url($contract_settings['company_data']['logo_url']); ?>" alt="Contract Logo" style="max-width: 200px; max-height: 80px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <img src="<?php echo esc_url($contract_settings['company_data']['logo_url']); ?>" alt="Logo del Contrato" style="max-width: 200px; max-height: 80px; border: 1px solid #ddd; border-radius: 4px;">
                                     <?php else: ?>
                                         <div class="vdp-logo-placeholder">
                                             <i class="fas fa-image"></i>
-                                            <span><?php esc_html_e('No logo uploaded', 'vendor-dashboard-pro'); ?></span>
+                                            <span><?php esc_html_e('No se ha subido logo', 'vendor-dashboard-pro'); ?></span>
                                         </div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="vdp-logo-controls">
                                     <input type="file" id="contract-logo" name="logo_file" class="vdp-file-input" accept="image/*" style="display: none;">
                                     <button type="button" class="vdp-btn vdp-btn-outline vdp-logo-btn">
-                                        <i class="fas fa-upload"></i> <?php esc_html_e('Upload Logo', 'vendor-dashboard-pro'); ?>
+                                        <i class="fas fa-upload"></i> <?php esc_html_e('Subir Logo', 'vendor-dashboard-pro'); ?>
                                     </button>
                                     <?php if (!empty($contract_settings['company_data']['logo_url'])): ?>
                                         <button type="button" class="vdp-btn vdp-btn-outline vdp-remove-logo">
-                                            <i class="fas fa-trash"></i> <?php esc_html_e('Remove', 'vendor-dashboard-pro'); ?>
+                                            <i class="fas fa-trash"></i> <?php esc_html_e('Eliminar', 'vendor-dashboard-pro'); ?>
                                         </button>
                                     <?php endif; ?>
                                 </div>
                                 <input type="hidden" id="logo-url" name="logo_url" value="<?php echo esc_attr($contract_settings['company_data']['logo_url'] ?? ''); ?>">
                             </div>
-                            <div class="vdp-form-help"><?php esc_html_e('Upload a logo that will appear on your contracts. Recommended size: 200x80px', 'vendor-dashboard-pro'); ?></div>
+                            <div class="vdp-form-help"><?php esc_html_e('Sube un logo que aparecerá en tus contratos. Tamaño recomendado: 200x80px', 'vendor-dashboard-pro'); ?></div>
                         </div>
                         
                         <div class="vdp-form-group">
-                            <label for="razon-social" class="vdp-form-label"><?php esc_html_e('Business Name (Razón Social)', 'vendor-dashboard-pro'); ?></label>
+                            <label for="razon-social" class="vdp-form-label"><?php esc_html_e('Razón Social', 'vendor-dashboard-pro'); ?></label>
                             <input type="text" id="razon-social" name="razon_social" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['company_data']['razon_social'] ?? ''); ?>">
-                            <div class="vdp-form-help"><?php esc_html_e('Official business name that will appear in contract bank information', 'vendor-dashboard-pro'); ?></div>
+                            <div class="vdp-form-help"><?php esc_html_e('Nombre oficial del negocio que aparecerá en la información bancaria del contrato', 'vendor-dashboard-pro'); ?></div>
                         </div>
                     </div>
                     
                     <div class="vdp-form-actions">
                         <button type="submit" class="vdp-btn vdp-btn-primary">
-                            <i class="fas fa-save"></i> <?php esc_html_e('Save Company Info', 'vendor-dashboard-pro'); ?>
+                            <i class="fas fa-save"></i> <?php esc_html_e('Guardar Información', 'vendor-dashboard-pro'); ?>
                         </button>
                     </div>
                 </form>
@@ -276,19 +276,19 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                 <form id="contract-terms-form" class="vdp-contracts-form">
                     <div class="vdp-form-section">
                         <div class="vdp-section-header">
-                            <h3 class="vdp-section-title"><?php esc_html_e('Contract Terms and Conditions', 'vendor-dashboard-pro'); ?></h3>
-                            <p class="vdp-section-subtitle"><?php esc_html_e('Define the legal terms that will appear in all your contracts', 'vendor-dashboard-pro'); ?></p>
+                            <h3 class="vdp-section-title"><?php esc_html_e('Términos y Condiciones del Contrato', 'vendor-dashboard-pro'); ?></h3>
+                            <p class="vdp-section-subtitle"><?php esc_html_e('Define los términos legales que aparecerán en todos tus contratos', 'vendor-dashboard-pro'); ?></p>
                         </div>
                         
                         <div class="vdp-form-group">
-                            <label for="contract-terms" class="vdp-form-label"><?php esc_html_e('Contract Terms', 'vendor-dashboard-pro'); ?></label>
+                            <label for="contract-terms" class="vdp-form-label"><?php esc_html_e('Términos del Contrato', 'vendor-dashboard-pro'); ?></label>
                             <textarea id="contract-terms" name="contract_terms" class="vdp-form-control vdp-contract-terms-editor" rows="20"><?php echo esc_textarea($contract_settings['contract_terms']); ?></textarea>
                             <div class="vdp-form-help">
-                                <?php esc_html_e('These terms will be included in every contract. You can use the following placeholders:', 'vendor-dashboard-pro'); ?>
+                                <?php esc_html_e('Estos términos se incluirán en cada contrato. Puedes usar los siguientes marcadores:', 'vendor-dashboard-pro'); ?>
                                 <br>
-                                <code>{event_date}</code> - <?php esc_html_e('Event date', 'vendor-dashboard-pro'); ?>,
-                                <code>{client_name}</code> - <?php esc_html_e('Client name', 'vendor-dashboard-pro'); ?>,
-                                <code>{total_amount}</code> - <?php esc_html_e('Contract total', 'vendor-dashboard-pro'); ?>
+                                <code>{event_date}</code> - <?php esc_html_e('Fecha del evento', 'vendor-dashboard-pro'); ?>,
+                                <code>{client_name}</code> - <?php esc_html_e('Nombre del cliente', 'vendor-dashboard-pro'); ?>,
+                                <code>{total_amount}</code> - <?php esc_html_e('Monto total del contrato', 'vendor-dashboard-pro'); ?>
                             </div>
                         </div>
                     </div>
@@ -312,19 +312,19 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                         
                         <div class="vdp-form-grid">
                             <div class="vdp-form-group">
-                                <label for="bank-name" class="vdp-form-label"><?php esc_html_e('Bank Name', 'vendor-dashboard-pro'); ?></label>
+                                <label for="bank-name" class="vdp-form-label"><?php esc_html_e('Nombre del Banco', 'vendor-dashboard-pro'); ?></label>
                                 <input type="text" id="bank-name" name="bank_name" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['bank_data']['bank_name']); ?>">
                             </div>
                             
                             <div class="vdp-form-group">
-                                <label for="account-holder" class="vdp-form-label"><?php esc_html_e('Account Holder', 'vendor-dashboard-pro'); ?></label>
+                                <label for="account-holder" class="vdp-form-label"><?php esc_html_e('Titular de la Cuenta', 'vendor-dashboard-pro'); ?></label>
                                 <input type="text" id="account-holder" name="account_holder" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['bank_data']['account_holder']); ?>">
                             </div>
                         </div>
                         
                         <div class="vdp-form-grid">
                             <div class="vdp-form-group">
-                                <label for="account-number" class="vdp-form-label"><?php esc_html_e('Account Number', 'vendor-dashboard-pro'); ?></label>
+                                <label for="account-number" class="vdp-form-label"><?php esc_html_e('Número de Cuenta', 'vendor-dashboard-pro'); ?></label>
                                 <input type="text" id="account-number" name="account_number" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['bank_data']['account_number']); ?>">
                             </div>
                             
@@ -354,15 +354,15 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                         
                         <div class="vdp-form-grid">
                             <div class="vdp-form-group">
-                                <label for="min-days-before-event" class="vdp-form-label"><?php esc_html_e('Minimum days before event for final payment', 'vendor-dashboard-pro'); ?></label>
+                                <label for="min-days-before-event" class="vdp-form-label"><?php esc_html_e('Días mínimos antes del evento para el pago final', 'vendor-dashboard-pro'); ?></label>
                                 <input type="number" id="min-days-before-event" name="min_days_before_event" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['validation_rules']['min_days_before_event']); ?>" min="1" max="30">
-                                <div class="vdp-form-help"><?php esc_html_e('Recommended: 7 days', 'vendor-dashboard-pro'); ?></div>
+                                <div class="vdp-form-help"><?php esc_html_e('Recomendado: 7 días', 'vendor-dashboard-pro'); ?></div>
                             </div>
                             
                             <div class="vdp-form-group">
-                                <label for="force-full-payment-days" class="vdp-form-label"><?php esc_html_e('Force full payment if event is within X days', 'vendor-dashboard-pro'); ?></label>
+                                <label for="force-full-payment-days" class="vdp-form-label"><?php esc_html_e('Forzar pago completo si el evento está en X días', 'vendor-dashboard-pro'); ?></label>
                                 <input type="number" id="force-full-payment-days" name="force_full_payment_days" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['validation_rules']['force_full_payment_days']); ?>" min="7" max="60">
-                                <div class="vdp-form-help"><?php esc_html_e('Recommended: 15 days', 'vendor-dashboard-pro'); ?></div>
+                                <div class="vdp-form-help"><?php esc_html_e('Recomendado: 15 días', 'vendor-dashboard-pro'); ?></div>
                             </div>
                         </div>
                         
@@ -396,11 +396,11 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
 <div id="vdp-payment-template-modal" class="vdp-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 999999; align-items: center; justify-content: center;">
     <div class="vdp-modal-content" style="background: white; padding: 20px; border-radius: 8px; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative;">
         <span class="vdp-modal-close" style="position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer;">&times;</span>
-        <h2 id="template-modal-title"><?php esc_html_e('Add Payment Template', 'vendor-dashboard-pro'); ?></h2>
+        <h2 id="template-modal-title"><?php esc_html_e('Agregar Plantilla de Pago', 'vendor-dashboard-pro'); ?></h2>
         
         <form id="payment-template-form">
             <div class="vdp-form-group">
-                <label for="template-name" class="vdp-form-label"><?php esc_html_e('Template Name', 'vendor-dashboard-pro'); ?></label>
+                <label for="template-name" class="vdp-form-label"><?php esc_html_e('Nombre de la Plantilla', 'vendor-dashboard-pro'); ?></label>
                 <input type="text" id="template-name" name="template_name" class="vdp-form-control" required>
             </div>
             
@@ -423,7 +423,7 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                 </div>
                 
                 <button type="button" class="vdp-btn vdp-btn-outline" id="add-payment-item">
-                    <i class="fas fa-plus"></i> <?php esc_html_e('Add Payment', 'vendor-dashboard-pro'); ?>
+                    <i class="fas fa-plus"></i> <?php esc_html_e('Agregar Pago', 'vendor-dashboard-pro'); ?>
                 </button>
             </div>
             
@@ -435,10 +435,10 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
             
             <div class="vdp-form-actions">
                 <button type="button" class="vdp-btn vdp-btn-secondary" id="cancel-template">
-                    <?php esc_html_e('Cancel', 'vendor-dashboard-pro'); ?>
+                    <?php esc_html_e('Cancelar', 'vendor-dashboard-pro'); ?>
                 </button>
                 <button type="submit" class="vdp-btn vdp-btn-primary">
-                    <i class="fas fa-save"></i> <?php esc_html_e('Save Template', 'vendor-dashboard-pro'); ?>
+                    <i class="fas fa-save"></i> <?php esc_html_e('Guardar Plantilla', 'vendor-dashboard-pro'); ?>
                 </button>
             </div>
         </form>
@@ -603,16 +603,16 @@ jQuery(document).ready(function($) {
         // Show loading state
         var $submitBtn = $form.find('button[type="submit"]');
         var originalText = $submitBtn.html();
-        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
         
         $.post(vdp_ajax.url, formData, function(response) {
             if (response.success) {
-                showNotification('success', 'Settings saved successfully');
+                showNotification('success', 'Configuración guardada exitosamente');
             } else {
-                showNotification('error', response.data || 'Error saving settings');
+                showNotification('error', response.data || 'Error guardando configuración');
             }
         }).fail(function() {
-            showNotification('error', 'Network error. Please try again.');
+            showNotification('error', 'Error de conexión. Intenta de nuevo.');
         }).always(function() {
             // Restore button state
             $submitBtn.prop('disabled', false).html(originalText);
@@ -650,7 +650,7 @@ jQuery(document).ready(function($) {
         }
         
         if (!isValid) {
-            showNotification('error', 'Please fix the errors below before saving');
+            showNotification('error', 'Por favor corrige los errores antes de guardar');
         }
         
         return isValid;
@@ -672,7 +672,7 @@ jQuery(document).ready(function($) {
         $('#template-payments').empty();
         
         if (templateData) {
-            $('#template-modal-title').text('Edit Payment Template');
+            $('#template-modal-title').text('Editar Plantilla de Pago');
             $('#template-name').val(templateData.name);
             $('#min-days').val(templateData.min_days_required);
             $('#is-default').prop('checked', templateData.is_default);
@@ -681,7 +681,7 @@ jQuery(document).ready(function($) {
                 addPaymentItem(payment);
             });
         } else {
-            $('#template-modal-title').text('Add Payment Template');
+            $('#template-modal-title').text('Agregar Plantilla de Pago');
             addPaymentItem(); // Add one default payment item
         }
         
@@ -694,13 +694,13 @@ jQuery(document).ready(function($) {
         var html = `
             <div class="payment-item">
                 <div class="payment-item-fields">
-                    <input type="number" name="percentage[]" placeholder="Percentage" value="${payment ? payment.percentage : ''}" min="0" max="100" step="0.01">
+                    <input type="number" name="percentage[]" placeholder="Porcentaje" value="${payment ? payment.percentage : ''}" min="0" max="100" step="0.01">
                     <select name="timing_type[]">
-                        <option value="days_from_contract" ${payment && payment.days_from_contract !== undefined ? 'selected' : ''}>Days after contract</option>
-                        <option value="days_before_event" ${payment && payment.days_before_event !== undefined ? 'selected' : ''}>Days before event</option>
+                        <option value="days_from_contract" ${payment && payment.days_from_contract !== undefined ? 'selected' : ''}>Días después del contrato</option>
+                        <option value="days_before_event" ${payment && payment.days_before_event !== undefined ? 'selected' : ''}>Días antes del evento</option>
                     </select>
-                    <input type="number" name="timing_value[]" placeholder="Days" value="${payment ? (payment.days_from_contract || payment.days_before_event) : ''}" min="0">
-                    <input type="text" name="description[]" placeholder="Description" value="${payment ? payment.description : ''}">
+                    <input type="number" name="timing_value[]" placeholder="Días" value="${payment ? (payment.days_from_contract || payment.days_before_event) : ''}" min="0">
+                    <input type="text" name="description[]" placeholder="Descripción" value="${payment ? payment.description : ''}">
                     <button type="button" class="remove-payment"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
@@ -769,11 +769,11 @@ jQuery(document).ready(function($) {
         
         $.post(vdp_ajax.url, data, function(response) {
             if (response.success) {
-                showNotification('success', 'Template saved successfully');
+                showNotification('success', 'Plantilla guardada exitosamente');
                 $('#vdp-payment-template-modal').hide();
                 location.reload(); // Refresh to show new template
             } else {
-                showNotification('error', response.data || 'Error saving template');
+                showNotification('error', response.data || 'Error guardando plantilla');
             }
         });
     }
@@ -800,7 +800,7 @@ jQuery(document).ready(function($) {
     }
     
     function generateContractPreview() {
-        $('#contract-preview').html('<div class="vdp-preview-loading"><i class="fas fa-spinner fa-spin"></i> Loading preview...</div>');
+        $('#contract-preview').html('<div class="vdp-preview-loading"><i class="fas fa-spinner fa-spin"></i> Cargando vista previa...</div>');
         
         // This would generate a sample contract preview
         setTimeout(function() {
@@ -811,9 +811,9 @@ jQuery(document).ready(function($) {
                     
                     <div class="contract-section">
                         <h3>Datos de la Empresa</h3>
-                        <p>${$('#company-name').val() || '[Company Name]'}</p>
-                        <p>${$('#company-address').val() || '[Company Address]'}</p>
-                        <p>Tel: ${$('#company-phone').val() || '[Phone]'}</p>
+                        <p>${$('#company-name').val() || '[Nombre de la Empresa]'}</p>
+                        <p>${$('#company-address').val() || '[Dirección de la Empresa]'}</p>
+                        <p>Tel: ${$('#company-phone').val() || '[Teléfono]'}</p>
                         <p>Email: ${$('#company-email').val() || '[Email]'}</p>
                     </div>
                     
@@ -832,7 +832,7 @@ jQuery(document).ready(function($) {
                     
                     <div class="contract-section">
                         <h3>Términos y Condiciones</h3>
-                        <div style="white-space: pre-line; font-size: 12px;">${$('#contract-terms').val() || '[Contract Terms]'}</div>
+                        <div style="white-space: pre-line; font-size: 12px;">${$('#contract-terms').val() || '[Términos del Contrato]'}</div>
                     </div>
                 </div>
             `);
@@ -859,18 +859,18 @@ jQuery(document).ready(function($) {
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
         if (!allowedTypes.includes(file.type)) {
-            showNotification('error', 'Invalid file type. Only JPG, PNG and GIF are allowed.');
+            showNotification('error', 'Tipo de archivo inválido. Solo se permiten JPG, PNG y GIF.');
             return;
         }
         
         // Validate file size (max 2MB)
         if (file.size > 2 * 1024 * 1024) {
-            showNotification('error', 'File too large. Maximum size is 2MB.');
+            showNotification('error', 'Archivo muy grande. El tamaño máximo es 2MB.');
             return;
         }
         
         // Show loading state
-        $('.vdp-logo-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Uploading...');
+        $('.vdp-logo-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Subiendo...');
         
         // Convert file to Base64
         const reader = new FileReader();
@@ -895,27 +895,27 @@ jQuery(document).ready(function($) {
                         console.log('VDP Upload - Success! URL:', response.data.url);
                         displayContractLogo(response.data.url);
                         $('#logo-url').val(response.data.url);
-                        showNotification('success', 'Logo uploaded successfully');
+                        showNotification('success', 'Logo subido exitosamente');
                     } else {
                         console.log('VDP Upload - Error response:', response.data);
-                        showNotification('error', response.data || 'Error uploading logo');
+                        showNotification('error', response.data || 'Error subiendo el logo');
                     }
                 },
                 error: function(xhr, status, error) {
                     console.log('VDP Upload - AJAX Error:', error);
                     console.log('VDP Upload - Status:', status);
                     console.log('VDP Upload - Response:', xhr.responseText);
-                    showNotification('error', 'Network error. Please try again.');
+                    showNotification('error', 'Error de conexión. Intenta de nuevo.');
                 },
                 complete: function() {
-                    $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Logo');
+                    $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Subir Logo');
                 }
             });
         };
         
         reader.onerror = function() {
-            showNotification('error', 'Error reading file. Please try again.');
-            $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Upload Logo');
+            showNotification('error', 'Error leyendo el archivo. Intenta de nuevo.');
+            $('.vdp-logo-btn').prop('disabled', false).html('<i class="fas fa-upload"></i> Subir Logo');
         };
         
         // Start reading the file
@@ -924,7 +924,7 @@ jQuery(document).ready(function($) {
     
     function displayContractLogo(url) {
         const $container = $('.vdp-current-logo');
-        $container.html(`<img src="${url}" alt="Contract Logo" style="max-width: 200px; max-height: 80px; border: 1px solid #ddd; border-radius: 4px;">`);
+        $container.html(`<img src="${url}" alt="Logo del Contrato" style="max-width: 200px; max-height: 80px; border: 1px solid #ddd; border-radius: 4px;">`);
         
         // Show remove button if not already visible
         if (!$('.vdp-remove-logo').is(':visible')) {
