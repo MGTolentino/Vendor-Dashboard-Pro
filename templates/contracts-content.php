@@ -25,10 +25,10 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
     <div class="vdp-page-header">
         <h1 class="vdp-page-title">
             <i class="fas fa-file-contract"></i>
-            <?php esc_html_e('Contract Settings', 'vendor-dashboard-pro'); ?>
+            <?php esc_html_e('Configuración de Contratos', 'vendor-dashboard-pro'); ?>
         </h1>
         <p class="vdp-page-description">
-            <?php esc_html_e('Configure your contract templates, payment schedules, and terms.', 'vendor-dashboard-pro'); ?>
+            <?php esc_html_e('Configura tus plantillas de contratos, esquemas de pago y términos.', 'vendor-dashboard-pro'); ?>
         </p>
     </div>
     
@@ -295,7 +295,7 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                     
                     <div class="vdp-form-actions">
                         <button type="submit" class="vdp-btn vdp-btn-primary">
-                            <i class="fas fa-save"></i> <?php esc_html_e('Save Terms', 'vendor-dashboard-pro'); ?>
+                            <i class="fas fa-save"></i> <?php esc_html_e('Guardar Términos', 'vendor-dashboard-pro'); ?>
                         </button>
                     </div>
                 </form>
@@ -306,8 +306,8 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                 <form id="bank-info-form" class="vdp-contracts-form">
                     <div class="vdp-form-section">
                         <div class="vdp-section-header">
-                            <h3 class="vdp-section-title"><?php esc_html_e('Bank Account Information', 'vendor-dashboard-pro'); ?></h3>
-                            <p class="vdp-section-subtitle"><?php esc_html_e('Banking details that will appear on contracts for client payments', 'vendor-dashboard-pro'); ?></p>
+                            <h3 class="vdp-section-title"><?php esc_html_e('Información de Cuenta Bancaria', 'vendor-dashboard-pro'); ?></h3>
+                            <p class="vdp-section-subtitle"><?php esc_html_e('Detalles bancarios que aparecerán en los contratos para pagos de clientes', 'vendor-dashboard-pro'); ?></p>
                         </div>
                         
                         <div class="vdp-form-grid">
@@ -337,7 +337,7 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                     
                     <div class="vdp-form-actions">
                         <button type="submit" class="vdp-btn vdp-btn-primary">
-                            <i class="fas fa-save"></i> <?php esc_html_e('Save Bank Info', 'vendor-dashboard-pro'); ?>
+                            <i class="fas fa-save"></i> <?php esc_html_e('Guardar Info Bancaria', 'vendor-dashboard-pro'); ?>
                         </button>
                     </div>
                 </form>
@@ -348,8 +348,8 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                 <form id="validation-rules-form" class="vdp-contracts-form">
                     <div class="vdp-form-section">
                         <div class="vdp-section-header">
-                            <h3 class="vdp-section-title"><?php esc_html_e('Payment Validation Rules', 'vendor-dashboard-pro'); ?></h3>
-                            <p class="vdp-section-subtitle"><?php esc_html_e('Configure rules to ensure payment schedules are realistic and enforceable', 'vendor-dashboard-pro'); ?></p>
+                            <h3 class="vdp-section-title"><?php esc_html_e('Reglas de Validación de Pagos', 'vendor-dashboard-pro'); ?></h3>
+                            <p class="vdp-section-subtitle"><?php esc_html_e('Configura reglas para asegurar que los esquemas de pago sean realistas y ejecutables', 'vendor-dashboard-pro'); ?></p>
                         </div>
                         
                         <div class="vdp-form-grid">
@@ -383,7 +383,7 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                     
                     <div class="vdp-form-actions">
                         <button type="submit" class="vdp-btn vdp-btn-primary">
-                            <i class="fas fa-save"></i> <?php esc_html_e('Save Validation Rules', 'vendor-dashboard-pro'); ?>
+                            <i class="fas fa-save"></i> <?php esc_html_e('Guardar Reglas de Validación', 'vendor-dashboard-pro'); ?>
                         </button>
                     </div>
                 </form>
@@ -405,14 +405,14 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
             </div>
             
             <div class="vdp-form-group">
-                <label for="min-days" class="vdp-form-label"><?php esc_html_e('Minimum days required before event', 'vendor-dashboard-pro'); ?></label>
+                <label for="min-days" class="vdp-form-label"><?php esc_html_e('Días mínimos requeridos antes del evento', 'vendor-dashboard-pro'); ?></label>
                 <input type="number" id="min-days" name="min_days_required" class="vdp-form-control" value="0" min="0">
             </div>
             
             <div class="vdp-form-group">
                 <label class="vdp-checkbox-label">
                     <input type="checkbox" id="is-default" name="is_default">
-                    <?php esc_html_e('Set as default template', 'vendor-dashboard-pro'); ?>
+                    <?php esc_html_e('Establecer como plantilla por defecto', 'vendor-dashboard-pro'); ?>
                 </label>
             </div>
             
@@ -518,6 +518,24 @@ jQuery(document).ready(function($) {
         var templateId = $(this).closest('.vdp-payment-template-card').data('template-id');
         editPaymentTemplate(templateId);
     });
+    
+    // Edit payment template function
+    function editPaymentTemplate(templateId) {
+        // Get template data from the server
+        $.post(vdp_ajax.url, {
+            action: 'vdp_get_payment_template',
+            template_id: templateId,
+            nonce: vdp_ajax.nonce
+        }, function(response) {
+            if (response.success) {
+                openPaymentTemplateModal(response.data);
+            } else {
+                showNotification('error', response.data || 'Error obteniendo la plantilla');
+            }
+        }).fail(function() {
+            showNotification('error', 'Error de conexión. Intenta de nuevo.');
+        });
+    }
     
     $('.delete-template').on('click', function() {
         var templateId = $(this).closest('.vdp-payment-template-card').data('template-id');
@@ -643,7 +661,7 @@ jQuery(document).ready(function($) {
             requiredFields.forEach(function(fieldId) {
                 var $field = $form.find(fieldId);
                 if (!$field.val().trim()) {
-                    showFieldError($field, 'This field is required');
+                    showFieldError($field, 'Este campo es requerido');
                     isValid = false;
                 }
             });
@@ -779,7 +797,7 @@ jQuery(document).ready(function($) {
     }
     
     function deletePaymentTemplate(templateId) {
-        if (!confirm('Are you sure you want to delete this template?')) {
+        if (!confirm('¿Estás seguro que quieres eliminar esta plantilla?')) {
             return;
         }
         
@@ -791,10 +809,10 @@ jQuery(document).ready(function($) {
         
         $.post(vdp_ajax.url, data, function(response) {
             if (response.success) {
-                showNotification('success', 'Template deleted successfully');
+                showNotification('success', 'Plantilla eliminada exitosamente');
                 $('[data-template-id="' + templateId + '"]').remove();
             } else {
-                showNotification('error', response.data || 'Error deleting template');
+                showNotification('error', response.data || 'Error eliminando plantilla');
             }
         });
     }
@@ -946,13 +964,13 @@ jQuery(document).ready(function($) {
         $container.html(`
             <div class="vdp-logo-placeholder">
                 <i class="fas fa-image"></i>
-                <span>No logo uploaded</span>
+                <span>No se ha subido logo</span>
             </div>
         `);
         $('.vdp-remove-logo').remove();
         $('#logo-url').val('');
         $('#contract-logo').val('');
-        showNotification('success', 'Logo removed');
+        showNotification('success', 'Logo eliminado');
     }
 });
 </script>
