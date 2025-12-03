@@ -28,6 +28,7 @@ class VDP_Contracts {
         // Register AJAX handlers
         add_action('wp_ajax_vdp_save_contract_settings', array($this, 'save_contract_settings'));
         add_action('wp_ajax_vdp_get_contract_templates', array($this, 'get_contract_templates'));
+        add_action('wp_ajax_vdp_get_payment_template', array($this, 'get_payment_template'));
         add_action('wp_ajax_vdp_save_payment_template', array($this, 'save_payment_template'));
         add_action('wp_ajax_vdp_delete_payment_template', array($this, 'delete_payment_template'));
         add_action('wp_ajax_vdp_upload_contract_logo', array($this, 'upload_contract_logo'));
@@ -282,6 +283,35 @@ class VDP_Contracts {
         
         $settings = $this->get_contract_settings($vendor->get_id());
         wp_send_json_success($settings['payment_templates']);
+    }
+    
+    /**
+     * Get single payment template via AJAX
+     */
+    public function get_payment_template() {
+        check_ajax_referer('vdp-ajax-nonce', 'nonce');
+        
+        $vendor = vdp_get_current_vendor();
+        if (!$vendor) {
+            wp_send_json_error('Vendor not found');
+        }
+        
+        $template_id = sanitize_text_field($_POST['template_id'] ?? '');
+        if (empty($template_id)) {
+            wp_send_json_error('Template ID is required');
+        }
+        
+        $settings = $this->get_contract_settings($vendor->get_id());
+        $templates = $settings['payment_templates'];
+        
+        // Find the template by ID
+        foreach ($templates as $template) {
+            if ($template['id'] === $template_id) {
+                wp_send_json_success($template);
+            }
+        }
+        
+        wp_send_json_error('Template not found');
     }
     
     /**

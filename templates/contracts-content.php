@@ -368,15 +368,15 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                         
                         <div class="vdp-form-grid">
                             <div class="vdp-form-group">
-                                <label for="min-initial-payment" class="vdp-form-label"><?php esc_html_e('Minimum initial payment percentage', 'vendor-dashboard-pro'); ?></label>
+                                <label for="min-initial-payment" class="vdp-form-label"><?php esc_html_e('Porcentaje mínimo de pago inicial', 'vendor-dashboard-pro'); ?></label>
                                 <input type="number" id="min-initial-payment" name="min_initial_payment" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['validation_rules']['min_initial_payment']); ?>" min="10" max="100">
                                 <div class="vdp-form-help">%</div>
                             </div>
                             
                             <div class="vdp-form-group">
-                                <label for="max-payment-terms" class="vdp-form-label"><?php esc_html_e('Maximum payment terms (months)', 'vendor-dashboard-pro'); ?></label>
+                                <label for="max-payment-terms" class="vdp-form-label"><?php esc_html_e('Términos máximos de pago (meses)', 'vendor-dashboard-pro'); ?></label>
                                 <input type="number" id="max-payment-terms" name="max_payment_terms" class="vdp-form-control" value="<?php echo esc_attr($contract_settings['validation_rules']['max_payment_terms']); ?>" min="1" max="24">
-                                <div class="vdp-form-help"><?php esc_html_e('months', 'vendor-dashboard-pro'); ?></div>
+                                <div class="vdp-form-help"><?php esc_html_e('meses', 'vendor-dashboard-pro'); ?></div>
                             </div>
                         </div>
                     </div>
