@@ -687,7 +687,6 @@ jQuery(document).ready(function($) {
     
     function openPaymentTemplateModal(templateData = null) {
         $('#payment-template-form')[0].reset();
-        $('#template-payments').empty();
         
         if (templateData) {
             $('#template-modal-title').text('Editar Plantilla de Pago');
@@ -695,16 +694,45 @@ jQuery(document).ready(function($) {
             $('#min-days').val(templateData.min_days_required);
             $('#is-default').prop('checked', templateData.is_default);
             
-            templateData.payments.forEach(function(payment) {
-                addPaymentItem(payment);
-            });
+            // Optimized: Build all HTML at once
+            const $paymentsContainer = $('#template-payments');
+            let paymentsHtml = '';
+            
+            if (templateData.payments && templateData.payments.length > 0) {
+                templateData.payments.forEach(function(payment) {
+                    paymentsHtml += buildPaymentItemHtml(payment);
+                });
+            } else {
+                paymentsHtml = buildPaymentItemHtml();
+            }
+            
+            $paymentsContainer.html(paymentsHtml);
+            
         } else {
             $('#template-modal-title').text('Agregar Plantilla de Pago');
-            addPaymentItem(); // Add one default payment item
+            $('#template-payments').html(buildPaymentItemHtml());
         }
         
         $('#vdp-payment-template-modal').css('display', 'flex');
         updateTemplateTotal();
+    }
+    
+    // Optimized HTML builder function
+    function buildPaymentItemHtml(payment = null) {
+        return `
+            <div class="payment-item">
+                <div class="payment-item-fields">
+                    <input type="number" name="percentage[]" placeholder="Porcentaje" value="${payment ? payment.percentage : ''}" min="0" max="100" step="0.01">
+                    <select name="timing_type[]">
+                        <option value="days_from_contract" ${payment && payment.days_from_contract !== undefined ? 'selected' : ''}>Días después del contrato</option>
+                        <option value="days_before_event" ${payment && payment.days_before_event !== undefined ? 'selected' : ''}>Días antes del evento</option>
+                    </select>
+                    <input type="number" name="timing_value[]" placeholder="Días" value="${payment ? (payment.days_from_contract || payment.days_before_event) : ''}" min="0">
+                    <input type="text" name="description[]" placeholder="Descripción" value="${payment ? (payment.description || '') : ''}">
+                    <button type="button" class="remove-payment"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
     }
     
     function addPaymentItem(payment = null) {

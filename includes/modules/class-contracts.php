@@ -286,7 +286,7 @@ class VDP_Contracts {
     }
     
     /**
-     * Get single payment template via AJAX
+     * Get single payment template via AJAX - Optimized version
      */
     public function get_payment_template() {
         check_ajax_referer('vdp-ajax-nonce', 'nonce');
@@ -301,17 +301,27 @@ class VDP_Contracts {
             wp_send_json_error('Template ID is required');
         }
         
-        $settings = $this->get_contract_settings($vendor->get_id());
-        $templates = $settings['payment_templates'];
+        // Get only payment templates, not all settings
+        $vendor_id = $vendor->get_id();
+        $settings = get_post_meta($vendor_id, 'vdp_contract_settings', true);
         
-        // Find the template by ID
-        foreach ($templates as $template) {
-            if ($template['id'] === $template_id) {
-                wp_send_json_success($template);
-            }
+        // Quick check if settings exist
+        if (empty($settings) || empty($settings['payment_templates'])) {
+            wp_send_json_error('No templates found');
         }
         
-        wp_send_json_error('Template not found');
+        // Convert to associative array indexed by ID for O(1) lookup
+        $templates_by_id = array();
+        foreach ($settings['payment_templates'] as $template) {
+            $templates_by_id[$template['id']] = $template;
+        }
+        
+        // Direct access by ID - much faster than loop
+        if (isset($templates_by_id[$template_id])) {
+            wp_send_json_success($templates_by_id[$template_id]);
+        } else {
+            wp_send_json_error('Template not found');
+        }
     }
     
     /**
