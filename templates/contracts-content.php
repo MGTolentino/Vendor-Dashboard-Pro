@@ -47,10 +47,7 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                 <i class="fas fa-university"></i> <?php esc_html_e('Bank Information', 'vendor-dashboard-pro'); ?>
             </button>
             <button class="vdp-tab-btn" data-tab="validation">
-                <i class="fas fa-shield-alt"></i> <?php esc_html_e('Validation Rules', 'vendor-dashboard-pro'); ?>
-            </button>
-            <button class="vdp-tab-btn" data-tab="preview">
-                <i class="fas fa-eye"></i> <?php esc_html_e('Preview', 'vendor-dashboard-pro'); ?>
+                <i class="fas fa-shield-alt"></i> <?php esc_html_e('Reglas de Validación', 'vendor-dashboard-pro'); ?>
             </button>
         </div>
         
@@ -62,6 +59,9 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                         <div class="vdp-section-header">
                             <h3 class="vdp-section-title"><?php esc_html_e('Company Information for Contracts', 'vendor-dashboard-pro'); ?></h3>
                             <p class="vdp-section-subtitle"><?php esc_html_e('This information will appear on all generated contracts', 'vendor-dashboard-pro'); ?></p>
+                            <button type="button" class="vdp-btn vdp-btn-secondary vdp-btn-sm" id="copy-from-settings">
+                                <i class="fas fa-copy"></i> <?php esc_html_e('Copiar desde Configuración de Tienda', 'vendor-dashboard-pro'); ?>
+                            </button>
                         </div>
                         
                         <div class="vdp-form-group">
@@ -139,11 +139,84 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
             <div class="vdp-tab-content" id="payment-templates-tab">
                 <div class="vdp-form-section">
                     <div class="vdp-section-header">
-                        <h3 class="vdp-section-title"><?php esc_html_e('Payment Schedule Templates', 'vendor-dashboard-pro'); ?></h3>
-                        <p class="vdp-section-subtitle"><?php esc_html_e('Create and manage payment schedule templates for your contracts', 'vendor-dashboard-pro'); ?></p>
+                        <h3 class="vdp-section-title"><?php esc_html_e('Plantillas de Pago', 'vendor-dashboard-pro'); ?></h3>
+                        <p class="vdp-section-subtitle"><?php esc_html_e('Crea y gestiona plantillas de esquemas de pago para tus contratos', 'vendor-dashboard-pro'); ?></p>
                     </div>
                     
-                    <div class="vdp-payment-templates-list">
+                    <!-- Smart Templates Based on Event Timeline -->
+                    <div class="vdp-smart-templates">
+                        <h4><?php esc_html_e('Plantillas Inteligentes', 'vendor-dashboard-pro'); ?></h4>
+                        <p class="vdp-help-text"><?php esc_html_e('Estas plantillas se ajustan automáticamente según los días hasta el evento', 'vendor-dashboard-pro'); ?></p>
+                        
+                        <div class="vdp-smart-templates-grid">
+                            <div class="vdp-smart-template" data-template="instant">
+                                <div class="template-icon">⚡</div>
+                                <h5>Pago Inmediato</h5>
+                                <p>100% al contratar</p>
+                                <div class="template-timeline">
+                                    <div class="timeline-bar">
+                                        <div class="payment-segment full" style="width: 100%;">100%</div>
+                                    </div>
+                                </div>
+                                <span class="use-case">Eventos en menos de 15 días</span>
+                            </div>
+                            
+                            <div class="vdp-smart-template active" data-template="50-50">
+                                <div class="template-icon">📋</div>
+                                <h5>50% - 50%</h5>
+                                <p>Mitad al contratar, mitad antes del evento</p>
+                                <div class="template-timeline">
+                                    <div class="timeline-bar">
+                                        <div class="payment-segment first" style="width: 50%;">50%</div>
+                                        <div class="payment-segment second" style="width: 50%;">50%</div>
+                                    </div>
+                                </div>
+                                <span class="use-case">Eventos de 15-60 días</span>
+                                <div class="default-badge">Por defecto</div>
+                            </div>
+                            
+                            <div class="vdp-smart-template" data-template="flexible">
+                                <div class="template-icon">📅</div>
+                                <h5>Pagos Flexibles</h5>
+                                <p>30% inicial, 40% intermedio, 30% final</p>
+                                <div class="template-timeline">
+                                    <div class="timeline-bar">
+                                        <div class="payment-segment first" style="width: 30%;">30%</div>
+                                        <div class="payment-segment second" style="width: 40%;">40%</div>
+                                        <div class="payment-segment third" style="width: 30%;">30%</div>
+                                    </div>
+                                </div>
+                                <span class="use-case">Eventos de 60+ días</span>
+                            </div>
+                            
+                            <div class="vdp-smart-template" data-template="monthly">
+                                <div class="template-icon">📊</div>
+                                <h5>Mensualidades</h5>
+                                <p>Pagos mensuales iguales</p>
+                                <div class="template-timeline">
+                                    <div class="timeline-bar">
+                                        <div class="payment-segment equal" style="width: 20%;">20%</div>
+                                        <div class="payment-segment equal" style="width: 20%;">20%</div>
+                                        <div class="payment-segment equal" style="width: 20%;">20%</div>
+                                        <div class="payment-segment equal" style="width: 20%;">20%</div>
+                                        <div class="payment-segment equal" style="width: 20%;">20%</div>
+                                    </div>
+                                </div>
+                                <span class="use-case">Eventos de 90+ días</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Existing Custom Templates -->
+                    <div class="vdp-custom-templates">
+                        <div class="section-header-with-action">
+                            <h4><?php esc_html_e('Plantillas Personalizadas', 'vendor-dashboard-pro'); ?></h4>
+                            <button class="vdp-btn vdp-btn-primary vdp-btn-sm" id="add-payment-template">
+                                <i class="fas fa-plus"></i> <?php esc_html_e('Crear Plantilla', 'vendor-dashboard-pro'); ?>
+                            </button>
+                        </div>
+                    
+                        <div class="vdp-payment-templates-list templates-grid">
                         <?php foreach ($contract_settings['payment_templates'] as $template): ?>
                             <div class="vdp-payment-template-card" data-template-id="<?php echo esc_attr($template['id']); ?>">
                                 <div class="vdp-template-header">
@@ -193,10 +266,7 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                         <?php endforeach; ?>
                     </div>
                     
-                    <div class="vdp-add-template-section">
-                        <button class="vdp-btn vdp-btn-primary" id="add-payment-template">
-                            <i class="fas fa-plus"></i> <?php esc_html_e('Add New Template', 'vendor-dashboard-pro'); ?>
-                        </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -318,32 +388,6 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                     </div>
                 </form>
             </div>
-            
-            <!-- Preview Tab -->
-            <div class="vdp-tab-content" id="preview-tab">
-                <div class="vdp-form-section">
-                    <div class="vdp-section-header">
-                        <h3 class="vdp-section-title"><?php esc_html_e('Contract Preview', 'vendor-dashboard-pro'); ?></h3>
-                        <p class="vdp-section-subtitle"><?php esc_html_e('Preview how your contract will look with sample data', 'vendor-dashboard-pro'); ?></p>
-                    </div>
-                    
-                    <div class="vdp-contract-preview-container">
-                        <div class="vdp-contract-preview" id="contract-preview">
-                            <!-- Contract preview will be generated here -->
-                            <div class="vdp-preview-loading">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <?php esc_html_e('Loading preview...', 'vendor-dashboard-pro'); ?>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="vdp-preview-actions">
-                        <button class="vdp-btn vdp-btn-primary" id="refresh-preview">
-                            <i class="fas fa-sync-alt"></i> <?php esc_html_e('Refresh Preview', 'vendor-dashboard-pro'); ?>
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -403,6 +447,47 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
 
 <script>
 jQuery(document).ready(function($) {
+    // Copy from settings button
+    $('#copy-from-settings').on('click', function() {
+        if (confirm('¿Desea copiar los datos de la configuración de la tienda? Esto reemplazará los valores actuales.')) {
+            $.ajax({
+                url: vdp_ajax.url,
+                type: 'POST',
+                data: {
+                    action: 'vdp_get_store_settings',
+                    nonce: vdp_vars.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var data = response.data;
+                        // Fill company info fields
+                        $('#company-name').val(data.store_name || '');
+                        $('#company-phone').val(data.store_phone || '');
+                        $('#company-email').val(data.store_email || '');
+                        
+                        // Fill bank info if available
+                        if (data.bank_name) {
+                            $('#bank-name').val(data.bank_name);
+                        }
+                        if (data.account_holder) {
+                            $('#account-holder').val(data.account_holder);
+                        }
+                        if (data.account_number) {
+                            $('#account-number').val(data.account_number);
+                        }
+                        
+                        showNotification('success', 'Datos copiados exitosamente');
+                    } else {
+                        showNotification('error', 'Error al obtener los datos de la tienda');
+                    }
+                },
+                error: function() {
+                    showNotification('error', 'Error de conexión');
+                }
+            });
+        }
+    });
+    
     // Tab switching
     $('.vdp-tab-btn').on('click', function() {
         var tab = $(this).data('tab');
@@ -888,5 +973,181 @@ jQuery(document).ready(function($) {
 .vdp-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+/* Smart Templates Styles */
+.vdp-smart-templates {
+    margin-bottom: 40px;
+}
+
+.vdp-smart-templates h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.vdp-help-text {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.vdp-smart-templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.vdp-smart-template {
+    position: relative;
+    background: #fff;
+    border: 2px solid #e1e1e1;
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.vdp-smart-template:hover {
+    border-color: #007cba;
+    box-shadow: 0 4px 12px rgba(0, 124, 186, 0.15);
+    transform: translateY(-2px);
+}
+
+.vdp-smart-template.active {
+    border-color: #007cba;
+    background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    box-shadow: 0 6px 20px rgba(0, 124, 186, 0.2);
+}
+
+.template-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.vdp-smart-template h5 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.vdp-smart-template p {
+    margin: 0 0 16px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.template-timeline {
+    margin: 16px 0;
+}
+
+.timeline-bar {
+    display: flex;
+    height: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.payment-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.payment-segment.full {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+}
+
+.payment-segment.first {
+    background: linear-gradient(135deg, #3498db, #5dade2);
+}
+
+.payment-segment.second {
+    background: linear-gradient(135deg, #e74c3c, #ec7063);
+}
+
+.payment-segment.third {
+    background: linear-gradient(135deg, #f39c12, #f7dc6f);
+}
+
+.payment-segment.equal {
+    background: linear-gradient(135deg, #9b59b6, #bb8fce);
+}
+
+.use-case {
+    display: block;
+    font-size: 12px;
+    color: #999;
+    font-style: italic;
+    margin-top: 12px;
+}
+
+.default-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #27ae60;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.vdp-custom-templates {
+    border-top: 1px solid #e1e1e1;
+    padding-top: 30px;
+}
+
+.section-header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header-with-action h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.templates-grid .vdp-payment-template-card {
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+.templates-grid .vdp-payment-template-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-color: #007cba;
+}
+
+@media (max-width: 768px) {
+    .vdp-smart-templates-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .vdp-smart-template {
+        padding: 20px;
+    }
+    
+    .section-header-with-action {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
 }
 </style>

@@ -17,9 +17,9 @@ $statistics = $orders_data['statistics'];
 ?>
 
 <div class="vdp-orders-wrapper">
-    <!-- Orders Header -->
+    <!-- Orders Header with Sub-tabs -->
     <div class="vdp-section-header">
-        <h2 class="vdp-section-title"><?php esc_html_e('Mis Órdenes', 'vendor-dashboard-pro'); ?></h2>
+        <h2 class="vdp-section-title"><?php esc_html_e('Ventas', 'vendor-dashboard-pro'); ?></h2>
         <div class="vdp-section-actions">
             <button type="button" class="vdp-btn vdp-btn-secondary" id="vdp_export_orders">
                 <i class="fas fa-download"></i>
@@ -27,6 +27,36 @@ $statistics = $orders_data['statistics'];
             </button>
         </div>
     </div>
+    
+    <!-- Sub-tabs Navigation -->
+    <div class="vdp-orders-subtabs">
+        <button class="vdp-subtab-btn vdp-active" data-subtab="orders">
+            <i class="fas fa-shopping-cart"></i>
+            <?php esc_html_e('Órdenes', 'vendor-dashboard-pro'); ?>
+        </button>
+        <button class="vdp-subtab-btn" data-subtab="contracts">
+            <i class="fas fa-file-contract"></i>
+            <?php esc_html_e('Contratos', 'vendor-dashboard-pro'); ?>
+            <?php 
+            // Get contracts count
+            global $wpdb;
+            $vendor = vdp_get_current_vendor();
+            if ($vendor) {
+                $vendor_id = $vendor->get_id();
+                $contracts_count = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$wpdb->prefix}eq_contracts WHERE vendor_id = %d",
+                    $vendor_id
+                ));
+                if ($contracts_count > 0) {
+                    echo '<span class="vdp-subtab-badge">' . $contracts_count . '</span>';
+                }
+            }
+            ?>
+        </button>
+    </div>
+    
+    <!-- Orders Content -->
+    <div class="vdp-subtab-content vdp-active" id="orders-content">
 
     <!-- Summary Cards -->
     <div class="vdp-orders-summary">
@@ -228,10 +258,365 @@ $statistics = $orders_data['statistics'];
             </div>
         </div>
     <?php endif; ?>
+    </div>
+    <!-- End Orders Content -->
+    
+    <!-- Contracts Content -->
+    <div class="vdp-subtab-content" id="contracts-content" style="display: none;">
+        <?php
+        // Get contracts for this vendor
+        global $wpdb;
+        $vendor = vdp_get_current_vendor();
+        if ($vendor) {
+            $vendor_id = $vendor->get_id();
+            
+            // Get pagination parameters
+            $contracts_page = isset($_GET['contracts_page']) ? max(1, intval($_GET['contracts_page'])) : 1;
+            $contracts_per_page = 10;
+            $offset = ($contracts_page - 1) * $contracts_per_page;
+            
+            // Get total contracts count
+            $total_contracts = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}eq_contracts WHERE vendor_id = %d",
+                $vendor_id
+            ));
+            
+            // Get contracts with pagination
+            $contracts = $wpdb->get_results($wpdb->prepare(
+                "SELECT c.*, 
+                        l.nombre_del_cliente as client_name,
+                        l.telefono_del_cliente as client_phone,
+                        e.fecha_evento as event_date,
+                        e.nombre_del_evento as event_name
+                FROM {$wpdb->prefix}eq_contracts c
+                LEFT JOIN {$wpdb->prefix}jet_cct_leads l ON c.lead_id = l._ID
+                LEFT JOIN {$wpdb->prefix}jet_cct_eventos e ON c.event_id = e._ID
+                WHERE c.vendor_id = %d
+                ORDER BY c.created_at DESC
+                LIMIT %d OFFSET %d",
+                $vendor_id,
+                $contracts_per_page,
+                $offset
+            ));
+            
+            $total_pages = ceil($total_contracts / $contracts_per_page);
+        ?>
+        
+        <!-- Contracts Header -->
+        <div class="vdp-contracts-header">
+            <div class="vdp-contracts-filters">
+                <input type="text" id="contracts_search" class="vdp-filter-input" placeholder="Buscar por cliente o número de contrato...">
+                
+                <select id="contracts_status_filter" class="vdp-filter-select">
+                    <option value="">Todos los estados</option>
+                    <option value="draft">Borrador</option>
+                    <option value="sent">Enviado</option>
+                    <option value="signed">Firmado</option>
+                    <option value="cancelled">Cancelado</option>
+                </select>
+                
+                <input type="date" id="contracts_date_from" class="vdp-filter-input" placeholder="Fecha desde">
+                <input type="date" id="contracts_date_to" class="vdp-filter-input" placeholder="Fecha hasta">
+                
+                <button type="button" class="vdp-btn vdp-btn-primary" id="apply_contracts_filters">
+                    Filtrar
+                </button>
+                
+                <button type="button" class="vdp-btn vdp-btn-secondary" id="clear_contracts_filters">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contracts Table -->
+        <div class="vdp-contracts-table-wrapper">
+            <table class="vdp-contracts-table">
+                <thead>
+                    <tr>
+                        <th>Contrato #</th>
+                        <th>Cliente</th>
+                        <th>Evento</th>
+                        <th>Fecha Evento</th>
+                        <th>Monto Total</th>
+                        <th>Estado</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="contracts-table-body">
+                    <?php if (!empty($contracts)) : ?>
+                        <?php foreach ($contracts as $contract) : ?>
+                            <tr data-contract-id="<?php echo esc_attr($contract->id); ?>">
+                                <td>
+                                    <strong>#<?php echo str_pad($contract->id, 5, '0', STR_PAD_LEFT); ?></strong>
+                                </td>
+                                <td>
+                                    <div class="contract-client">
+                                        <strong><?php echo esc_html($contract->client_name); ?></strong>
+                                        <?php if ($contract->client_phone) : ?>
+                                            <div class="client-phone"><?php echo esc_html($contract->client_phone); ?></div>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?php echo esc_html($contract->event_name ?: 'Sin nombre'); ?>
+                                </td>
+                                <td>
+                                    <?php 
+                                    if ($contract->event_date) {
+                                        echo date_i18n('d/m/Y', strtotime($contract->event_date));
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <strong>$<?php echo number_format($contract->total_amount, 2); ?></strong>
+                                </td>
+                                <td>
+                                    <?php
+                                    $status_labels = array(
+                                        'draft' => 'Borrador',
+                                        'sent' => 'Enviado',
+                                        'signed' => 'Firmado',
+                                        'cancelled' => 'Cancelado'
+                                    );
+                                    $status_classes = array(
+                                        'draft' => 'vdp-status-pending',
+                                        'sent' => 'vdp-status-processing',
+                                        'signed' => 'vdp-status-completed',
+                                        'cancelled' => 'vdp-status-cancelled'
+                                    );
+                                    $status = $contract->status ?: 'draft';
+                                    ?>
+                                    <span class="contract-status <?php echo esc_attr($status_classes[$status]); ?>">
+                                        <?php echo esc_html($status_labels[$status]); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php echo date_i18n('d/m/Y', strtotime($contract->created_at)); ?>
+                                </td>
+                                <td>
+                                    <div class="contract-actions">
+                                        <?php if (!empty($contract->pdf_url)) : ?>
+                                            <a href="<?php echo esc_url($contract->pdf_url); ?>" 
+                                               target="_blank"
+                                               class="vdp-btn vdp-btn-sm vdp-btn-primary">
+                                                <i class="fas fa-eye"></i> Ver
+                                            </a>
+                                            <a href="<?php echo esc_url($contract->pdf_url); ?>" 
+                                               download
+                                               class="vdp-btn vdp-btn-sm vdp-btn-secondary">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        <?php else : ?>
+                                            <span class="no-pdf">Sin PDF</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else : ?>
+                        <tr>
+                            <td colspan="8" class="no-contracts">
+                                <div class="vdp-empty-state">
+                                    <i class="fas fa-file-contract"></i>
+                                    <p>No se han generado contratos todavía.</p>
+                                    <p class="vdp-empty-help">Los contratos se generan desde el plugin Event Quote Cart cuando creas una cotización.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Contracts Pagination -->
+        <?php if ($total_pages > 1) : ?>
+            <div class="vdp-pagination">
+                <div class="vdp-pagination-info">
+                    <?php
+                    printf(
+                        'Mostrando %d-%d de %d contratos',
+                        (($contracts_page - 1) * $contracts_per_page) + 1,
+                        min($contracts_page * $contracts_per_page, $total_contracts),
+                        $total_contracts
+                    );
+                    ?>
+                </div>
+                <div class="vdp-pagination-links">
+                    <?php
+                    // Previous page
+                    if ($contracts_page > 1) {
+                        echo '<a href="#" class="vdp-contracts-pagination-link" data-page="' . ($contracts_page - 1) . '">&laquo; Anterior</a>';
+                    }
+                    
+                    // Page numbers
+                    for ($i = max(1, $contracts_page - 2); $i <= min($total_pages, $contracts_page + 2); $i++) {
+                        $class = $i === $contracts_page ? 'vdp-contracts-pagination-link current' : 'vdp-contracts-pagination-link';
+                        echo '<a href="#" class="' . $class . '" data-page="' . $i . '">' . $i . '</a>';
+                    }
+                    
+                    // Next page
+                    if ($contracts_page < $total_pages) {
+                        echo '<a href="#" class="vdp-contracts-pagination-link" data-page="' . ($contracts_page + 1) . '">Siguiente &raquo;</a>';
+                    }
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
+        
+        <?php } else { ?>
+            <div class="vdp-notice vdp-notice-error">
+                Error: No se pudo obtener la información del vendedor.
+            </div>
+        <?php } ?>
+    </div>
+    <!-- End Contracts Content -->
 </div>
 
 <script>
 jQuery(document).ready(function($) {
+    // Sub-tabs switching
+    $('.vdp-subtab-btn').on('click', function() {
+        var subtab = $(this).data('subtab');
+        
+        // Update active subtab button
+        $('.vdp-subtab-btn').removeClass('vdp-active');
+        $(this).addClass('vdp-active');
+        
+        // Show active subtab content
+        $('.vdp-subtab-content').removeClass('vdp-active').hide();
+        $('#' + subtab + '-content').addClass('vdp-active').show();
+        
+        // Update export button visibility
+        if (subtab === 'contracts') {
+            $('#vdp_export_orders').hide();
+        } else {
+            $('#vdp_export_orders').show();
+        }
+    });
+    
+    // Contracts filtering
+    $('#apply_contracts_filters').on('click', function() {
+        filterContracts();
+    });
+    
+    $('#clear_contracts_filters').on('click', function() {
+        $('#contracts_search').val('');
+        $('#contracts_status_filter').val('');
+        $('#contracts_date_from').val('');
+        $('#contracts_date_to').val('');
+        filterContracts();
+    });
+    
+    // Contracts search on enter
+    $('#contracts_search').on('keypress', function(e) {
+        if (e.which === 13) {
+            filterContracts();
+        }
+    });
+    
+    // Contracts pagination
+    $(document).on('click', '.vdp-contracts-pagination-link:not(.current)', function(e) {
+        e.preventDefault();
+        var page = $(this).data('page');
+        filterContracts(page);
+    });
+    
+    function filterContracts(page = 1) {
+        var filters = {
+            search: $('#contracts_search').val(),
+            status: $('#contracts_status_filter').val(),
+            date_from: $('#contracts_date_from').val(),
+            date_to: $('#contracts_date_to').val(),
+            page: page
+        };
+        
+        $.ajax({
+            url: vdp_ajax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'vdp_filter_contracts',
+                ...filters,
+                nonce: vdp_ajax.nonce
+            },
+            beforeSend: function() {
+                $('#contracts-table-body').html('<tr><td colspan="8" class="loading">Cargando...</td></tr>');
+            },
+            success: function(response) {
+                if (response.success) {
+                    updateContractsTable(response.data.contracts);
+                    updateContractsPagination(response.data.pagination);
+                }
+            },
+            error: function() {
+                $('#contracts-table-body').html('<tr><td colspan="8" class="error">Error al cargar los contratos.</td></tr>');
+            }
+        });
+    }
+    
+    function updateContractsTable(contracts) {
+        var html = '';
+        
+        if (contracts.length === 0) {
+            html = '<tr><td colspan="8" class="no-contracts"><div class="vdp-empty-state"><i class="fas fa-file-contract"></i><p>No se encontraron contratos.</p></div></td></tr>';
+        } else {
+            contracts.forEach(function(contract) {
+                var statusClass = getContractStatusClass(contract.status);
+                var statusLabel = getContractStatusLabel(contract.status);
+                
+                html += '<tr data-contract-id="' + contract.id + '">';
+                html += '<td><strong>#' + contract.id.toString().padStart(5, '0') + '</strong></td>';
+                html += '<td><div class="contract-client"><strong>' + contract.client_name + '</strong>';
+                if (contract.client_phone) {
+                    html += '<div class="client-phone">' + contract.client_phone + '</div>';
+                }
+                html += '</div></td>';
+                html += '<td>' + (contract.event_name || 'Sin nombre') + '</td>';
+                html += '<td>' + (contract.event_date ? formatDate(contract.event_date) : '-') + '</td>';
+                html += '<td><strong>$' + parseFloat(contract.total_amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '</strong></td>';
+                html += '<td><span class="contract-status ' + statusClass + '">' + statusLabel + '</span></td>';
+                html += '<td>' + formatDate(contract.created_at) + '</td>';
+                html += '<td><div class="contract-actions">';
+                if (contract.pdf_url) {
+                    html += '<a href="' + contract.pdf_url + '" target="_blank" class="vdp-btn vdp-btn-sm vdp-btn-primary"><i class="fas fa-eye"></i> Ver</a>';
+                    html += '<a href="' + contract.pdf_url + '" download class="vdp-btn vdp-btn-sm vdp-btn-secondary"><i class="fas fa-download"></i></a>';
+                } else {
+                    html += '<span class="no-pdf">Sin PDF</span>';
+                }
+                html += '</div></td>';
+                html += '</tr>';
+            });
+        }
+        
+        $('#contracts-table-body').html(html);
+    }
+    
+    function updateContractsPagination(pagination) {
+        // Update pagination would be implemented here
+    }
+    
+    function getContractStatusClass(status) {
+        var classes = {
+            'draft': 'vdp-status-pending',
+            'sent': 'vdp-status-processing',
+            'signed': 'vdp-status-completed',
+            'cancelled': 'vdp-status-cancelled'
+        };
+        return classes[status] || 'vdp-status-pending';
+    }
+    
+    function getContractStatusLabel(status) {
+        var labels = {
+            'draft': 'Borrador',
+            'sent': 'Enviado',
+            'signed': 'Firmado',
+            'cancelled': 'Cancelado'
+        };
+        return labels[status] || 'Borrador';
+    }
+    
     // Filter orders
     $('#apply_orders_filters').on('click', function() {
         filterOrders();
@@ -443,6 +828,190 @@ jQuery(document).ready(function($) {
 <style>
 .vdp-orders-wrapper {
     margin: 20px 0;
+}
+
+/* Sub-tabs Styles */
+.vdp-orders-subtabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #e1e1e1;
+    margin: 20px 0;
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+}
+
+.vdp-subtab-btn {
+    position: relative;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #666;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vdp-subtab-btn:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+.vdp-subtab-btn.vdp-active {
+    color: #007cba;
+    border-bottom-color: #007cba;
+    background: #f0f8ff;
+}
+
+.vdp-subtab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 10px;
+    margin-left: 4px;
+}
+
+.vdp-subtab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+.vdp-subtab-content:not(.vdp-active) {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Contracts Table Styles */
+.vdp-contracts-header {
+    margin-bottom: 20px;
+}
+
+.vdp-contracts-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.vdp-contracts-table-wrapper {
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.vdp-contracts-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vdp-contracts-table th,
+.vdp-contracts-table td {
+    padding: 15px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+.vdp-contracts-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.vdp-contracts-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.contract-client .client-phone {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.contract-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.contract-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.no-pdf {
+    color: #999;
+    font-style: italic;
+    font-size: 12px;
+}
+
+.no-contracts {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.vdp-empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.vdp-empty-state i {
+    font-size: 48px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.vdp-empty-state p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.vdp-empty-help {
+    font-size: 14px;
+    color: #999;
+}
+
+.vdp-contracts-pagination-link {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.vdp-contracts-pagination-link:hover {
+    background: #f8f9fa;
+    text-decoration: none;
+}
+
+.vdp-contracts-pagination-link.current {
+    background: #007cba;
+    color: #fff;
+    border-color: #007cba;
 }
 
 .vdp-orders-summary {
