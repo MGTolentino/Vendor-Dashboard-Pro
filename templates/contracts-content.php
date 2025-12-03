@@ -224,21 +224,21 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                                         <h4 class="vdp-template-name">
                                             <?php echo esc_html($template['name']); ?>
                                             <?php if ($template['is_default']): ?>
-                                                <span class="vdp-badge vdp-badge-primary"><?php esc_html_e('Default', 'vendor-dashboard-pro'); ?></span>
+                                                <span class="vdp-badge vdp-badge-primary">Por Defecto</span>
                                             <?php endif; ?>
                                         </h4>
                                         <p class="vdp-template-meta">
-                                            <?php echo count($template['payments']); ?> <?php esc_html_e('payments', 'vendor-dashboard-pro'); ?>
-                                            · <?php esc_html_e('Min', 'vendor-dashboard-pro'); ?> <?php echo $template['min_days_required']; ?> <?php esc_html_e('days', 'vendor-dashboard-pro'); ?>
+                                            <?php echo count($template['payments']); ?> pagos
+                                            · Mín <?php echo $template['min_days_required']; ?> días
                                         </p>
                                     </div>
                                     <div class="vdp-template-actions">
                                         <button class="vdp-btn vdp-btn-sm vdp-btn-outline edit-template">
-                                            <i class="fas fa-edit"></i> <?php esc_html_e('Edit', 'vendor-dashboard-pro'); ?>
+                                            <i class="fas fa-edit"></i> Editar
                                         </button>
                                         <?php if (!in_array($template['id'], ['full_payment', '50_50', '3_months', '6_months'])): ?>
                                             <button class="vdp-btn vdp-btn-sm vdp-btn-danger delete-template">
-                                                <i class="fas fa-trash"></i> <?php esc_html_e('Delete', 'vendor-dashboard-pro'); ?>
+                                                <i class="fas fa-trash"></i> Eliminar
                                             </button>
                                         <?php endif; ?>
                                     </div>
@@ -251,12 +251,12 @@ $contract_settings = $contracts_module->get_contract_settings($vendor->get_id())
                                             <span class="vdp-payment-timing">
                                                 <?php if (isset($payment['days_from_contract'])): ?>
                                                     <?php if ($payment['days_from_contract'] == 0): ?>
-                                                        <?php esc_html_e('At contract signing', 'vendor-dashboard-pro'); ?>
+                                                        Al firmar contrato
                                                     <?php else: ?>
-                                                        <?php echo $payment['days_from_contract']; ?> <?php esc_html_e('days after contract', 'vendor-dashboard-pro'); ?>
+                                                        <?php echo $payment['days_from_contract']; ?> días después del contrato
                                                     <?php endif; ?>
                                                 <?php elseif (isset($payment['days_before_event'])): ?>
-                                                    <?php echo $payment['days_before_event']; ?> <?php esc_html_e('days before event', 'vendor-dashboard-pro'); ?>
+                                                    <?php echo $payment['days_before_event']; ?> días antes del evento
                                                 <?php endif; ?>
                                             </span>
                                         </div>
@@ -1122,16 +1122,98 @@ jQuery(document).ready(function($) {
     color: #333;
 }
 
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
 .templates-grid .vdp-payment-template-card {
-    border: 1px solid #e1e1e1;
-    border-radius: 8px;
+    border: 2px solid #e1e1e1;
+    border-radius: 12px;
     background: #fff;
     transition: all 0.3s ease;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
 }
 
 .templates-grid .vdp-payment-template-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border-color: #007cba;
+    transform: translateY(-2px);
+}
+
+.vdp-template-header {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.vdp-template-info h4.vdp-template-name {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vdp-template-meta {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+}
+
+.vdp-template-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.vdp-template-payments {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+}
+
+.vdp-payment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #007cba;
+}
+
+.vdp-payment-percentage {
+    font-weight: 600;
+    color: #007cba;
+    font-size: 14px;
+}
+
+.vdp-payment-timing {
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+}
+
+.vdp-badge {
+    background: #27ae60;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.vdp-badge-primary {
+    background: #007cba;
 }
 
 @media (max-width: 768px) {
