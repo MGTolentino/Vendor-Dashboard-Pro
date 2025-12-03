@@ -525,7 +525,7 @@ jQuery(document).ready(function($) {
         $.post(vdp_ajax.url, {
             action: 'vdp_get_payment_template',
             template_id: templateId,
-            nonce: vdp_ajax.nonce
+            nonce: vdp_vars.nonce
         }, function(response) {
             if (response.success) {
                 openPaymentTemplateModal(response.data);
